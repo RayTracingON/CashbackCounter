@@ -13,21 +13,37 @@ struct CreditCard: Identifiable {
     let type: String
     let endNum: String
     let colors: [Color]
+    
+    
     // --- 新增的核心逻辑 ---
+    // 👇 1. 这张卡的“老家”在哪里？
+    let issueRegion: Region
         
+    // 👇 2. 如果在“老家”以外的地方刷，返现率是多少？
+    let foreignCurrencyRate: Double?
+    
     // 1. 保底返现率 (比如 0.01 代表 1%)
     let defaultRate: Double
         
     // 2. 特殊类别返现表 [类别图标名 : 返现率]
     // 比如 ["cart.fill": 0.05] 代表超市返 5%
-    let specialRates: [String: Double]
-        
-    // 3. 一个“聪明”的方法：给我一个类别，我告诉你该返多少
-    func getRate(for category: String) -> Double {
-        // 语法糖复习：?? 是空合运算符
-        // 意思：尝试在 specialRates 字典里找 category
-        // 如果找到了(有值)，就用那个值；
-        // 如果没找到(nil)，就用 ?? 后面的 defaultRate。
-        return specialRates[category] ?? defaultRate
-    }
+    let specialRates: [Category: Double]
+    
+    // 3. 核心计算逻辑升级
+    func getRate(for category: Category, location: Region) -> Double {
+            // A. 先查类别基础分 (比如餐饮)
+            let categoryRate = specialRates[category] ?? defaultRate
+            
+            // B. 判断是否为跨境交易
+            // 如果交易地点 (location) 不等于 卡片发行地 (issueRegion)，就是跨境
+            if location != issueRegion {
+                // 如果这张卡有境外返现优惠
+                if let foreignRate = foreignCurrencyRate {
+                    // 取最大值 (比如餐饮 1%，但境外全返 3%，那就按 3% 算)
+                    return max(categoryRate, foreignRate)
+                }
+            }
+            
+            return categoryRate
+        }
 }

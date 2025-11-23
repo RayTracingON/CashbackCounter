@@ -11,8 +11,11 @@ struct BillHomeView: View {
     
     // --- 2. 自动计算总返现 ---
     var totalCashback: Double {
-        manager.transactions.reduce(0) { $0 + $1.cashbackAmount }
-    }
+            manager.transactions.reduce(0) { currentTotal, transaction in
+                // 每一笔都问 manager 算一下返现，然后加起来
+                currentTotal + manager.getCashback(for: transaction)
+            }
+        }
     
     var body: some View {
         NavigationView {

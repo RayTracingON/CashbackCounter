@@ -12,51 +12,49 @@ struct TransactionRow: View {
     
     // 1. 安装传感器
     @Environment(\.colorScheme) var colorScheme
+    // 需要用到 manager 来计算金额
+    @EnvironmentObject var manager: DataManager
     
     var body: some View {
-        HStack(spacing: 15) {
-            // 图标背景
-            ZStack {
-                Circle()
-                    .fill(transaction.color.opacity(0.1))
-                    .frame(width: 50, height: 50)
-                Image(systemName: transaction.category)
-                    .font(.title3)
-                    .foregroundColor(transaction.color)
-            }
-            
-            // 商家和日期
-            VStack(alignment: .leading, spacing: 4) {
-                Text(transaction.merchant)
-                    .font(.headline)
-                    // 标题色自动适配
-                Text(transaction.date)
-                    .font(.caption)
-                    .foregroundColor(.secondary) // 次级色自动适配
-            }
-            
-            Spacer()
-            
-            // 金额和返现
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("- \(String(format: "%.2f", transaction.amount))")
-                    .font(.system(.body, design: .rounded))
-                    .fontWeight(.semibold)
-                
-                // 返现提示 (这个不用改，绿色底色在深色模式下也很好看)
-                HStack(spacing: 4) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 10))
-                    Text("返 ¥\(String(format: "%.2f", transaction.cashbackAmount))")
-                        .font(.system(size: 10, weight: .bold))
+            HStack(spacing: 15) {
+                ZStack {
+                    // 👇 颜色改用 Category 里的颜色
+                    Circle()
+                        .fill(transaction.category.color.opacity(0.1))
+                        .frame(width: 50, height: 50)
+                    // 👇 图标改用 Category 里的图标
+                    Image(systemName: transaction.category.iconName)
+                        .font(.title3)
+                        .foregroundColor(transaction.category.color)
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(Color.green.opacity(0.1))
-                .foregroundColor(.green)
-                .cornerRadius(4)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(transaction.merchant).font(.headline)
+                    Text(transaction.dateString).font(.caption).foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("- \(String(format: "%.2f", transaction.amount))")
+                        .font(.system(.body, design: .rounded))
+                        .fontWeight(.semibold)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkles").font(.system(size: 10))
+                        
+                        // 👇👇👇 核心修改：调用 manager.getCashback
+                        let cashback = manager.getCashback(for: transaction)
+                        Text("返 ¥\(String(format: "%.2f", cashback))")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.green.opacity(0.1))
+                    .foregroundColor(.green)
+                    .cornerRadius(4)
+                }
             }
-        }
         .padding()
         // 2. 背景色升级
         .background(Color(uiColor: .secondarySystemGroupedBackground))
