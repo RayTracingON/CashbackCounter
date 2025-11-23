@@ -15,15 +15,17 @@ class Transaction: Identifiable {
     var location: Region
     var amount: Double
     var date: Date
-    var cardID: UUID
+    // 👇 核心修改：不再存 UUID，直接存 CreditCard 对象！
+    // 这是一个 Optional，因为万一卡片被删了，这个字段就会变成 nil
+    var card: CreditCard?
     
-    init(merchant: String, category: Category, location: Region, amount: Double, date: Date, cardID: UUID) {
+    init(merchant: String, category: Category, location: Region, amount: Double, date: Date, card: CreditCard?) {
             self.merchant = merchant
             self.category = category
             self.location = location
             self.amount = amount
             self.date = date
-            self.cardID = cardID
+            self.card = card // 直接把对象存进去
         }
     
     var color: Color { category.color }

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct TransactionRow: View {
     let transaction: Transaction
-    @EnvironmentObject var manager: DataManager
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -29,7 +28,7 @@ struct TransactionRow: View {
                             Text(transaction.merchant).font(.headline)
                             
                             // 👇 修改：调用 Service，传入 transaction 和 manager.cards
-                            let cardName = CashbackService.getCardName(for: transaction, in: manager.cards)
+                            let cardName = CashbackService.getCardName(for: transaction)
                             Text("\(transaction.dateString) · \(cardName)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -40,13 +39,13 @@ struct TransactionRow: View {
             
             // --- 右边：金额 + (返现金额 & 比例) ---
             VStack(alignment: .trailing, spacing: 4) {
-                let symbol = CashbackService.getCurrency(for: transaction, in: manager.cards)
+                let symbol = CashbackService.getCurrency(for: transaction)
                 Text("- \(symbol)\(String(format: "%.2f", transaction.amount))")
                                     .font(.system(.body, design: .rounded))
                                     .fontWeight(.semibold)
                                 
                 // 3. 显示返现
-                let cashback = CashbackService.calculateCashback(for: transaction, in: manager.cards)
+                let cashback = CashbackService.calculateCashback(for: transaction)
                                 
                 if cashback > 0 {
                     HStack(spacing: 4) {
@@ -56,7 +55,7 @@ struct TransactionRow: View {
                     Text("返 \(symbol)\(String(format: "%.2f", cashback))")
                             .font(.system(size: 10, weight: .bold))
                                         
-                    let rate = CashbackService.getRate(for: transaction, in: manager.cards)
+                    let rate = CashbackService.getRate(for: transaction)
                     Text("(\(Int(rate * 100))%)")
                             .font(.system(size: 10, weight: .medium))
                             .opacity(0.8)

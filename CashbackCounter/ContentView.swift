@@ -1,6 +1,5 @@
 import SwiftUI
-
-
+import SwiftData
 // --- 2. 主入口 (包含底部导航栏) ---
 struct ContentView: View {
     // 选中的 Tab 索引
@@ -40,6 +39,11 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
-        .environmentObject(DataManager()) // 👈 必须加！为了喂饱里面的子页面
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Transaction.self, CreditCard.self, configurations: config)
+    
+    SampleData.load(context: container.mainContext)
+    
+    return ContentView()
+        .modelContainer(container)
 }

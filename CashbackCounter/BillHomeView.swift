@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct BillHomeView: View {
-    @EnvironmentObject var manager: DataManager
     @Environment(\.modelContext) var context
     @Query(sort: \Transaction.date, order: .reverse) var dbTransactions: [Transaction]
     
@@ -15,7 +14,7 @@ struct BillHomeView: View {
     // 2. 计算总返现
     var totalCashback: Double {
             dbTransactions.reduce(0) {
-                $0 + CashbackService.calculateCashback(for: $1, in: manager.cards)
+                $0 + CashbackService.calculateCashback(for: $1)
             }
         }
     
@@ -71,12 +70,20 @@ struct BillHomeView: View {
         
         }.onAppear {
             // 当页面显示时，尝试加载假数据
-            SampleData.load(context: context, manager: manager)
+            SampleData.load(context: context)
         }
     }
 }
 
+// 预览也需要注入环境
 #Preview {
-    BillHomeView()
-        .environmentObject(DataManager()) // 👈 必须加！为了喂饱里面的子页面
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Transaction.self, CreditCard.self, configurations: config)
+    
+    SampleData.load(context: container.mainContext)
+    
+    // 👇 加上这个 return！
+    return BillHomeView()
+        .modelContainer(container)
 }
+
