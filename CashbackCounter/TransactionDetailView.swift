@@ -11,6 +11,7 @@ import SwiftData
 struct TransactionDetailView: View {
     let transaction: Transaction
     @Environment(\.dismiss) var dismiss
+    @State private var showFullImage = false
     
     // 获取计算数据
     var cashback: Double {
@@ -40,86 +41,102 @@ struct TransactionDetailView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 30) {
-                // 1. 顶部大图标和商家
-                VStack(spacing: 15) {
-                    ZStack {
-                        Circle()
-                            .fill(transaction.category.color.opacity(0.1))
-                            .frame(width: 80, height: 80)
-                        Image(systemName: transaction.category.iconName)
-                            .font(.system(size: 35))
-                            .foregroundColor(transaction.category.color)
-                    }
-                    
-                    Text(transaction.merchant)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
-                .padding(.top, 40)
-                
-                // 2. 金额显示
-                Text("- \(currency)\(String(format: "%.2f", transaction.amount))")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                
-                // 3. 详细信息列表
-                VStack(spacing: 0) {
-                    DetailRow(title: "交易时间", value: transaction.dateString) // 这里的 dateString 如果不够详细，可以用 formatter 再转一次
-                    Divider()
-                    DetailRow(title: "支付卡片", value: cardName)
-                    Divider()
-                    DetailRow(title: "卡片尾号", value: cardNumber)
-                    Divider()
-                    DetailRow(title: "入账金额", value: (cardregion+String(format: "%.2f", billamount)))
-                    Divider()
-                    DetailRow(title: "消费地区", value: "\(transaction.location.icon) \(transaction.location.rawValue)")
-                }
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .cornerRadius(12)
-                .padding(.horizontal)
-                
-                // 4. 返现高亮区域
-                if cashback > 0 {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("本单返现")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            Text("\(cardregion)\(String(format: "%.2f", cashback))"+"(\(cashbackrate)%)")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundColor(.green)
+            ScrollView{
+                VStack(spacing: 30) {
+                    // 1. 顶部大图标和商家
+                    VStack(spacing: 15) {
+                        ZStack {
+                            Circle()
+                                .fill(transaction.category.color.opacity(0.1))
+                                .frame(width: 80, height: 80)
+                            Image(systemName: transaction.category.iconName)
+                                .font(.system(size: 35))
+                                .foregroundColor(transaction.category.color)
                         }
-                        Spacer()
-                        Image(systemName: "sparkles")
-                            .font(.largeTitle)
-                            .foregroundColor(.green.opacity(0.3))
+                        
+                        Text(transaction.merchant)
+                            .font(.title2)
+                            .fontWeight(.bold)
                     }
-                    .padding()
-                    .background(Color.green.opacity(0.1))
+                    .padding(.top, 40)
+                    
+                    // 2. 金额显示
+                    Text("- \(currency)\(String(format: "%.2f", transaction.amount))")
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                    
+                    // 3. 详细信息列表
+                    VStack(spacing: 0) {
+                        DetailRow(title: "交易时间", value: transaction.dateString) // 这里的 dateString 如果不够详细，可以用 formatter 再转一次
+                        Divider()
+                        DetailRow(title: "支付卡片", value: cardName)
+                        Divider()
+                        DetailRow(title: "卡片尾号", value: cardNumber)
+                        Divider()
+                        DetailRow(title: "入账金额", value: (cardregion+String(format: "%.2f", billamount)))
+                        Divider()
+                        DetailRow(title: "消费地区", value: "\(transaction.location.icon) \(transaction.location.rawValue)")
+                    }
+                    .background(Color(uiColor: .secondarySystemGroupedBackground))
                     .cornerRadius(12)
                     .padding(.horizontal)
-                }
-                if let data = transaction.receiptData,
-                                   let uiImage = UIImage(data: data) {
-                                    
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        Text("电子收据")
-                                            .font(.headline)
-                                            .foregroundColor(.secondary)
-                                        
-                                        Image(uiImage: uiImage)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(maxHeight: 300) // 限制最大高度，防止太长
-                                            .cornerRadius(12)
-                                            .onTapGesture {
-                                                // 这里以后可以做“点击查看大图”的功能
-                                            }
-                                    }
-                                    .padding()
+                    
+                    // 4. 返现高亮区域
+                    if cashback > 0 {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text("本单返现")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Text("\(cardregion)\(String(format: "%.2f", cashback))"+"(\(cashbackrate)%)")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.green)
+                            }
+                            Spacer()
+                            Image(systemName: "sparkles")
+                                .font(.largeTitle)
+                                .foregroundColor(.green.opacity(0.3))
+                        }
+                        .padding()
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    }
+                    // 👇 5. 电子收据区域 (优化版)
+                    if let data = transaction.receiptData,
+                       let uiImage = UIImage(data: data) {
+                        
+                        VStack(spacing: 15) {
+                            // 分割线
+                            Divider()
+                            
+                            HStack {
+                                Text("电子收据")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                            }
+                            
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 300)
+                                .cornerRadius(12)
+                                .shadow(radius: 5)
+                            // 👇 点击触发全屏
+                                .onTapGesture {
+                                    showFullImage = true
                                 }
-                Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 30)
+                        // 👇 全屏覆盖层绑定
+                        .fullScreenCover(isPresented: $showFullImage) {
+                            ReceiptFullScreenView(image: uiImage)
+                        }
+                    }
+                }
+                .padding(.vertical)
             }
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationBarTitleDisplayMode(.inline)
@@ -131,6 +148,7 @@ struct TransactionDetailView: View {
         }
     }
 }
+
 
 // 辅助子视图：一行详情
 struct DetailRow: View {
