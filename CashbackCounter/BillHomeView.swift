@@ -2,22 +2,28 @@ import SwiftUI
 import SwiftData
 
 struct BillHomeView: View {
+    // 1. 拿到数据库上下文 (用来删除)
     @Environment(\.modelContext) var context
+    
     @Query(sort: \Transaction.date, order: .reverse) var dbTransactions: [Transaction]
+    
+    // 2. 控制详情页弹窗
     @State private var selectedTransaction: Transaction? = nil
     
-    // 1. 自动计算总支出
-    // reduce 是一个高阶函数：把数组里的每一项 ($1) 的 amount 加到初始值 0 ($0) 上
+    // 3. 控制编辑页弹窗
+    @State private var transactionToEdit: Transaction?
+    
+    // 计算总支出
     var totalExpense: Double {
-            dbTransactions.reduce(0) { $0 + $1.amount }
-        }
-        
-    // 2. 计算总返现
+        dbTransactions.reduce(0) { $0 + $1.amount }
+    }
+    
+    // 计算总返现
     var totalCashback: Double {
-            dbTransactions.reduce(0) {
-                $0 + CashbackService.calculateCashback(for: $1)
-            }
+        dbTransactions.reduce(0) {
+            $0 + CashbackService.calculateCashback(for: $1)
         }
+    }
     
     var body: some View {
         NavigationView {
@@ -27,19 +33,18 @@ struct BillHomeView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         
-                        // --- 3. 消失的统计条 (这里加回来了！) ---
-                        // 而且现在它是动态的，数字会随着你记账自动变！
+                        // --- 统计条 ---
                         HStack(spacing: 15) {
                             StatBox(
                                 title: "本月支出",
-                                amount: "¥\(String(format: "%.2f", totalExpense))", // 显示真数据
+                                amount: "¥\(String(format: "%.2f", totalExpense))",
                                 icon: "arrow.down.circle.fill",
                                 color: .red
                             )
                             
                             StatBox(
                                 title: "累计返现",
-                                amount: "¥\(String(format: "%.2f", totalCashback))", // 显示真数据
+                                amount: "¥\(String(format: "%.2f", totalCashback))",
                                 icon: "arrow.up.circle.fill",
                                 color: .green
                             )
@@ -58,37 +63,48 @@ struct BillHomeView: View {
                         
                         // --- 交易列表 ---
                         LazyVStack(spacing: 15) {
-                                         ForEach(dbTransactions) { item in
-                                             TransactionRow(transaction: item)
-                                                 .onTapGesture {
-                                                selectedTransaction = item
-                                            }
-                                         }
-                                     }
+                            ForEach(dbTransactions) { item in
+                                TransactionRow(transaction: item)
+                                    // 1. 单击 -> 查看详情
+                                    .onTapGesture {
+                                        selectedTransaction = item
+                                    }
+                                    // 2. 长按 -> 弹出菜单
+                                    .contextMenu {
+                                        Button {
+                                            // 赋值给 transactionToEdit，触发编辑弹窗
+                                            transactionToEdit = item
+                                        } label: {
+                                            Label("编辑", systemImage: "pencil")
+                                        }
+                                        
+                                        Button(role: .destructive) {
+                                            // 直接删除
+                                            context.delete(item)
+                                        } label: {
+                                            Label("删除", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        }
                         .padding(.horizontal)
                     }
                 }
             }
             .navigationTitle("Cashback Counter")
             .navigationBarTitleDisplayMode(.inline)
+            
+            // 弹窗 1: 详情页
             .sheet(item: $selectedTransaction) { item in
                 TransactionDetailView(transaction: item)
-                // 在 iOS 16+ 可以控制弹窗高度 (可选)
-                    .presentationDetents([.large, .large])
+                    .presentationDetents([.large]) // iOS 16+
+            }
+            
+            // 弹窗 2: 编辑页 (复用 AddTransactionView)
+            .sheet(item: $transactionToEdit) { item in
+                // 这里传入 transaction，让它进入编辑模式
+                AddTransactionView(transaction: item)
             }
         }
     }
 }
-
-// 预览也需要注入环境
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Transaction.self, CreditCard.self, configurations: config)
-    
-    SampleData.load(context: container.mainContext)
-    
-    // 👇 加上这个 return！
-    return BillHomeView()
-        .modelContainer(container)
-}
-

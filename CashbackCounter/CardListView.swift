@@ -20,7 +20,10 @@ struct CardListView: View {
     @Query var cards: [CreditCard]
     @Environment(\.modelContext) var context // 用来删除
     
-    // 2. 控制当前显示的弹窗类型 (如果是 nil 就不弹)
+    // 2. 控制编辑状态
+    @State private var cardToEdit: CreditCard?
+    
+    // 3. 控制添加状态
     @State private var activeSheet: SheetType?
     
     var body: some View {
@@ -34,8 +37,16 @@ struct CardListView: View {
                             endNum: card.endNum,
                             colors: card.colors
                         )
-                        // 长按删除功能
+                        // 👇 修改点 1：完善长按菜单
                         .contextMenu {
+                            // ✏️ 编辑按钮
+                            Button {
+                                cardToEdit = card // 赋值后会自动触发下面的 sheet
+                            } label: {
+                                Label("编辑卡片", systemImage: "pencil")
+                            }
+                            
+                            // 🗑️ 删除按钮
                             Button(role: .destructive) {
                                 context.delete(card)
                             } label: {
@@ -49,53 +60,36 @@ struct CardListView: View {
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("我的卡包")
             .toolbar {
-                // 👇 3. 修改这里：把 Button 换成 Menu
                 ToolbarItem(placement: .primaryAction) {
-                    
                     Menu {
-                        // 选项 1: 从模板添加
-                        Button(action: {
-                            activeSheet = .template
-                        }) {
+                        Button(action: { activeSheet = .template }) {
                             Label("从模板添加", systemImage: "doc.on.doc")
                         }
-                        
-                        // 选项 2: 自定义添加
-                        Button(action: {
-                            activeSheet = .custom
-                        }) {
+                        Button(action: { activeSheet = .custom }) {
                             Label("自定义添加", systemImage: "square.and.pencil")
                         }
-                        
                     } label: {
-                        // 菜单外面的图标 (还是那个加号)
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 24))
                     }
                 }
             }
-            // 👇 4. 统一处理弹窗逻辑
-            // 只要 activeSheet 变了，这里就会弹出来
+            // 弹窗 1: 处理添加 (模板/自定义)
             .sheet(item: $activeSheet) { type in
-                            switch type {
-                            case .template:
-                                // 👇 修改这里：把 $activeSheet 传进去
-                                // 以前是 CardTemplateListView()
-                                // 现在必须填上参数
-                                CardTemplateListView(rootSheet: $activeSheet)
-                                
-                            case .custom:
-                                AddCardView()
-                            }
-                        }
+                switch type {
+                case .template:
+                    CardTemplateListView(rootSheet: $activeSheet)
+                case .custom:
+                    AddCardView()
+                }
+            }
+            // 👇 修改点 2: 处理编辑弹窗
+            // 只要 cardToEdit 变成非空，就会弹出这个窗口，并把卡片传进去
+            .sheet(item: $cardToEdit) { card in
+                AddCardView(cardToEdit: card)
+            }
         }
     }
 }
 
-#Preview {
-    // 预览需要的准备工作
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Transaction.self, CreditCard.self, configurations: config)
-    SampleData.load(context: container.mainContext)
-    return CardListView().modelContainer(container)
-}
+

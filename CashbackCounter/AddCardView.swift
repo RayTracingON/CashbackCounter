@@ -11,61 +11,118 @@ import SwiftData
 struct AddCardView: View {
     @Environment(\.modelContext) var context
     @Environment(\.dismiss) var dismiss
-    // 👇 1. 新增：一个回调函数，如果不为 nil，就执行它
+    
+    // 1. 接收要编辑的卡片 (如果是 nil 就是添加模式)
+    var cardToEdit: CreditCard?
     var onSaved: (() -> Void)? = nil
     
     // --- 表单状态 ---
-    @State private var bankName: String = ""
-    @State private var cardType: String = ""
-    @State private var endNum: String = ""
+    @State private var bankName: String
+    @State private var cardType: String
+    @State private var endNum: String
     
-    // 默认颜色 (红配橙)
-    @State private var color1: Color = .blue
-    @State private var color2: Color = .purple
+    @State private var color1: Color
+    @State private var color2: Color
+    @State private var region: Region
     
-    // 地区
-    @State private var region: Region = .cn
-    
-    // 费率
-    @State private var defaultRateStr: String = ""
-    @State private var foreignRateStr: String = ""
+    @State private var defaultRateStr: String
+    @State private var foreignRateStr: String
     @State private var diningRateStr: String = ""
     @State private var groceryRateStr: String = ""
     @State private var travelRateStr: String = ""
     @State private var digitalRateStr: String = ""
     @State private var otherRateStr: String = ""
     
-    init(template: CardTemplate? = nil, onSaved: (() -> Void)? = nil) {            // 1. 设置银行名称
-            self.onSaved = onSaved
-            _bankName = State(initialValue: template?.bankName ?? "")
-            // 2. 设置卡种
-            _cardType = State(initialValue: template?.type ?? "")
+    // --- 2. 核心：自定义初始化 ---
+    init(template: CardTemplate? = nil, cardToEdit: CreditCard? = nil, onSaved: (() -> Void)? = nil) {
+        self.cardToEdit = cardToEdit
+        self.onSaved = onSaved
+        
+        // 逻辑 A: 如果是编辑模式 (cardToEdit 有值) -> 填充旧数据
+        if let card = cardToEdit {
+            _bankName = State(initialValue: card.bankName)
+            _cardType = State(initialValue: card.type)
+            _endNum = State(initialValue: card.endNum)
             
-            // 3. 设置颜色 (把 Hex 转回 Color)
-            if let colors = template?.colors, colors.count >= 2 {
-                _color1 = State(initialValue: Color(hex: colors[0]))
-                _color2 = State(initialValue: Color(hex: colors[1]))
+            // 颜色回填 (利用 computed property 直接拿 Color)
+            if card.colors.count >= 2 {
+                _color1 = State(initialValue: card.colors[0])
+                _color2 = State(initialValue: card.colors[1])
             } else {
                 _color1 = State(initialValue: .blue)
                 _color2 = State(initialValue: .purple)
             }
             
-            // 4. 设置地区
-            _region = State(initialValue: template?.region ?? .cn)
+            _region = State(initialValue: card.issueRegion)
+            
+            // 费率回填 (注意：数据库存的是 0.01，界面显示要 *100 变成 "1.0")
+            _defaultRateStr = State(initialValue: String(card.defaultRate * 100))
+            
+            if let foreignRate = card.foreignCurrencyRate {
+                _foreignRateStr = State(initialValue: String(foreignRate * 100))
+            } else {
+                _foreignRateStr = State(initialValue: "")
+            }
+            if let rate = card.specialRates[.dining] {
+                _diningRateStr = State(initialValue: String(rate * 100))
+            }
+            if let rate = card.specialRates[.grocery] {
+                _groceryRateStr = State(initialValue: String(rate * 100))
+            }
+            if let rate = card.specialRates[.travel] {
+                _travelRateStr = State(initialValue: String(rate * 100))
+            }
+            if let rate = card.specialRates[.digital] {
+                _digitalRateStr = State(initialValue: String(rate * 100))
+            }
+            if let rate = card.specialRates[.other] {
+                _otherRateStr = State(initialValue: String(rate * 100))
+            }
+            
         }
+        // 逻辑 B: 如果是模板模式 -> 填充模板数据
+        else if let template = template {
+            _bankName = State(initialValue: template.bankName)
+            _cardType = State(initialValue: template.type)
+            _endNum = State(initialValue: "") // 模板不带尾号
+            
+            if template.colors.count >= 2 {
+                _color1 = State(initialValue: Color(hex: template.colors[0]))
+                _color2 = State(initialValue: Color(hex: template.colors[1]))
+            } else {
+                _color1 = State(initialValue: .blue)
+                _color2 = State(initialValue: .purple)
+            }
+            
+            _region = State(initialValue: template.region)
+            _defaultRateStr = State(initialValue: "1.0")
+            _foreignRateStr = State(initialValue: "")
+        }
+        // 逻辑 C: 纯新建模式 -> 全部给空值/默认值
+        else {
+            _bankName = State(initialValue: "")
+            _cardType = State(initialValue: "")
+            _endNum = State(initialValue: "")
+            _color1 = State(initialValue: .blue)
+            _color2 = State(initialValue: .purple)
+            _region = State(initialValue: .cn)
+            _defaultRateStr = State(initialValue: "1.0")
+            _foreignRateStr = State(initialValue: "")
+        }
+    }
     
     var body: some View {
         NavigationView {
             Form {
-                // 1. 卡片外观预览
+                // 1. 实时预览
                 Section {
                     CreditCardView(
                         bankName: bankName.isEmpty ? "银行名称" : bankName,
                         type: cardType.isEmpty ? "卡种" : cardType,
                         endNum: endNum.isEmpty ? "8888" : endNum,
-                        colors: [color1, color2] // 实时预览颜色
+                        colors: [color1, color2]
                     )
-                    .listRowInsets(EdgeInsets()) // 去掉两边边距，让卡片撑满
+                    .listRowInsets(EdgeInsets())
                     .padding(.vertical)
                     .background(Color(uiColor: .systemGroupedBackground))
                 }
@@ -91,7 +148,7 @@ struct AddCardView: View {
                 Section(header: Text("返现规则")) {
                     Picker("发行地区", selection: $region) {
                         ForEach(Region.allCases, id: \.self) { r in
-                            Text(r.rawValue).tag(r)
+                            Text("\(r.icon) \(r.rawValue)").tag(r)
                         }
                     }
                     
@@ -114,7 +171,7 @@ struct AddCardView: View {
                     }
                 }
                 Section(header: Text("特殊返现规则")) {
-                    
+                                    
                     HStack {
                         Text("餐饮返现率 (%)")
                         Spacer()
@@ -122,8 +179,8 @@ struct AddCardView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 60)
-                    }
-                    
+                        }
+                                    
                     HStack {
                         Text("超市返现率 (%)")
                         Spacer()
@@ -131,7 +188,8 @@ struct AddCardView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 60)
-                    }
+                        }
+                    
                     HStack {
                         Text("出行返现率 (%)")
                         Spacer()
@@ -140,6 +198,7 @@ struct AddCardView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 60)
                     }
+                    
                     HStack {
                         Text("数码返现率 (%)")
                         Spacer()
@@ -147,18 +206,19 @@ struct AddCardView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 60)
-                    }
-                    HStack {
-                        Text("其他返现率 (%)")
-                        Spacer()
-                        TextField("可选", text: $otherRateStr)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                    }
-                }
+                        }
+                        HStack {
+                            Text("其他返现率 (%)")
+                            Spacer()
+                            TextField("可选", text: $otherRateStr)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 60)
+                            }
+                        }
             }
-            .navigationTitle("添加信用卡")
+            // 动态标题：有 cardToEdit 就是“编辑”，否则是“添加”
+            .navigationTitle(cardToEdit == nil ? "添加信用卡" : "编辑卡片")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -166,75 +226,59 @@ struct AddCardView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { saveCard() }
-                        .disabled(bankName.isEmpty || cardType.isEmpty || endNum.isEmpty)
+                        .disabled(bankName.isEmpty || cardType.isEmpty)
                 }
             }
         }
     }
     
+    // --- 3. 核心保存逻辑 ---
     func saveCard() {
-        // 1. 处理数字 (把 "1.0" 变成 0.01)
+        // 数据处理
         let defaultRate = (Double(defaultRateStr) ?? 0) / 100.0
-
-        var foreignRate: Double = 0
+        var foreignRate: Double? = nil
         if !foreignRateStr.isEmpty {
             foreignRate = (Double(foreignRateStr) ?? 0) / 100.0
         }
-        
-        var diningRate: Double = 0
-        if !diningRateStr.isEmpty {
-            diningRate = (Double(diningRateStr) ?? 0) / 100.0
-        }
-        var groceryRate: Double = 0
-        if !groceryRateStr.isEmpty {
-            groceryRate = (Double(groceryRateStr) ?? 0) / 100.0
-        }
-        var digitalRate: Double = 0
-        if !digitalRateStr.isEmpty {
-            digitalRate = (Double(digitalRateStr) ?? 0) / 100.0
-        }
-        var travelRate: Double = 0
-        if !travelRateStr.isEmpty {
-            travelRate = (Double(travelRateStr) ?? 0) / 100.0
-        }
-        var otherRate: Double = 0
-        if !otherRateStr.isEmpty {
-            otherRate = (Double(otherRateStr) ?? 0) / 100.0
-        }
-        // 2. 处理颜色 (Color -> Hex String)
+
         let c1Hex = color1.toHex() ?? "0000FF"
         let c2Hex = color2.toHex() ?? "000000"
         
-        // 3. 创建对象
-        let newCard = CreditCard(
-            bankName: bankName,
-            type: cardType,
-            endNum: endNum,
-            colorHexes: [c1Hex, c2Hex],
-            defaultRate: defaultRate,
-            specialRates: [.dining:diningRate,
-                           .grocery:groceryRate,
-                           .digital:digitalRate,
-                           .travel:travelRate,
-                           .other:otherRate],
-            issueRegion: region,
-            foreignCurrencyRate: foreignRate
-        )
+        var specialRates: [Category: Double] = [:]
+        if let rate = Double(diningRateStr) { specialRates[.dining] = rate / 100.0 }
+        if let rate = Double(groceryRateStr) { specialRates[.grocery] = rate / 100.0 }
+        if let rate = Double(travelRateStr) { specialRates[.travel] = rate / 100.0 }
+        if let rate = Double(digitalRateStr) { specialRates[.digital] = rate / 100.0 }
+        if let rate = Double(otherRateStr) { specialRates[.other] = rate / 100.0 }
         
-        // 4. 存库
-        context.insert(newCard)
-        // 👇 5. 核心修改：决定怎么关闭页面
-        if let onSavedAction = onSaved {
-        // 如果有高级指令（比如“关闭所有”），就执行高级指令
-            onSavedAction()
+        if let existingCard = cardToEdit {
+            // 👉 场景 A: 编辑模式 (直接修改现有对象，不需要 insert)
+            existingCard.bankName = bankName
+            existingCard.type = cardType
+            existingCard.endNum = endNum
+            existingCard.colorHexes = [c1Hex, c2Hex]
+            existingCard.defaultRate = defaultRate
+            existingCard.issueRegion = region
+            existingCard.foreignCurrencyRate = foreignRate
+            existingCard.specialRates = specialRates
+            // SwiftData 会自动监控到属性变化并保存
         } else {
-            // 如果没有（比如是自定义添加），就执行普通的关闭
-            dismiss()
+            // 👉 场景 B: 新建模式 (创建新对象并 insert)
+            let newCard = CreditCard(
+                bankName: bankName,
+                type: cardType,
+                endNum: endNum,
+                colorHexes: [c1Hex, c2Hex],
+                defaultRate: defaultRate,
+                specialRates: specialRates, // 暂时留空
+                issueRegion: region,
+                foreignCurrencyRate: foreignRate
+            )
+            context.insert(newCard)
         }
+        
+        dismiss()
+        onSaved?()
     }
 }
 
-#Preview {
-    AddCardView()
-        .modelContainer(for: CreditCard.self, inMemory: true)
-}

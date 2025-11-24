@@ -13,7 +13,10 @@ class Transaction: Identifiable {
     // Enum 需要遵守 Codable 才能存进 SwiftData (之前我们加过 Codable 了)
     var category: Category
     var location: Region
-    var amount: Double
+    
+    var amount: Double        // 🌏 消费金额 (比如 1000 JPY)
+    var billingAmount: Double // 💳 入账金额 (比如 7 USD)
+    
     var date: Date
     var cashbackamount: Double
     // 👇 核心修改：不再存 UUID，直接存 CreditCard 对象！
@@ -22,7 +25,7 @@ class Transaction: Identifiable {
     
     @Attribute(.externalStorage) var receiptData: Data?
     
-    init(merchant: String, category: Category, location: Region, amount: Double, date: Date, card: CreditCard?, receiptData: Data? = nil) {
+    init(merchant: String, category: Category, location: Region, amount: Double, date: Date, card: CreditCard?, receiptData: Data? = nil, billingAmount: Double? = nil) {
         self.merchant = merchant
         self.category = category
         self.location = location
@@ -30,7 +33,11 @@ class Transaction: Identifiable {
         self.date = date
         self.card = card // 直接把对象存进去
         self.receiptData = receiptData // 赋值
-        self.cashbackamount = CashbackService.calculateCashback(amount: amount, category: category, location: location, card: card!)
+        self.billingAmount = billingAmount ?? amount
+
+        let finalBilling = billingAmount ?? amount
+        let rate = card?.getRate(for: category, location: location) ?? 0
+        self.cashbackamount = finalBilling * rate
     }
     
     var color: Color { category.color }
