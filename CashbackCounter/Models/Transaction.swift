@@ -47,27 +47,3 @@ class Transaction: Identifiable {
             return formatter.string(from: date)
         }
 }
-
-enum Region: String, CaseIterable, Codable {
-    case cn = "中国大陆"
-    case hk = "中国香港"
-    case us = "美国"
-    case other = "其他地区"
-    
-    var icon: String {
-        switch self {
-        case .cn: return "🇨🇳" // 直接用 Emoji，简单明了
-        case .hk: return "🇭🇰"
-        case .us: return "🇺🇸"
-        case .other: return "🌍"
-        }
-    }
-    var currencySymbol: String {
-        switch self {
-        case .cn: return "¥"
-        case .hk: return "HK$"
-        case .us: return "$"
-        case .other: return "€" // 或者用通用符号 ¤
-        }
-    }
-}

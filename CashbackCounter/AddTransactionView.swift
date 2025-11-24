@@ -14,10 +14,10 @@ struct AddTransactionView: View {
     @Environment(\.dismiss) var dismiss
     @Query var cards: [CreditCard]
     
-    // 2. 回调函数 (用于保存后通知父页面，比如关闭相机页)
+    // 2. 回调与编辑对象
     var onSaved: (() -> Void)? = nil
-    var transactionToEdit: Transaction? // 👈 传入要编辑的对象
-
+    var transactionToEdit: Transaction?
+    
     // --- 表单的状态变量 ---
     @State private var merchant: String = ""
     @State private var amount: String = ""
@@ -25,33 +25,35 @@ struct AddTransactionView: View {
     @State private var date: Date = Date()
     @State private var selectedCardIndex: Int = 0
     @State private var location: Region = .cn
-    @State private var billingAmountStr: String = "" // 入账金额输入框
-    @State private var receiptImage: UIImage? // 图片
+    @State private var billingAmountStr: String = ""
+    @State private var receiptImage: UIImage?
     
-    // --- 3. 新增：自定义初始化方法 ---
+    // 👇 新增：控制 AI 分析的加载状态
+    @State private var isAnalyzing: Bool = false
+    
+    // --- 3. 自定义初始化 ---
     init(transaction: Transaction? = nil, image: UIImage? = nil, onSaved: (() -> Void)? = nil) {
-            self.transactionToEdit = transaction
-            self.onSaved = onSaved
+        self.transactionToEdit = transaction
+        self.onSaved = onSaved
+        
+        if let t = transaction {
+            // 编辑模式
+            _merchant = State(initialValue: t.merchant)
+            _amount = State(initialValue: String(t.amount))
+            _billingAmountStr = State(initialValue: String(t.billingAmount))
+            _selectedCategory = State(initialValue: t.category)
+            _date = State(initialValue: t.date)
+            _location = State(initialValue: t.location)
             
-            if let t = transaction {
-                // 📝 编辑模式：填充旧数据
-                _merchant = State(initialValue: t.merchant)
-                _amount = State(initialValue: String(t.amount))
-                _billingAmountStr = State(initialValue: String(t.billingAmount))
-                _selectedCategory = State(initialValue: t.category)
-                _date = State(initialValue: t.date)
-                _location = State(initialValue: t.location)
-                
-                if let data = t.receiptData {
-                    _receiptImage = State(initialValue: UIImage(data: data))
-                }
-                // 注意：这里需要找到卡片的索引，稍后在 onAppear 里处理更安全，这里先默认0
-            } else {
-                // 🆕 新建模式
-                _receiptImage = State(initialValue: image)
+            if let data = t.receiptData {
+                _receiptImage = State(initialValue: UIImage(data: data))
             }
+        } else {
+            // 新建模式 (可能带图)
+            _receiptImage = State(initialValue: image)
         }
-    // 动态获取货币符号
+    }
+    
     var currentCurrencySymbol: String {
         if cards.indices.contains(selectedCardIndex) {
             let card = cards[selectedCardIndex]
@@ -61,134 +63,237 @@ struct AddTransactionView: View {
     }
     
     var body: some View {
-            NavigationView {
-                Form {
-                    Section(header: Text("消费详情")) {
-                        TextField("商户", text: $merchant)
+        NavigationView {
+            Form {
+                // --- 第一组：消费详情 ---
+                Section(header: Text("消费详情")) {
+                    TextField("商户名称 (例如：星巴克)", text: $merchant)
+                    
+                    HStack {
+                        Text(location.currencySymbol)
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
                         
-                        // 1. 消费金额 (比如日元)
-                        HStack {
-                            Text(location.currencySymbol).foregroundStyle(.secondary) // 消费地货币符号
-                            TextField("消费金额", text: $amount).keyboardType(.decimalPad)
+                        TextField("消费金额", text: $amount)
+                            .keyboardType(.decimalPad)
+                    }
+                    
+                    Picker("消费类别", selection: $selectedCategory) {
+                        ForEach(Category.allCases, id: \.self) { c in
+                            HStack {
+                                Image(systemName: c.iconName).foregroundColor(c.color)
+                                Text(c.displayName)
+                            }
+                            .tag(c)
                         }
-                        
-                        Picker("类别", selection: $selectedCategory) {
-                            ForEach(Category.allCases, id: \.self) { c in
-                                HStack {
-                                    Image(systemName: c.iconName).foregroundColor(c.color)
-                                    Text(c.displayName)
-                                }
-                                .tag(c)
+                    }
+                    
+                    Picker("消费地区", selection: $location) {
+                        ForEach(Region.allCases, id: \.self) { r in
+                            Text("\(r.icon) \(r.rawValue)").tag(r)
+                        }
+                    }
+                }
+                
+                // --- 第二组：收据图片预览 + 加载状态 ---
+                if let image = receiptImage {
+                    Section(header: Text("收据凭证")) {
+                        ZStack {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 200)
+                                .cornerRadius(10)
+                                .opacity(isAnalyzing ? 0.5 : 1.0) // 分析时变暗
+                            
+                            // 👇 分析时显示转圈圈
+                            if isAnalyzing {
+                                ProgressView("AI 分析中...")
+                                    .padding()
+                                    .background(.ultraThinMaterial)
+                                    .cornerRadius(10)
                             }
                         }
-                        
-                        Picker("地区", selection: $location) {
-                            ForEach(Region.allCases, id: \.self) { r in
-                                Text("\(r.icon) \(r.rawValue)").tag(r)
+                    }
+                }
+                
+                // --- 第三组：支付方式 ---
+                Section(header: Text("支付方式")) {
+                    Picker("选择信用卡", selection: $selectedCardIndex) {
+                        ForEach(0..<cards.count, id: \.self) { index in
+                            Text(cards[index].bankName + " " + cards[index].type).tag(index)
+                        }
+                    }
+                    
+                    if cards.indices.contains(selectedCardIndex) {
+                        let card = cards[selectedCardIndex]
+                        if location.currencySymbol != card.issueRegion.currencySymbol {
+                            HStack {
+                                Text("入账金额 (\(card.issueRegion.currencySymbol))")
+                                    .font(.caption).foregroundColor(.red)
+                                Spacer()
+                                TextField("实际扣款", text: $billingAmountStr)
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.trailing)
                             }
                         }
                     }
                     
-                    // 2. 支付方式
-                    Section(header: Text("支付方式")) {
-                        Picker("选择信用卡", selection: $selectedCardIndex) {
-                            ForEach(0..<cards.count, id: \.self) { index in
-                                Text(cards[index].bankName).tag(index)
-                            }
-                        }
-                        
-                        // 🔥 关键逻辑：如果“消费地货币”和“卡片货币”不同，显示入账金额框
-                        if cards.indices.contains(selectedCardIndex) {
-                            let card = cards[selectedCardIndex]
-                            if location.currencySymbol != card.issueRegion.currencySymbol {
-                                HStack {
-                                    Text("入账金额 (\(card.issueRegion.currencySymbol))")
-                                        .font(.caption).foregroundColor(.red)
-                                    Spacer()
-                                    TextField("实际扣款", text: $billingAmountStr)
-                                        .keyboardType(.decimalPad)
-                                        .multilineTextAlignment(.trailing)
-                                }
-                            }
-                        }
-                        
-                        DatePicker("日期", selection: $date, displayedComponents: .date)
-                    }
+                    DatePicker("消费日期", selection: $date, in: ...Date(), displayedComponents: .date)
+                }
                 
-                    // 3. 预览计算
-                    Section {
-                        HStack {
-                            Text("预计返现")
-                            Spacer()
-                            if cards.indices.contains(selectedCardIndex) {
-                                let card = cards[selectedCardIndex]
-                                // 优先用填写的入账金额，没填就用消费金额
-                                let finalAmount = Double(billingAmountStr) ?? Double(amount) ?? 0
-                                            
-                                let cashback = CashbackService.calculateCashback(
-                                    billingAmount: finalAmount,
-                                    category: selectedCategory,
-                                    location: location,
-                                    card: card
-                                )
-                                Text("\(card.issueRegion.currencySymbol)\(String(format: "%.2f", cashback))")
-                                    .foregroundStyle(.green).bold()
-                                }
-                            }
-                        }
-                    }
-                    .navigationTitle(transactionToEdit == nil ? "记一笔" : "编辑账单")
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
-                        ToolbarItem(placement: .confirmationAction) { Button("保存") { saveTransaction() } }
-                    }
-                    // ⚡️ 修正卡片索引：进入页面时，如果是编辑模式，自动选中那张卡
-                    .onAppear {
-                        if let t = transactionToEdit, let card = t.card,
-                        let index = cards.firstIndex(of: card) {
-                        selectedCardIndex = index
+                // --- 第四组：实时预算返现 ---
+                Section {
+                    HStack {
+                        Text("预计返现")
+                        Spacer()
+                        if let amountDouble = Double(amount),
+                           cards.indices.contains(selectedCardIndex) {
+                            let card = cards[selectedCardIndex]
+                            let finalAmount = Double(billingAmountStr) ?? amountDouble
+                            
+                            let cashback = CashbackService.calculateCashback(
+                                billingAmount: finalAmount,
+                                category: selectedCategory,
+                                location: location,
+                                card: card
+                            )
+                            
+                            Text("\(currentCurrencySymbol)\(String(format: "%.2f", cashback))")
+                                .foregroundColor(.green)
+                                .fontWeight(.bold)
+                        } else {
+                            Text("¥0.00").foregroundColor(.gray)
                         }
                     }
                 }
             }
-    
-    // --- 核心保存逻辑 ---
-    func saveTransaction() {
-            guard let amountDouble = Double(amount) else { return }
-            // 如果没填入账金额，就默认等于消费金额
-            let billingDouble = Double(billingAmountStr) ?? amountDouble
-            
-            if cards.indices.contains(selectedCardIndex) {
-                let card = cards[selectedCardIndex]
-                let imageData = receiptImage?.jpegData(compressionQuality: 0.5)
-                
-                if let t = transactionToEdit {
-                    // 📝 编辑模式：直接修改对象属性 (SwiftData 会自动保存)
-                    t.merchant = merchant
-                    t.amount = amountDouble
-                    t.billingAmount = billingDouble
-                    t.category = selectedCategory
-                    t.date = date
-                    t.location = location
-                    t.card = card
-                    if let img = imageData { t.receiptData = img }
-                } else {
-                    // 🆕 新建模式：插入新对象
-                    let newT = Transaction(
-                        merchant: merchant,
-                        category: selectedCategory,
-                        location: location,
-                        amount: amountDouble,
-                        date: date,
-                        card: card,
-                        receiptData: imageData,
-                        billingAmount: billingDouble, // 存入账金额
-                    )
-                    context.insert(newT)
+            .navigationTitle(transactionToEdit == nil ? "记一笔" : "编辑账单")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") { saveTransaction() }
+                        .disabled(merchant.isEmpty || amount.isEmpty)
                 }
-                dismiss()
-                onSaved?()
+            }
+            // ⚡️ 修正卡片索引
+            .onAppear {
+                // 如果是编辑模式，选中旧卡
+                if let t = transactionToEdit, let card = t.card,
+                   let index = cards.firstIndex(of: card) {
+                    selectedCardIndex = index
+                }
+                // 👇 如果是新建模式且带图 (比如从相机直接跳转过来)，但还没分析过，触发分析
+                else if receiptImage != nil && amount.isEmpty {
+                    // 稍微延迟一下，让界面先出来
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        analyzeReceipt()
+                    }
+                }
+            }
+            // 👇👇👇 核心：监听图片变化，触发 OCR
+            .onChange(of: receiptImage) { oldValue, newImage in
+                if newImage != nil {
+                    analyzeReceipt()
+                }
             }
         }
     }
+    
+    // --- 4. 抽离出 AI 分析逻辑 ---
+    func analyzeReceipt() {
+        guard let image = receiptImage else { return }
+        
+        // 避免重复分析 (比如编辑模式进来已有数据)
+        if !merchant.isEmpty || !amount.isEmpty { return }
+        
+        isAnalyzing = true // 开始转圈
+        
+        Task {
+            // 调用我们之前写好的 OCRService
+            let metadata = await OCRService.analyzeImage(image)
+            
+            await MainActor.run {
+                isAnalyzing = false // 停止转圈
+                
+                if let data = metadata {
+                    // 1. 填金额
+                    if let amt = data.totalAmount {
+                        self.amount = String(format: "%.2f", abs(amt))
+                    }
+                    // 2. 填商家
+                    if let merch = data.merchant {
+                        self.merchant = merch
+                    }
+                    // 3. 填日期
+                    if let dateStr = data.dateString {
+                        self.date = dateStr.toDate()
+                    }
+                    
+                    // 4. 自动选卡 (匹配尾号)
+                    if let last4 = data.cardLast4 {
+                        if let index = cards.firstIndex(where: { $0.endNum == last4 }) {
+                            self.selectedCardIndex = index
+                        }
+                    }
+                    
+                    // 5. 匹配商户类别
+                    if let cat = data.category {
+                        self.selectedCategory = cat
+                    }
+                    
+                    // 5. 自动识别币种/地区
+                    if let currency = data.currency {
+                        if currency.contains("CNY") { self.location = .cn }
+                        else if currency.contains("USD") { self.location = .us }
+                        else if currency.contains("HKD") { self.location = .hk }
+                        else if currency.contains("JPY") { self.location = .jp}
+                        else if currency.contains("NZD") { self.location = .nz}
+                        else if currency.contains("TWD") { self.location = .tw}
+                        else { self.location = .other}
+                        
+                    }
+                }
+            }
+        }
+    }
+    
+    // --- 核心保存逻辑 ---
+    func saveTransaction() {
+        guard let amountDouble = Double(amount) else { return }
+        let billingDouble = Double(billingAmountStr) ?? amountDouble
+        
+        if cards.indices.contains(selectedCardIndex) {
+            let card = cards[selectedCardIndex]
+            let imageData = receiptImage?.jpegData(compressionQuality: 0.5)
+            
+            if let t = transactionToEdit {
+                t.merchant = merchant
+                t.amount = amountDouble
+                t.billingAmount = billingDouble
+                t.category = selectedCategory
+                t.location = location
+                t.date = date
+                t.card = card
+                if let img = imageData { t.receiptData = img }
+            } else {
+                let newTransaction = Transaction(
+                    merchant: merchant,
+                    category: selectedCategory,
+                    location: location,
+                    amount: amountDouble,
+                    date: date,
+                    card: card,
+                    receiptData: imageData,
+                    billingAmount: billingDouble
+                )
+                context.insert(newTransaction)
+            }
+            
+            dismiss()
+            onSaved?()
+        }
+    }
+}
 

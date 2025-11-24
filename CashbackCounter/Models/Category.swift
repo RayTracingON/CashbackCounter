@@ -4,9 +4,11 @@
 //
 //  Created by Junhao Huang on 11/23/25.
 //
-
+import FoundationModels
+import Foundation
 import SwiftUI
 
+@Generable
 enum Category: String, CaseIterable, Codable {
     // 定义所有的类别 (Key)
     case dining     // 餐饮
