@@ -29,10 +29,10 @@ enum Region: String, CaseIterable, Codable {
     }
     var currencySymbol: String {
         switch self {
-        case .cn: return "¥"
+        case .cn: return "CN¥"
         case .hk: return "HK$"
-        case .us: return "$"
-        case .jp: return "¥"
+        case .us: return "US$"
+        case .jp: return "JP¥"
         case .nz: return "NZ$"
         case .tw: return "NT$"
         case .other: return "€" // 或者用通用符号 ¤

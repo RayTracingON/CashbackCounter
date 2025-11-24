@@ -17,11 +17,13 @@ struct CardTemplate: Identifiable {
     
     
     static let examples: [CardTemplate] = [
-        CardTemplate(bankName: "Apple", type: "Card", colors: ["EEEEEE", "FFFFFF"], region: .us),
-        CardTemplate(bankName: "招商银行", type: "运通百夫长", colors: ["000000", "333333"], region: .cn),
-        CardTemplate(bankName: "中国银行", type: "冬奥白金", colors: ["FF0000", "FF7F50"], region: .cn),
-        CardTemplate(bankName: "Amex", type: "Platinum", colors: ["C0C0C0", "E0E0E0"], region: .us),
-        CardTemplate(bankName: "Chase", type: "Sapphire", colors: ["0000FF", "000080"], region: .us)
+        CardTemplate(bankName: "HSBC HK", type: "Red", colors: ["DA291C", "005863"], region: .hk),
+        CardTemplate(bankName: "HSBC HK", type: "Pulse", colors: ["DB0011", "1A1A1A"], region: .hk),
+        CardTemplate(bankName: "HSBC HK", type: "Premier", colors: ["111111", "D9D9D9"], region: .hk),
+        CardTemplate(bankName: "HSBC US", type: "Elite", colors: ["050505", "8C8C8C"], region: .us),
+        CardTemplate(bankName: "农业银行", type: "大学生青春卡", colors: ["9EC0B3", "D9A62E"], region: .cn),
+        CardTemplate(bankName: "农业银行", type: "Visa精粹白金卡", colors: ["1A1A1A", "C4C6C8"], region: .cn)
+        
     ]
 }
 
