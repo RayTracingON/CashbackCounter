@@ -263,6 +263,7 @@ struct AddCardView: View {
                         .disabled(bankName.isEmpty || cardType.isEmpty)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
         }
     }
     

@@ -201,6 +201,7 @@ struct AddTransactionView: View {
             .onChange(of: amount) { updateBillingAmount() }
             .onChange(of: location) { updateBillingAmount() }
             .onChange(of: selectedCardIndex) { updateBillingAmount() }
+            .scrollDismissesKeyboard(.interactively)
         }
     }
     
