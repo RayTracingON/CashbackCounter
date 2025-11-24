@@ -32,10 +32,10 @@ class SampleData {
             type: "Pulse",
             endNum: "4896",
             colorHexes: ["FF0000", "000000"],
-            defaultRate: 0.004, // 基础 0.4%
+            defaultRate: 0.044, // 基础 0.4%
             specialRates: [.dining: 0.094],
-            issueRegion: .hk,
-            foreignCurrencyRate: 0.044,
+            issueRegion: .cn,
+            foreignCurrencyRate: 0.004,
         )
     
         

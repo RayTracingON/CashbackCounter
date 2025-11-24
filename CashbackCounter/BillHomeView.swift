@@ -4,6 +4,7 @@ import SwiftData
 struct BillHomeView: View {
     @Environment(\.modelContext) var context
     @Query(sort: \Transaction.date, order: .reverse) var dbTransactions: [Transaction]
+    @State private var selectedTransaction: Transaction? = nil
     
     // 1. 自动计算总支出
     // reduce 是一个高阶函数：把数组里的每一项 ($1) 的 amount 加到初始值 0 ($0) 上
@@ -59,6 +60,9 @@ struct BillHomeView: View {
                         LazyVStack(spacing: 15) {
                                          ForEach(dbTransactions) { item in
                                              TransactionRow(transaction: item)
+                                                 .onTapGesture {
+                                                selectedTransaction = item
+                                            }
                                          }
                                      }
                         .padding(.horizontal)
@@ -67,10 +71,11 @@ struct BillHomeView: View {
             }
             .navigationTitle("Cashback Counter")
             .navigationBarTitleDisplayMode(.inline)
-        
-        }.onAppear {
-            // 当页面显示时，尝试加载假数据
-            SampleData.load(context: context)
+            .sheet(item: $selectedTransaction) { item in
+                TransactionDetailView(transaction: item)
+                // 在 iOS 16+ 可以控制弹窗高度 (可选)
+                    .presentationDetents([.large, .large])
+            }
         }
     }
 }

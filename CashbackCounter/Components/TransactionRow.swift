@@ -45,18 +45,14 @@ struct TransactionRow: View {
                                     .fontWeight(.semibold)
                                 
                 // 3. 显示返现
-                let cashback = CashbackService.calculateCashback(for: transaction)
+                let cashback = transaction.cashbackamount
                                 
                 if cashback > 0 {
                     HStack(spacing: 4) {
                     Image(systemName: "sparkles").font(.system(size: 10))
-                            
-                    // 显示返现金额： "返 $269.97"
-                    Text("返 \(symbol)\(String(format: "%.2f", cashback))")
-                            .font(.system(size: 10, weight: .bold))
                                         
                     let rate = CashbackService.getRate(for: transaction)
-                    Text("(\(Int(rate * 100))%)")
+                    Text("返 \((rate * 100).formatted(.number.precision(.fractionLength(1))))%")
                             .font(.system(size: 10, weight: .medium))
                             .opacity(0.8)
                                     }

@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
-import SwiftData // 👈 1. 别忘了引入这个
+import SwiftData
 
 struct AddTransactionView: View {
-    // 2. 拿到数据库操作手柄 (Context)
+    // 1. 数据库与环境
     @Environment(\.modelContext) var context
-        // 4. 关闭页面的开关
     @Environment(\.dismiss) var dismiss
     @Query var cards: [CreditCard]
     
+    // 2. 回调函数 (用于保存后通知父页面，比如关闭相机页)
+    var onSaved: (() -> Void)? = nil
 
     // --- 表单的状态变量 ---
     @State private var merchant: String = ""
@@ -22,16 +23,24 @@ struct AddTransactionView: View {
     @State private var selectedCategory: Category = .dining
     @State private var date: Date = Date()
     @State private var selectedCardIndex: Int = 0
-    @State private var location: Region = .cn // 默认在中国
+    @State private var location: Region = .cn
+    @State private var receiptImage: UIImage? // 图片
     
+    // --- 3. 新增：自定义初始化方法 ---
+    init(image: UIImage? = nil, onSaved: (() -> Void)? = nil) {
+        self.onSaved = onSaved
+        // 如果外部传了图片进来，就赋值给 receiptImage
+        _receiptImage = State(initialValue: image)
+    }
+    
+    // 动态获取货币符号
     var currentCurrencySymbol: String {
-            if cards.indices.contains(selectedCardIndex) {
-                let card = cards[selectedCardIndex]
-                // 👇 修改这里：直接问卡片要符号，不通过 Service 了
-                return card.issueRegion.currencySymbol
-            }
-            return "¥"
+        if cards.indices.contains(selectedCardIndex) {
+            let card = cards[selectedCardIndex]
+            return card.issueRegion.currencySymbol
         }
+        return "¥"
+    }
     
     var body: some View {
         NavigationView {
@@ -41,13 +50,12 @@ struct AddTransactionView: View {
                     TextField("商户名称 (例如：星巴克)", text: $merchant)
                     
                     HStack {
-                        // 👇 这里修改：不再写死 "¥"，而是用动态变量
                         Text(currentCurrencySymbol)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.secondary)
-                                            
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
+                        
                         TextField("0.00", text: $amount)
-                                                .keyboardType(.decimalPad)
+                            .keyboardType(.decimalPad)
                     }
                     
                     // 类别选择
@@ -62,7 +70,7 @@ struct AddTransactionView: View {
                         }
                     }
                     
-                    // 地区选择 (之前定义的 Region 枚举)
+                    // 地区选择
                     Picker("消费地区", selection: $location) {
                         ForEach(Region.allCases, id: \.self) { region in
                             Text("\(region.icon) \(region.rawValue)")
@@ -71,13 +79,24 @@ struct AddTransactionView: View {
                     }
                 }
                 
-                // --- 第二组：支付方式 ---
+                // --- 第二组：收据图片预览 (如果有) ---
+                if let image = receiptImage {
+                    Section(header: Text("收据凭证")) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 200)
+                            .cornerRadius(10)
+                    }
+                }
+                
+                // --- 第三组：支付方式 ---
                 Section(header: Text("支付方式")) {
-                    Picker("选择信用卡", selection: $selectedCardIndex) {                        // 遍历 DataManager 里的卡片
+                    Picker("选择信用卡", selection: $selectedCardIndex) {
                         ForEach(0..<cards.count, id: \.self) { index in
                             let card = cards[index]
                             HStack {
-                                Text(card.bankName+" "+card.type)
+                                Text(card.bankName + " " + card.type)
                             }
                             .tag(index)
                         }
@@ -86,34 +105,29 @@ struct AddTransactionView: View {
                     DatePicker("消费日期", selection: $date, in: ...Date(), displayedComponents: .date)
                 }
                 
-                // --- 第三组：实时预算返现 (调用 Service) ---
+                // --- 第四组：实时预算返现 ---
                 Section {
                     HStack {
                         Text("预计返现")
                         Spacer()
                         
-                        // 实时计算：造一个临时的 Transaction 对象来算费率
-                        if let amountDouble = Double(amount) {
-                            if cards.indices.contains(selectedCardIndex) { // 确保索引安全
-                                let card = cards[selectedCardIndex]
-                                
-                                // 临时造个对象给 Service 算（不会存入数据库）
-                                let tempTransaction = Transaction(
-                                    merchant: merchant,
-                                    category: selectedCategory,
-                                    location: location,
-                                    amount: amountDouble,
-                                    date: date,
-                                    card: card,
-                                )
-                                
-                                let cashback = CashbackService.calculateCashback(for: tempTransaction)
-                                
-                                Text("\(currentCurrencySymbol)\(String(format: "%.2f", cashback))")
-                                    .foregroundColor(.green)
-                            }
-                        }
-                            else {
+                        // 🛠️ 修复了这里的语法错误：使用逗号合并条件
+                        if let amountDouble = Double(amount),
+                           cards.indices.contains(selectedCardIndex) {
+                            
+                            let card = cards[selectedCardIndex]
+
+                            let cashback = CashbackService.calculateCashback(
+                                amount: amountDouble,
+                                category: selectedCategory,
+                                location: location,
+                                card: card
+                            )
+                                                        
+                            Text("\(currentCurrencySymbol)\(String(format: "%.2f", cashback))")
+                                .foregroundColor(.green)
+                                .fontWeight(.bold)
+                        } else {
                             Text("¥0.00").foregroundColor(.gray)
                         }
                     }
@@ -128,7 +142,7 @@ struct AddTransactionView: View {
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
-                        saveTransaction() // 👈 点击保存
+                        saveTransaction()
                     }
                     .disabled(merchant.isEmpty || amount.isEmpty)
                 }
@@ -138,36 +152,32 @@ struct AddTransactionView: View {
     
     // --- 核心保存逻辑 ---
     func saveTransaction() {
-            guard let amountDouble = Double(amount) else { return }
+        guard let amountDouble = Double(amount) else { return }
+        
+        if cards.indices.contains(selectedCardIndex) {
+            let card = cards[selectedCardIndex]
             
-            // 👇 修改这里：从 cards 数组拿卡
-            if cards.indices.contains(selectedCardIndex) {
-                let card = cards[selectedCardIndex]
-                
-                let newTransaction = Transaction(
-                    merchant: merchant,
-                    category: selectedCategory,
-                    location: location,
-                    amount: amountDouble,
-                    date: date,
-                    card: card
-                )
-                
-                context.insert(newTransaction)
-                dismiss()
-            }
+            // 1. 压缩图片 (如果有图片，压缩成 0.5 质量的 Data)
+            let imageData = receiptImage?.jpegData(compressionQuality: 0.5)
+            
+            let newTransaction = Transaction(
+                merchant: merchant,
+                category: selectedCategory,
+                location: location,
+                amount: amountDouble,
+                date: date,
+                card: card,
+                receiptData: imageData // 👈 存入数据库
+            )
+            
+            context.insert(newTransaction)
+            
+            // 2. 关闭页面
+            dismiss()
+            
+            // 3. 执行回调 (比如通知相机页面关闭)
+            onSaved?()
         }
-}
-
-// 预览也需要注入环境
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Transaction.self, CreditCard.self, configurations: config)
-    
-    SampleData.load(context: container.mainContext)
-    
-    // 👇 加上这个 return！
-    return AddTransactionView()
-        .modelContainer(container)
+    }
 }
 

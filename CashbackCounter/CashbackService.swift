@@ -10,20 +10,27 @@ import Foundation
 struct CashbackService {
     
     // 计算返现
+    static func calculateCashback(amount: Double, category: Category, location: Region, card: CreditCard) -> Double {
+            // 直接调用卡片的计算逻辑
+            let rate = card.getRate(for: category, location: location)
+            return amount * rate
+        }
+    
     static func calculateCashback(for transaction: Transaction) -> Double {
-        // 直接解包 card 对象
-        guard let card = transaction.card else { return 0.0 }
-        
-        let rate = card.getRate(for: transaction.category, location: transaction.location)
-        return transaction.amount * rate
-    }
+            guard let card = transaction.card else { return 0.0 }
+            return calculateCashback(amount: transaction.amount, category: transaction.category, location: transaction.location, card: card)
+        }
     
     // 获取卡名
     static func getCardName(for transaction: Transaction) -> String {
         guard let card = transaction.card else { return "已删除卡片" }
         return "\(card.bankName) \(card.type)"
     }
-    
+    // 获取卡号
+    static func getCardNum(for transaction: Transaction) -> String {
+        guard let card = transaction.card else { return "已删除卡片" }
+        return "\(card.endNum)"
+    }
     // 获取货币符号
     static func getCurrency(for transaction: Transaction) -> String {
         guard let card = transaction.card else { return "¥" }

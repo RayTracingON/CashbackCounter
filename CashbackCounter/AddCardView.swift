@@ -27,13 +27,13 @@ struct AddCardView: View {
     @State private var region: Region = .cn
     
     // 费率
-    @State private var defaultRateStr: String = "0"
-    @State private var foreignRateStr: String = "0"
-    @State private var diningRateStr: String = "0"
-    @State private var groceryRateStr: String = "0"
-    @State private var travelRateStr: String = "0"
-    @State private var digitalRateStr: String = "0"
-    @State private var otherRateStr: String = "0"
+    @State private var defaultRateStr: String = ""
+    @State private var foreignRateStr: String = ""
+    @State private var diningRateStr: String = ""
+    @State private var groceryRateStr: String = ""
+    @State private var travelRateStr: String = ""
+    @State private var digitalRateStr: String = ""
+    @State private var otherRateStr: String = ""
     
     init(template: CardTemplate? = nil, onSaved: (() -> Void)? = nil) {            // 1. 设置银行名称
             self.onSaved = onSaved

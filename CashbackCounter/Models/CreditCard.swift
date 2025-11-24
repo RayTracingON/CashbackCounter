@@ -53,7 +53,7 @@ class CreditCard: Identifiable {
         if location != issueRegion, let foreignRate = foreignCurrencyRate {
             return max(categoryRate, foreignRate)
         }
-        return categoryRate
+        return max(categoryRate, defaultRate)
     }
 }
 
