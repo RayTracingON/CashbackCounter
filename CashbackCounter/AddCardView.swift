@@ -33,6 +33,17 @@ struct AddCardView: View {
     @State private var digitalRateStr: String = ""
     @State private var otherRateStr: String = ""
     
+    // 👇 新增：上限设置 (Cap) 变量
+    @State private var localBaseCapStr: String = ""   // 本币基础上限
+    @State private var foreignBaseCapStr: String = "" // 外币基础上限
+    
+    // 各个类别的加成上限
+    @State private var diningCapStr: String = ""
+    @State private var groceryCapStr: String = ""
+    @State private var travelCapStr: String = ""
+    @State private var digitalCapStr: String = ""
+    @State private var otherCapStr: String = ""
+    
     // --- 2. 核心：自定义初始化 ---
     init(template: CardTemplate? = nil, cardToEdit: CreditCard? = nil, onSaved: (() -> Void)? = nil) {
         self.cardToEdit = cardToEdit
@@ -79,8 +90,19 @@ struct AddCardView: View {
                 _otherRateStr = State(initialValue: String(rate * 100))
             }
             
+            // 👇 新增：回填上限数据 (如果是 0 就不显示，留空代表无上限)
+            if card.localBaseCap > 0 { _localBaseCapStr = State(initialValue: String(format: "%.0f", card.localBaseCap)) }
+            if card.foreignBaseCap > 0 { _foreignBaseCapStr = State(initialValue: String(format: "%.0f", card.foreignBaseCap)) }
+            
+            // 回填类别上限 (从字典取)
+            if let cap = card.categoryCaps[.dining], cap > 0 { _diningCapStr = State(initialValue: String(format: "%.0f", cap)) }
+            if let cap = card.categoryCaps[.grocery], cap > 0 { _groceryCapStr = State(initialValue: String(format: "%.0f", cap)) }
+            if let cap = card.categoryCaps[.travel], cap > 0 { _travelCapStr = State(initialValue: String(format: "%.0f", cap)) }
+            if let cap = card.categoryCaps[.digital], cap > 0 { _digitalCapStr = State(initialValue: String(format: "%.0f", cap)) }
+            if let cap = card.categoryCaps[.other], cap > 0 { _otherCapStr = State(initialValue: String(format: "%.0f", cap)) }
+            
         }
-        // 逻辑 B: 如果是模板模式 -> 填充模板数据
+        // 逻辑 B: 如果是模板模式 -> 填充模板数据 ***还没改
         else if let template = template {
             _bankName = State(initialValue: template.bankName)
             _cardType = State(initialValue: template.type)
@@ -107,7 +129,7 @@ struct AddCardView: View {
             }
             
             // 5. ✅ 填充特殊返现率 (从字典里拆出来填给对应的 State)
-                        // 餐饮
+            // 餐饮
             if let dining = template.specialRate[.dining] {
                 let s = String(format: "%.1f", dining).replacingOccurrences(of: ".0", with: "")
                 _diningRateStr = State(initialValue: s)
@@ -180,77 +202,60 @@ struct AddCardView: View {
                 }
                 
                 // 4. 规则设置
-                Section(header: Text("返现规则")) {
+                Section(header: Text("基础返现 (所有消费)")) {
                     Picker("发行地区", selection: $region) {
                         ForEach(Region.allCases, id: \.self) { r in
                             Text("\(r.icon) \(r.rawValue)").tag(r)
                         }
                     }
                     
+                    // --- 本币基础 ---
                     HStack {
-                        Text("基础返现率 (%)")
+                        Text("本币返现率 (%)")
                         Spacer()
                         TextField("1.0", text: $defaultRateStr)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
+                            .frame(width: 50)
+                    }
+                    HStack {
+                        Text("本币年上限")
+                            .font(.caption).foregroundColor(.secondary)
+                        Spacer()
+                        TextField("无上限", text: $localBaseCapStr) // 👈 新增
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
                     }
                     
+                    // --- 外币基础 ---
                     HStack {
-                        Text("境外返现率 (%)")
+                        Text("外币返现率 (%)")
                         Spacer()
-                        TextField("可选", text: $foreignRateStr)
+                        TextField("同本币", text: $foreignRateStr)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
+                            .frame(width: 50)
+                    }
+                    HStack {
+                        Text("外币年上限")
+                            .font(.caption).foregroundColor(.secondary)
+                        Spacer()
+                        TextField("无上限", text: $foreignBaseCapStr) // 👈 新增
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
                     }
                 }
-                Section(header: Text("特殊返现规则")) {
-                                    
-                    HStack {
-                        Text("餐饮返现率 (%)")
-                        Spacer()
-                        TextField("可选", text: $diningRateStr)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        }
-                                    
-                    HStack {
-                        Text("超市返现率 (%)")
-                        Spacer()
-                        TextField("可选", text: $groceryRateStr)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        }
-                    
-                    HStack {
-                        Text("出行返现率 (%)")
-                        Spacer()
-                        TextField("可选", text: $travelRateStr)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                    }
-                    
-                    HStack {
-                        Text("数码返现率 (%)")
-                        Spacer()
-                        TextField("可选", text: $digitalRateStr)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        }
-                        HStack {
-                            Text("其他返现率 (%)")
-                            Spacer()
-                            TextField("可选", text: $otherRateStr)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 60)
-                            }
-                        }
+                Section(header: Text("类别加成 (额外叠加)")) {
+                    // 使用一个辅助 View 来减少重复代码 (在下方定义)
+                    CategoryInputRow(name: "餐饮", rate: $diningRateStr, cap: $diningCapStr)
+                    CategoryInputRow(name: "超市", rate: $groceryRateStr, cap: $groceryCapStr)
+                    CategoryInputRow(name: "出行", rate: $travelRateStr, cap: $travelCapStr)
+                    CategoryInputRow(name: "数码", rate: $digitalRateStr, cap: $digitalCapStr)
+                    CategoryInputRow(name: "其他", rate: $otherRateStr, cap: $otherCapStr)
+                }
+                
             }
             // 动态标题：有 cardToEdit 就是“编辑”，否则是“添加”
             .navigationTitle(cardToEdit == nil ? "添加信用卡" : "编辑卡片")
@@ -270,27 +275,39 @@ struct AddCardView: View {
     
     // --- 3. 核心保存逻辑 ---
     func saveCard() {
-        // 数据处理
+        // 1. 处理费率 (保持不变)
         let defaultRate = (Double(defaultRateStr) ?? 0) / 100.0
         var foreignRate: Double? = nil
         if !foreignRateStr.isEmpty {
             foreignRate = (Double(foreignRateStr) ?? 0) / 100.0
-        }else{
-            foreignRate = 0
         }
-
+        
+        // 2. 处理颜色 (保持不变)
         let c1Hex = color1.toHex() ?? "0000FF"
         let c2Hex = color2.toHex() ?? "000000"
         
+        // 3. 处理类别加成率 (保持不变)
         var specialRates: [Category: Double] = [:]
-        if let rate = Double(diningRateStr) { specialRates[.dining] = rate / 100.0 }else{specialRates[.dining] = 0}
-        if let rate = Double(groceryRateStr) { specialRates[.grocery] = rate / 100.0 }else{specialRates[.grocery] = 0}
-        if let rate = Double(travelRateStr) { specialRates[.travel] = rate / 100.0 }else{specialRates[.travel] = 0}
-        if let rate = Double(digitalRateStr) { specialRates[.digital] = rate / 100.0 }else{specialRates[.digital] = 0}
-        if let rate = Double(otherRateStr) { specialRates[.other] = rate / 100.0 }else{specialRates[.other] = 0}
+        if let rate = Double(diningRateStr), rate > 0 { specialRates[.dining] = rate / 100.0 }
+        if let rate = Double(groceryRateStr), rate > 0 { specialRates[.grocery] = rate / 100.0 }
+        if let rate = Double(travelRateStr), rate > 0 { specialRates[.travel] = rate / 100.0 }
+        if let rate = Double(digitalRateStr), rate > 0 { specialRates[.digital] = rate / 100.0 }
+        if let rate = Double(otherRateStr), rate > 0 { specialRates[.other] = rate / 100.0 }
+        
+        // 👇 4. 处理新字段：上限 (Caps)
+        let locBaseCap = Double(localBaseCapStr) ?? 0
+        let forBaseCap = Double(foreignBaseCapStr) ?? 0
+        
+        var catCaps: [Category: Double] = [:]
+        if let cap = Double(diningCapStr), cap > 0 { catCaps[.dining] = cap }
+        if let cap = Double(groceryCapStr), cap > 0 { catCaps[.grocery] = cap }
+        if let cap = Double(travelCapStr), cap > 0 { catCaps[.travel] = cap }
+        if let cap = Double(digitalCapStr), cap > 0 { catCaps[.digital] = cap }
+        if let cap = Double(otherCapStr), cap > 0 { catCaps[.other] = cap }
+        
         
         if let existingCard = cardToEdit {
-            // 👉 场景 A: 编辑模式 (直接修改现有对象，不需要 insert)
+            // 编辑模式
             existingCard.bankName = bankName
             existingCard.type = cardType
             existingCard.endNum = endNum
@@ -299,9 +316,14 @@ struct AddCardView: View {
             existingCard.issueRegion = region
             existingCard.foreignCurrencyRate = foreignRate
             existingCard.specialRates = specialRates
-            // SwiftData 会自动监控到属性变化并保存
+            
+            // 👇 更新新属性
+            existingCard.localBaseCap = locBaseCap
+            existingCard.foreignBaseCap = forBaseCap
+            existingCard.categoryCaps = catCaps
+            
         } else {
-            // 👉 场景 B: 新建模式 (创建新对象并 insert)
+            // 新建模式
             let newCard = CreditCard(
                 bankName: bankName,
                 type: cardType,
@@ -310,7 +332,11 @@ struct AddCardView: View {
                 defaultRate: defaultRate,
                 specialRates: specialRates,
                 issueRegion: region,
-                foreignCurrencyRate: foreignRate
+                foreignCurrencyRate: foreignRate,
+                // 👇 传入新属性
+                localBaseCap: locBaseCap,
+                foreignBaseCap: forBaseCap,
+                categoryCaps: catCaps
             )
             context.insert(newCard)
         }
@@ -318,5 +344,42 @@ struct AddCardView: View {
         dismiss()
         onSaved?()
     }
+    
+    struct CategoryInputRow: View {
+        let name: String
+        @Binding var rate: String
+        @Binding var cap: String
+        
+        var body: some View {
+            VStack(spacing: 8) {
+                HStack {
+                    Text(name)
+                        .fontWeight(.medium)
+                    Spacer()
+                    // 费率输入
+                    Text("加成%")
+                        .font(.caption).foregroundColor(.gray)
+                    TextField("0", text: $rate)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 40)
+                        .padding(5)
+                        .background(Color(uiColor: .secondarySystemBackground))
+                        .cornerRadius(5)
+                    
+                    // 上限输入
+                    Text("上限")
+                        .font(.caption).foregroundColor(.gray)
+                    TextField("无", text: $cap)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 60)
+                        .padding(5)
+                        .background(Color(uiColor: .secondarySystemBackground))
+                        .cornerRadius(5)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
 }
-

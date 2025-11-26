@@ -149,19 +149,35 @@ struct AddTransactionView: View {
                         Spacer()
                         if let amountDouble = Double(amount),
                            cards.indices.contains(selectedCardIndex) {
+                            
                             let card = cards[selectedCardIndex]
                             let finalAmount = Double(billingAmountStr) ?? amountDouble
                             
-                            let cashback = CashbackService.calculateCashback(
-                                billingAmount: finalAmount,
+                            // 👇 核心修改：调用卡片的 calculateCappedCashback
+                            // 注意：必须传入 date，因为要查这一年的历史记录
+                            let cashback = card.calculateCappedCashback(
+                                amount: finalAmount,
                                 category: selectedCategory,
                                 location: location,
-                                card: card
+                                date: date,
+                                transactionToExclude: transactionToEdit // 👈 预览时排除旧值
                             )
                             
-                            Text("\(currentCurrencySymbol)\(String(format: "%.2f", cashback))")
-                                .foregroundColor(.green)
-                                .fontWeight(.bold)
+                            // 计算理论返现 (如果不受限应该拿多少)，用来判断是否变色
+                            let theoretical = finalAmount * card.getRate(for: selectedCategory, location: location)
+                            
+                            HStack(spacing: 4) {
+                                Text("\(currentCurrencySymbol)\(String(format: "%.2f", cashback))")
+                                    .foregroundColor(cashback < theoretical - 0.01 ? .orange : .green) // 如果被砍了(比理论少)，显示橙色
+                                    .fontWeight(.bold)
+                                
+                                // 如果触发上限，加个小提示
+                                if cashback < theoretical - 0.01 {
+                                    Image(systemName: "exclamationmark.circle")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                }
+                            }
                         } else {
                             Text("¥0.00").foregroundColor(.gray)
                         }
@@ -272,28 +288,42 @@ struct AddTransactionView: View {
             let card = cards[selectedCardIndex]
             let imageData = receiptImage?.jpegData(compressionQuality: 0.5)
             
+            // 👇 1. 在保存前，先算出“最终返现额”
+            let finalCashback = card.calculateCappedCashback(
+                amount: billingDouble,
+                category: selectedCategory,
+                location: location,
+                date: date,
+                transactionToExclude: transactionToEdit // 👈 保存时排除旧值
+            )
+            
+            // 2. 重新获取一次名义费率 (用于更新 rate 字段)
+            let nominalRate = card.getRate(for: selectedCategory, location: location)
+            
             if let t = transactionToEdit {
+                // --- 编辑模式 ---
                 t.merchant = merchant
                 t.amount = amountDouble
-
                 t.location = location
                 t.date = date
-                if t.card != card || t.billingAmount != billingDouble || t.category != selectedCategory {
+                
+                // 如果关键信息变了，更新关联属性
+                if t.card != card || t.billingAmount != billingDouble || t.category != selectedCategory || t.date != date {
                     
-                    t.card = card // 更新卡片
+                    t.card = card
                     t.billingAmount = billingDouble
                     t.category = selectedCategory
                     
-                    // 重新计算费率
-                    let newRate = card.getRate(for: selectedCategory, location: location)
-                    t.rate = newRate
-                    
-                    // 重新计算返现额
-                    t.cashbackamount = billingDouble * newRate
+                    // 更新费率
+                    t.rate = nominalRate
+                    // 👇 更新返现额 (直接赋值)
+                    t.cashbackamount = finalCashback
                 }
                 
                 if let img = imageData { t.receiptData = img }
+                
             } else {
+                // --- 新建模式 ---
                 let newTransaction = Transaction(
                     merchant: merchant,
                     category: selectedCategory,
@@ -302,7 +332,9 @@ struct AddTransactionView: View {
                     date: date,
                     card: card,
                     receiptData: imageData,
-                    billingAmount: billingDouble
+                    billingAmount: billingDouble,
+                    // 👇 传入算好的返现额
+                    cashbackAmount: finalCashback,
                 )
                 context.insert(newTransaction)
             }

@@ -1,45 +1,58 @@
-//
-//  Transaction.swift
-//  CashbackCounter
-//
-//  Created by Junhao Huang on 11/23/25.
-//
-
 import SwiftUI
-import SwiftData // 👈 1. 引入新框架
+import SwiftData
+
 @Model
 class Transaction: Identifiable {
     var merchant: String
-    // Enum 需要遵守 Codable 才能存进 SwiftData (之前我们加过 Codable 了)
     var category: Category
     var location: Region
     
-    var amount: Double        // 🌏 消费金额 (比如 1000 JPY)
-    var billingAmount: Double // 💳 入账金额 (比如 7 USD)
+    var amount: Double        // 原币金额
+    var billingAmount: Double // 入账金额
     
     var date: Date
     var cashbackamount: Double
     var rate: Double
-    // 👇 核心修改：不再存 UUID，直接存 CreditCard 对象！
-    // 这是一个 Optional，因为万一卡片被删了，这个字段就会变成 nil
+    
     var card: CreditCard?
     
     @Attribute(.externalStorage) var receiptData: Data?
     
-    init(merchant: String, category: Category, location: Region, amount: Double, date: Date, card: CreditCard?, receiptData: Data? = nil, billingAmount: Double? = nil) {
+    // 👇 修改 init 方法，增加 cashbackAmount 参数
+    init(merchant: String,
+         category: Category,
+         location: Region,
+         amount: Double,
+         date: Date,
+         card: CreditCard?,
+         receiptData: Data? = nil,
+         billingAmount: Double? = nil,
+         cashbackAmount: Double? = nil // 👈 新增可选参数
+    ) {
         self.merchant = merchant
         self.category = category
         self.location = location
         self.amount = amount
         self.date = date
-        self.card = card // 直接把对象存进去
-        self.receiptData = receiptData // 赋值
+        self.card = card
+        self.receiptData = receiptData
         self.billingAmount = billingAmount ?? amount
         
         let finalBilling = billingAmount ?? amount
-        let rate = card?.getRate(for: category, location: location) ?? 0
-        self.rate = rate
-        self.cashbackamount = finalBilling * rate
+        
+        // 1. 记录名义费率 (用于界面显示，比如 "5%")
+        // 这里依然调用 getRate，得到的是 "基础+加成" 的理论总费率
+        let nominalRate = card?.getRate(for: category, location: location) ?? 0
+        self.rate = nominalRate
+        
+        // 2. 确定实际返现额 (优先使用传入的计算结果)
+        if let providedCashback = cashbackAmount {
+            // 如果外部传了（也就是经过了上限计算），就用外部的
+            self.cashbackamount = providedCashback
+        } else {
+            // 兜底：如果没传，就按简单的 费率*金额 算 (兼容旧代码)
+            self.cashbackamount = finalBilling * nominalRate
+        }
     }
     
     var color: Color { category.color }

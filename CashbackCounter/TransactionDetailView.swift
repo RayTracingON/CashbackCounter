@@ -131,8 +131,10 @@ struct TransactionDetailView: View {
                         .padding(.horizontal)
                         .padding(.bottom, 30)
                         // 👇 全屏覆盖层绑定
-                        .fullScreenCover(isPresented: $showFullImage) {
+                        .sheet(isPresented: $showFullImage){
                             ReceiptFullScreenView(image: uiImage)
+                                // 可选：显示下拉指示条，提示用户可以下拉
+                                .presentationDragIndicator(.visible)
                         }
                     }
                 }
