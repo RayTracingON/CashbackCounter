@@ -106,8 +106,14 @@ struct AddCardView: View {
         else if let template = template {
             _bankName = State(initialValue: template.bankName)
             _cardType = State(initialValue: template.type)
-            _endNum = State(initialValue: "") // 模板不带尾号
+            _endNum = State(initialValue: "8888") // 模板不带尾号
             
+            if template.localBaseCap > 0 {
+                _localBaseCapStr = State(initialValue: String(format: "%.0f", template.localBaseCap))
+            }
+            if template.foreignBaseCap > 0 {
+                _foreignBaseCapStr = State(initialValue: String(format: "%.0f", template.foreignBaseCap))
+            }
             
             if template.colors.count >= 2 {
                 _color1 = State(initialValue: Color(hex: template.colors[0]))
@@ -115,6 +121,22 @@ struct AddCardView: View {
             } else {
                 _color1 = State(initialValue: .blue)
                 _color2 = State(initialValue: .purple)
+            }
+            
+            if let cap = template.categoryCaps[.dining], cap > 0 {
+                _diningCapStr = State(initialValue: String(format: "%.0f", cap))
+            }
+            if let cap = template.categoryCaps[.grocery], cap > 0 {
+                _groceryCapStr = State(initialValue: String(format: "%.0f", cap))
+            }
+            if let cap = template.categoryCaps[.travel], cap > 0 {
+                _travelCapStr = State(initialValue: String(format: "%.0f", cap))
+            }
+            if let cap = template.categoryCaps[.digital], cap > 0 {
+                _digitalCapStr = State(initialValue: String(format: "%.0f", cap))
+            }
+            if let cap = template.categoryCaps[.other], cap > 0 {
+                _otherCapStr = State(initialValue: String(format: "%.0f", cap))
             }
             
             _region = State(initialValue: template.region)

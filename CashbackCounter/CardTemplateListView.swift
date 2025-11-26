@@ -23,19 +23,24 @@ struct CardTemplate: Identifiable {
     
     
     
+    
     static let examples: [CardTemplate] = [
-        CardTemplate(bankName: "HSBC HK", type: "Red", colors: ["DA291C", "005863"], region: .hk, specialRate: [ : ], defaultRate: 4.0, foreignCurrencyRate: 1.0),
-        CardTemplate(bankName: "HSBC HK", type: "Pulse", colors: ["DB0011", "1A1A1A"], region: .cn, specialRate: [ .dining: 5 ], defaultRate: 4.4, foreignCurrencyRate: 2.4),
-        CardTemplate(bankName: "HSBC HK", type: "Premier", colors: ["111111", "D9D9D9"], region: .hk, specialRate: [ : ], defaultRate: 0.4, foreignCurrencyRate: 2.4),
-        CardTemplate(bankName: "HSBC HK", type: "Visa Signature", colors: ["1C1C1C", "757575"], region: .hk, specialRate: [ : ], defaultRate: 1.6, foreignCurrencyRate: 3.6),
-        CardTemplate(bankName: "HSBC US", type: "Elite", colors: ["050505", "050505"], region: .us, specialRate: [ .travel: 5.28,.dining:1.32], defaultRate: 1.32, foreignCurrencyRate: 1.32),
+        CardTemplate(bankName: "滙豐香港", type: "Red信用卡", colors: ["DA291C", "005863"], region: .hk, specialRate: [ : ], defaultRate: 4.0, foreignCurrencyRate: 1.0, localBaseCap: 4800, foreignBaseCap: 0, categoryCaps: [: ]),
+        CardTemplate(bankName: "滙豐香港", type: "Pulse銀聯信用卡 ", colors: ["DB0011", "1A1A1A"], region: .cn, specialRate: [ .dining: 5 ], defaultRate: 4.4, foreignCurrencyRate: 2.4, localBaseCap: 4400, foreignBaseCap: 2400, categoryCaps: [.dining: 500]),
+        CardTemplate(bankName: "滙豐香港", type: "卓越理財信用卡", colors: ["111111", "D9D9D9"], region: .hk, specialRate: [ : ], defaultRate: 0.4, foreignCurrencyRate: 2.4),
+        CardTemplate(bankName: "滙豐香港", type: "Visa Signature卡", colors: ["1C1C1C", "757575"], region: .hk, specialRate: [ : ], defaultRate: 1.6, foreignCurrencyRate: 3.6, foreignBaseCap: 3600),
+        CardTemplate(bankName: "滙豐香港", type: "萬事達卡扣賬卡", colors: ["1D5564", "85BDCD"], region: .hk, specialRate: [ : ], defaultRate: 0.4, foreignCurrencyRate: 0.4),
+        CardTemplate(bankName: "HSBC US", type: "Elite ", colors: ["050505", "050505"], region: .us, specialRate: [ .travel: 5.28,.dining:1.32], defaultRate: 1.32, foreignCurrencyRate: 1.32),
         
-        CardTemplate(bankName: "ICBC Asia", type: "Visa Signature", colors: ["121212", "EDC457"], region: .hk, specialRate: [ .grocery: 15], defaultRate: 1.5, foreignCurrencyRate: 1.5),
-        CardTemplate(bankName: "ICBC Asia", type: "粵港澳灣區信用卡", colors: ["0F0F0F", "C0C0C0"], region: .cn, specialRate: [ .grocery: 15], defaultRate: 1.5, foreignCurrencyRate: 1.5),
-        CardTemplate(bankName: "信銀國際", type: "大灣區雙幣信用卡", colors: ["8A8F99", "E3DEE9"], region: .cn, specialRate: [ .other: 6], defaultRate: 4, foreignCurrencyRate: 0.4),
+        CardTemplate(bankName: "工銀亞洲", type: "Visa Signature", colors: ["121212", "EDC457"], region: .hk, specialRate: [ .grocery: 15], defaultRate: 1.5, foreignCurrencyRate: 1.5, categoryCaps: [.grocery: 2400]),
+        CardTemplate(bankName: "工銀亞洲", type: "粵港澳灣區信用卡", colors: ["0F0F0F", "C0C0C0"], region: .cn, specialRate: [ .grocery: 15], defaultRate: 1.5, foreignCurrencyRate: 1.5, categoryCaps: [.grocery: 2400]),
+        CardTemplate(bankName: "信銀國際", type: "大灣區雙幣信用卡", colors: ["8A8F99", "E3DEE9"], region: .cn, specialRate: [ .other: 6], defaultRate: 4, foreignCurrencyRate: 0.4, localBaseCap: 1800, foreignBaseCap: 0, categoryCaps: [.other: 3000]),
+        CardTemplate(bankName: "中銀香港", type: "萬事達卡扣賬卡", colors: ["121212", "D4B979"], region: .hk, specialRate: [ : ], defaultRate: 0.5, foreignCurrencyRate: 0.5),
+
         
-        CardTemplate(bankName: "农业银行", type: "大学生青春卡", colors: ["9EC0B3", "D9A62E"], region: .cn, specialRate: [ : ], defaultRate: 0.1, foreignCurrencyRate: 4),
-        CardTemplate(bankName: "农业银行", type: "Visa精粹白金卡", colors: ["1A1A1A", "C4C6C8"], region: .cn, specialRate: [ : ], defaultRate: 0.1, foreignCurrencyRate: 4)
+        CardTemplate(bankName: "农行", type: "大学生青春卡", colors: ["9EC0B3", "D9A62E"], region: .cn, specialRate: [ : ], defaultRate: 0.1, foreignCurrencyRate: 4),
+        CardTemplate(bankName: "农行", type: "Visa尊然白金信用卡", colors: ["1A1A1A", "C4C6C8"], region: .cn, specialRate: [ : ], defaultRate: 0.1, foreignCurrencyRate: 4),
+        CardTemplate(bankName: "工行", type: "牡丹祥运信用卡", colors: ["2F2F2F", "C7A04D"], region: .cn, specialRate: [ : ], defaultRate: 0, foreignCurrencyRate: 3)
         
     ]
 }
