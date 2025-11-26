@@ -159,7 +159,8 @@ struct AddTransactionView: View {
                                 amount: finalAmount,
                                 category: selectedCategory,
                                 location: location,
-                                date: date
+                                date: date,
+                                transactionToExclude: transactionToEdit // 👈 预览时排除旧值
                             )
                             
                             // 计算理论返现 (如果不受限应该拿多少)，用来判断是否变色
@@ -292,7 +293,8 @@ struct AddTransactionView: View {
                 amount: billingDouble,
                 category: selectedCategory,
                 location: location,
-                date: date
+                date: date,
+                transactionToExclude: transactionToEdit // 👈 保存时排除旧值
             )
             
             // 2. 重新获取一次名义费率 (用于更新 rate 字段)
@@ -332,7 +334,7 @@ struct AddTransactionView: View {
                     receiptData: imageData,
                     billingAmount: billingDouble,
                     // 👇 传入算好的返现额
-                    cashbackAmount: finalCashback
+                    cashbackAmount: finalCashback,
                 )
                 context.insert(newTransaction)
             }

@@ -93,7 +93,72 @@ class CreditCard: Identifiable {
         // 3. 核心修改：将基础费率与类别加成相加
         return baseRate + categoryBonus
     }
-    
+    func calculateCappedCashback(amount: Double, category: Category, location: Region, date: Date, transactionToExclude: Transaction? = nil) -> Double {
+            
+            let isForeign = (location != issueRegion)
+            
+            // --- 第一步：准备费率和当笔理论值 ---
+            var baseRate = defaultRate
+            if isForeign, let fr = foreignCurrencyRate, fr > 0 {
+                baseRate = fr
+            }
+            let potentialBaseReward = amount * baseRate
+            
+            let bonusRate = specialRates[category] ?? 0.0
+            let potentialBonusReward = amount * bonusRate
+            
+            // --- 第二步：准备上限阈值 ---
+            let baseCapLimit = isForeign ? foreignBaseCap : localBaseCap
+            let categoryCapLimit = categoryCaps[category] ?? 0.0
+            
+            // --- 第三步：统计历史用量 ---
+            let calendar = Calendar.current
+            let currentYear = calendar.component(.year, from: date)
+            
+            // 👇 核心修复：筛选时排除掉“正在编辑的这一笔”
+            let yearlyTransactions = (transactions ?? []).filter {
+                let isSameYear = calendar.component(.year, from: $0.date) == currentYear
+                let isNotSelf = ($0 != transactionToExclude) // 排除自己
+                return isSameYear && isNotSelf
+            }
+            
+            // A. 计算已用基础返现 (估算值)
+            var usedBase: Double = 0
+            if baseCapLimit > 0 {
+                usedBase = yearlyTransactions
+                    .filter { ($0.location != self.issueRegion) == isForeign }
+                    .reduce(0) { sum, t in
+                        let tBaseRate = ((t.location != self.issueRegion) && (foreignCurrencyRate ?? 0) > 0) ? (foreignCurrencyRate ?? 0) : defaultRate
+                        return sum + (t.billingAmount * tBaseRate)
+                    }
+            }
+            
+            // B. 计算已用加成返现 (估算值)
+            var usedBonus: Double = 0
+            if categoryCapLimit > 0 {
+                usedBonus = yearlyTransactions
+                    .filter { $0.category == category }
+                    .reduce(0) { sum, t in
+                        let tBonusRate = specialRates[t.category] ?? 0.0
+                        return sum + (t.billingAmount * tBonusRate)
+                    }
+            }
+            
+            // --- 第四步：结算 (Reward Cap 逻辑) ---
+            var finalBase = potentialBaseReward
+            if baseCapLimit > 0 {
+                let remaining = max(0, baseCapLimit - usedBase)
+                finalBase = min(potentialBaseReward, remaining)
+            }
+            
+            var finalBonus = potentialBonusReward
+            if categoryCapLimit > 0 {
+                let remaining = max(0, categoryCapLimit - usedBonus)
+                finalBonus = min(potentialBonusReward, remaining)
+            }
+            
+            return finalBase + finalBonus
+        }
     func calculateCappedCashback(amount: Double, category: Category, location: Region, date: Date) -> Double {
             
             let isForeign = (location != issueRegion)
