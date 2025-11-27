@@ -13,7 +13,7 @@ extension Array where Element == Transaction {
     // 生成 CSV 文本内容
     func generateCSV() -> String {
         // 1. 表头 (Excel 的第一行)
-        var csvString = "交易时间,商户名称,消费类别,消费金额(原币),入账金额(本币),支付卡片,消费地区\n"
+        var csvString = "交易时间,商户名称,消费类别,消费金额(原币),入账金额(本币),返现金额(本币),支付卡片,卡片尾号,消费地区\n"
         
         // 2. 遍历每一行数据
         for t in self {
@@ -24,12 +24,13 @@ extension Array where Element == Transaction {
             let amount = String(format: "%.2f", t.amount)
             // 假设我们想导出入账金额
             let billing = String(format: "%.2f", t.billingAmount)
-            
+            let cashback = String(format: "%.2f", t.cashbackamount)
+            let cardNumber = t.card?.endNum ?? "无卡"
             let cardName = t.card != nil ? "\"\(t.card!.bankName) \(t.card!.type)\"" : "已删除卡片"
             let region = t.location.rawValue
             
             // 拼接到 CSV
-            let row = "\(date),\(merchant),\(category),\(amount),\(billing),\(cardName),\(region)\n"
+            let row = "\(date),\(merchant),\(category),\(amount),\(billing),\(cashback),\(cardName),\(cardNumber),\(region)\n"
             csvString.append(row)
         }
         
