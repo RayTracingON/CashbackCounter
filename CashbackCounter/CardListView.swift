@@ -87,12 +87,13 @@ struct CardListView: View {
                                 endNum: card.endNum,
                                 colors: card.colors
                             )
+                            .contentShape(Rectangle())
                             // 控制位置和动画
                             .offset(y: isSelected
                                     // 选中时：停在当前滚动位置 + 顶部留白
                                     ? (scrollOffset + 10)
                                     // 未选中时：正常列表逻辑
-                                    : (isDetailMode ? 800 : CGFloat(index * 220 + 20))
+                                    : (isDetailMode ? 800 : CGFloat(index * 100 + 20))
                             )                            // 控制透明度和缩放
                             .opacity(isDetailMode && !isSelected ? 0 : 1)
                             .scaleEffect(isDetailMode && !isSelected ? 0.9 : 1)
@@ -110,11 +111,12 @@ struct CardListView: View {
                                     }
                                 }
                             }
+                            
                         }
                     }
                     // 👇 这里的报错应该消失了
                     Color.clear
-                        .frame(height: CGFloat(max(1, cards.count) * 200 + 40 ))
+                        .frame(height: CGFloat(max(1, cards.count) * 100 + 20 ))
                 }
                 .coordinateSpace(name: "scrollSpace")
                 // 🔥 核心修改 6: 监听滚动位置变化

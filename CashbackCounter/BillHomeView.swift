@@ -1,12 +1,17 @@
 import SwiftUI
 import SwiftData
-
+import UniformTypeIdentifiers // 👈 1. 必须加上这一行，否则无法识别文件类型
 struct BillHomeView: View {
     // 1. 拿到数据库上下文
     @Environment(\.modelContext) var context
     
-    @Query(sort: \Transaction.date, order: .reverse) var dbTransactions: [Transaction]
-    
+    @Query(
+        sort: [
+            SortDescriptor(\Transaction.date, order: .reverse),
+            SortDescriptor(\Transaction.merchant, order: .forward)
+        ]
+    )
+    var dbTransactions: [Transaction]
     // 2. 控制弹窗
     @State private var selectedTransaction: Transaction? = nil
     @State private var transactionToEdit: Transaction?
@@ -19,6 +24,10 @@ struct BillHomeView: View {
     @Query var cards: [CreditCard]
     @State private var showTrendSheet = false   // 控制“返现”弹窗
     @State private var showExpenseSheet = false // 👈 新增：控制“支出”弹窗
+    // 👇 新增：导入相关状态
+    @State private var showFileImporter = false
+    @State private var showImportAlert = false
+    @State private var importMessage = ""
     
     // 👇👇👇 补回缺失的状态：是否按整年筛选
     @State private var isWholeYear = false
@@ -84,7 +93,7 @@ struct BillHomeView: View {
                         // 1. 统计条 (标题动态变化)
                         HStack(spacing: 15) {
                             Button(action: {
-                                    showExpenseSheet = true // 点击触发支出弹窗
+                                showExpenseSheet = true // 点击触发支出弹窗
                             }) {
                                 StatBox(
                                     title: showAll ? "总支出" : (isWholeYear ? "本年支出" : "本月支出"),
@@ -186,14 +195,64 @@ struct BillHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if !filteredTransactions.isEmpty,
-                       let csvURL = filteredTransactions.exportCSVFile() {
-                        ShareLink(item: csvURL) {
-                            Image(systemName: "square.and.arrow.up")
+                    Menu {
+                        // 1. 导出选项
+                        if !filteredTransactions.isEmpty,
+                           let csvURL = filteredTransactions.exportCSVFile() {
+                            ShareLink(item: csvURL) {
+                                Label("导出账单", systemImage: "square.and.arrow.up")
+                            }
                         }
+                                                
+                        // 2. 导入选项
+                        Button {
+                            showFileImporter = true
+                        } label: {
+                            Label("导入账单", systemImage: "square.and.arrow.down")
+                        }
+                        
+                    } label: {
+                        // 外显图标：用圆圈三点或者之前的图标
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 18))
+                        // .foregroundColor(.blue)
                     }
                 }
             }
+            .fileImporter(
+                isPresented: $showFileImporter,
+                allowedContentTypes: [.commaSeparatedText], // 兼容 .csv
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    guard let url = urls.first else { return }
+                    // 安全访问
+                    guard url.startAccessingSecurityScopedResource() else { return }
+                    defer { url.stopAccessingSecurityScopedResource() }
+                    
+                    do {
+                        let content = try String(contentsOf: url, encoding: .utf8)
+                        // 调用刚才写的 Helper，传入 context 和当前的卡片列表
+                        try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
+                        
+                        importMessage = "导入成功！"
+                        showImportAlert = true
+                    } catch {
+                        importMessage = "导入失败：\(error.localizedDescription)"
+                        showImportAlert = true
+                    }
+                case .failure(let error):
+                    print("选择文件失败: \(error)")
+                }
+            }
+            // 结果提示框
+            .alert("导入结果", isPresented: $showImportAlert) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(importMessage)
+            }
+        
             // 弹窗绑定
             .sheet(item: $selectedTransaction) { item in
                 TransactionDetailView(transaction: item).presentationDetents([.large])

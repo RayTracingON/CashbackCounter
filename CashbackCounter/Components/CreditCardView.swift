@@ -28,7 +28,7 @@ struct CreditCardView: View {
                     Image(systemName: "wave.3.right") // 非接触支付图标
                         .font(.title2)
                     Spacer()
-                    Text(type)
+                    Text(bankName+" "+type)
                         .font(.caption)
                         .fontWeight(.bold)
                         .padding(6)
@@ -36,13 +36,9 @@ struct CreditCardView: View {
                         .cornerRadius(5)
                 }
                 Spacer()
-                Text(bankName)
-                    .font(.title3)
-                    .fontWeight(.bold)
                 HStack {
                     Text("**** **** **** \(endNum)")
                         .font(.subheadline)
-                    Spacer()
                 }
             }
             .padding(25)
