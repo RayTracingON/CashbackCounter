@@ -19,7 +19,8 @@ extension Array where Element == Transaction {
         for t in self {
             let date = t.dateString
             // 处理可能包含逗号的文字 (加引号防止 Excel 格式错乱)
-            let merchant = "\"\(t.merchant)\""
+            let safeMerchant = t.merchant.replacingOccurrences(of: "\"", with: "\"\"")
+            let merchant = "\"\(safeMerchant)\""
             let category = t.category.displayName
             let amount = String(format: "%.2f", t.amount)
             // 假设我们想导出入账金额

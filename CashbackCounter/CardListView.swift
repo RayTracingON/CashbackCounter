@@ -7,7 +7,7 @@
 
 import SwiftData
 import SwiftUI
-
+import UniformTypeIdentifiers
 // 定义弹窗类型
 enum SheetType: Identifiable {
     case template
@@ -20,10 +20,15 @@ struct CardListView: View {
     @Query var cards: [CreditCard]
     @Environment(\.modelContext) var context
     
-    // 控制编辑状态 (长按触发)
+    // 控制编辑状态
     @State private var cardToEdit: CreditCard?
     // 控制添加状态
     @State private var activeSheet: SheetType?
+    // 导入导出卡
+    @State private var showFileExporter = false
+    @State private var showFileImporter = false
+    @State private var importError: String?
+    @State private var showImportAlert = false
     // 核心状态：当前展开的卡片 ID
     @State private var selectedCardID: PersistentIdentifier? = nil
     @State private var scrollOffset: CGFloat = 0
@@ -69,7 +74,7 @@ struct CardListView: View {
                                 value: -proxy.frame(in: .named("scrollSpace")).minY
                             )
                         }
-                            .frame(height: 0) // 不占用空间
+                        .frame(height: 0) // 不占用空间
                         ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
                             
                             // 计算当前卡片的状态
@@ -84,11 +89,11 @@ struct CardListView: View {
                             )
                             // 控制位置和动画
                             .offset(y: isSelected
-                                                                // 选中时：停在当前滚动位置 + 顶部留白
-                                                                ? (scrollOffset + 10)
-                                                                // 未选中时：正常列表逻辑
-                                                                : (isDetailMode ? 800 : CGFloat(index * 220 + 20))
-                                                        )                            // 控制透明度和缩放
+                                    // 选中时：停在当前滚动位置 + 顶部留白
+                                    ? (scrollOffset + 10)
+                                    // 未选中时：正常列表逻辑
+                                    : (isDetailMode ? 800 : CGFloat(index * 220 + 20))
+                            )                            // 控制透明度和缩放
                             .opacity(isDetailMode && !isSelected ? 0 : 1)
                             .scaleEffect(isDetailMode && !isSelected ? 0.9 : 1)
                             // 控制层级
@@ -158,16 +163,16 @@ struct CardListView: View {
                             } label: {
                                 Label("编辑卡片", systemImage: "pencil")
                             }
- 
+                            
                             // 选项 2: 导出 (这里先预留位置)
-
-
+                            
+                            
                             if let csvURL = cardfli.exportCSVFile() {
                                 ShareLink(item: csvURL) {
                                     Label("导出交易", systemImage: "square.and.arrow.up")
                                 }
                             }
-                                
+                            
                             
                             Divider() // 分割线，把危险操作隔开
                             
@@ -187,16 +192,31 @@ struct CardListView: View {
                         } label: {
                             // 按钮图标：实心圆圈三点
                             Image(systemName: "ellipsis.circle.fill")
-                                .font(.title2)
+                                .font(.system(size: 24))
                             // 稍微把颜色加深一点，让它看起来更像可交互按钮
-                                .foregroundColor(.primary.opacity(0.7))
                         }
                     }else {
                         Menu {
                             Button(action: { activeSheet = .template }) { Label("从模板添加", systemImage: "doc.on.doc") }
+                            
                             Button(action: { activeSheet = .custom }) { Label("自定义添加", systemImage: "square.and.pencil") }
-                        } label: {
-                            Image(systemName: "plus.circle.fill").font(.system(size: 24))
+                            
+                            Divider()
+                            
+                            if let csvURL = cards.exportCSVFile() {
+                                ShareLink(item: csvURL) {
+                                    Label("导出卡片", systemImage: "square.and.arrow.up")
+                                }
+                            }
+                            
+                            Button {
+                                showFileImporter = true
+                            } label: {
+                                Label("导入卡片", systemImage: "square.and.arrow.down")
+                            }
+                        }
+                        label: {
+                            Image(systemName: "ellipsis.circle.fill").font(.system(size: 24))
                         }
                     }
                 }
@@ -210,6 +230,39 @@ struct CardListView: View {
             .sheet(item: $cardToEdit) { card in
                 AddCardView(cardToEdit: card)
             }
+
+            // 👇 处理导入
+            .fileImporter(
+                isPresented: $showFileImporter,
+                allowedContentTypes: [.commaSeparatedText],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    guard let url = urls.first else { return }
+                    // 必须处理安全访问权限
+                    guard url.startAccessingSecurityScopedResource() else { return }
+                    defer { url.stopAccessingSecurityScopedResource() }
+                    
+                    do {
+                        let content = try String(contentsOf: url, encoding: .utf8)
+                        try CardCSVHelper.parseCSV(content: content, into: context)
+                        importError = nil // 成功
+                    } catch {
+                        importError = "导入失败：格式错误或文件损坏。\n\(error.localizedDescription)"
+                        showImportAlert = true
+                    }
+                case .failure(let error):
+                    print("选择文件失败: \(error.localizedDescription)")
+                }
+            }
+            // 导入失败的提示框
+            .alert("导入结果", isPresented: $showImportAlert) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(importError ?? "未知错误")
+            }
+        
         }
     }
 
@@ -249,7 +302,7 @@ struct EmbeddedTransactionListView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 120)
+                .padding(.vertical)
                 .background(Color(uiColor: .secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal, 16)
