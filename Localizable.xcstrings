@@ -924,7 +924,14 @@
 
     },
     "总%@趋势" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total %@ Trend"
+          }
+        }
+      }
     },
     "所有卡片汇总" : {
       "localizations" : {
@@ -954,23 +961,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拍一笔"
-          }
-        }
-      }
-    },
-    "提醒功能正在开发中..." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminder feature under development..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提醒功能正在开发中..."
           }
         }
       }
@@ -1085,7 +1075,14 @@
 
     },
     "暂无卡片，请先添加信用卡" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Card"
+          }
+        }
+      }
     },
     "暂无账单" : {
       "localizations" : {
@@ -1152,7 +1149,14 @@
       }
     },
     "未设置还款日" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Payment Date"
+          }
+        }
+      }
     },
     "本单返现" : {
       "localizations" : {
