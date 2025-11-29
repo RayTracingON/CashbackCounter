@@ -18,6 +18,47 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             List {
+                                // 👇👇👇 1. 新增：顶部的 App 图标 Header 👇👇👇
+                                Section {
+                                    VStack(spacing: 8) {
+                                        // 图标组合
+                                        ZStack {
+                                            // 背景装饰 (可选，增加层次感)
+                                            Circle()
+                                                .fill(Color.blue.opacity(0.1))
+                                                .frame(width: 80, height: 80)
+                                            
+                                            // 1. 卡片
+                                            Image(systemName: "creditcard.fill")
+                                                .font(.system(size: 40))
+                                                .foregroundColor(.blue)
+                                                .offset(x: -5, y: 0) // 稍微往左偏一点
+                                            
+                                            // 2. 循环圈 (叠加在右下角)
+                                            Image(systemName: "arrow.triangle.2.circlepath")
+                                                .font(.system(size: 24))
+                                                .foregroundColor(.green)
+                                                .padding(4)
+                                            // 加个白色底色，防止和卡片重叠部分看不清
+                                                .background(Color(uiColor: .systemGroupedBackground).clipShape(Circle()))
+                                                .offset(x: 18, y: 12)
+                                        }
+                                        .padding(.bottom, 4)
+                                        
+                                        // App 名称
+                                        Text("Cashback Counter")
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                        
+                                        // 版本号
+                                        Text("Version \(appVersion)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity) // 让它水平居中
+                                    .padding(.vertical, 10)
+                                }
+                                .listRowBackground(Color.clear)
                 Section(header: Text("外观与语言")) {
                     // 主题选择
                     Picker(selection: $userTheme, label: Label("主题模式", systemImage: "paintpalette")) {

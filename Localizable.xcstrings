@@ -1,5 +1,5 @@
 {
-  "sourceLanguage" : "en",
+  "sourceLanguage" : "zh-Hans",
   "strings" : {
     "- %@%@" : {
       "localizations" : {
@@ -52,6 +52,12 @@
     "%@ %@趋势" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@%2$@ Trend"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ %2$@趋势"
@@ -976,7 +982,14 @@
       }
     },
     "支出" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expense"
+          }
+        }
+      }
     },
     "收据凭证" : {
       "localizations" : {
@@ -1619,7 +1632,14 @@
       }
     },
     "返现" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cashback"
+          }
+        }
+      }
     },
     "选择信用卡" : {
       "localizations" : {
