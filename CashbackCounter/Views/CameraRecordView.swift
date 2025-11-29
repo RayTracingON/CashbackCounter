@@ -17,14 +17,30 @@ struct CameraRecordView: View {
     
     // 3. 选中的图片 (无论是拍的还是相册选的)
     @State private var selectedImage: UIImage?
+    @State private var isTargeted = false
     
     var body: some View {
         ZStack {
             // --- 层级 1: 相机画面 (铺满全屏) ---
             CameraPreview(cameraService: cameraService)
                 .ignoresSafeArea()
-            
-            // --- 层级 2: 操作按钮 ---
+            // --- 层级 2: 拖拽提示层 (当用户拖着文件悬停时显示) ---
+            if isTargeted {
+                Color.black.opacity(0.6)
+                    .ignoresSafeArea()
+                    .overlay(
+                        VStack(spacing: 20) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.system(size: 80))
+                                .foregroundColor(.white)
+                            Text("松手导入图片")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                        }
+                    )
+            }
+            // --- 层级 3: 操作按钮 ---
             VStack {
                 Spacer() // 把按钮推到底部
                 
@@ -77,6 +93,22 @@ struct CameraRecordView: View {
                 }
                 .padding(.horizontal, 30)
                 .padding(.bottom, 50)
+            }
+        }
+        // 👇👇👇 核心修改：添加拖拽目标 👇👇👇
+        .dropDestination(for: Data.self) { items, location in
+            // items 是一个 [Data] 数组
+            guard let item = items.first, let image = UIImage(data: item) else {
+                return false // 如果不是图片数据，拒绝
+            }
+            
+            // 赋值图片，会自动触发 onChange 跳转
+            self.selectedImage = image
+            return true
+        } isTargeted: { targeted in
+            // 监听：用户是否拖着文件悬停在上方
+            withAnimation {
+                self.isTargeted = targeted
             }
         }
         .onAppear {
