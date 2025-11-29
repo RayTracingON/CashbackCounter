@@ -53,14 +53,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ %2$@ Trend"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ %2$@ Trend"
+            "state" : "new",
+            "value" : "%1$@ %2$@趋势"
           }
         }
       }
@@ -86,13 +80,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@  Analysis"
+            "value" : "%@ Analysis"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@  Analysis"
+            "value" : "%@分析"
           }
         }
       }
@@ -172,7 +166,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AI analyzing..."
+            "value" : "AI 分析中..."
           }
         }
       }
@@ -220,7 +214,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iCloud Sync (Automatically Enabled)"
+            "value" : "iCloud 同步 (自动开启)"
           }
         }
       }
@@ -236,7 +230,24 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Month"
+            "value" : "月"
+          }
+        }
+      }
+    },
+    "trend.expense" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expense Analysis"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支出分析"
           }
         }
       }
@@ -284,7 +295,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Limit"
+            "value" : "上限"
           }
         }
       }
@@ -300,7 +311,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Theme Mode"
+            "value" : "主题模式"
           }
         }
       }
@@ -316,7 +327,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add from Template"
+            "value" : "从模板添加"
           }
         }
       }
@@ -332,7 +343,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Save"
+            "value" : "保存"
           }
         }
       }
@@ -348,7 +359,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Posted amount (%@)"
+            "value" : "入账金额 (%@)"
           }
         }
       }
@@ -364,7 +375,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Full Year"
+            "value" : "全年"
           }
         }
       }
@@ -380,7 +391,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All"
+            "value" : "全部"
           }
         }
       }
@@ -396,7 +407,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All Bills"
+            "value" : "全部账单"
           }
         }
       }
@@ -428,7 +439,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Close"
+            "value" : "关闭"
           }
         }
       }
@@ -444,7 +455,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Latest Transactions"
+            "value" : "最新交易"
           }
         }
       }
@@ -460,7 +471,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete"
+            "value" : "删除"
           }
         }
       }
@@ -476,7 +487,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete Card"
+            "value" : "删除卡片"
           }
         }
       }
@@ -492,7 +503,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bonus %"
+            "value" : "加成%"
           }
         }
       }
@@ -508,7 +519,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Card Wallet"
+            "value" : "卡包"
           }
         }
       }
@@ -524,7 +535,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Card type (e.g., Amex Platinum)"
+            "value" : "卡种 (如: 运通白金)"
           }
         }
       }
@@ -540,7 +551,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Card Style"
+            "value" : "卡面风格"
           }
         }
       }
@@ -556,7 +567,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Issuing Region"
+            "value" : "发行地区"
           }
         }
       }
@@ -572,7 +583,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cancel"
+            "value" : "取消"
           }
         }
       }
@@ -588,7 +599,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Same as Base Currency"
+            "value" : "同本币"
           }
         }
       }
@@ -604,7 +615,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Merchant name (e.g., Starbucks)"
+            "value" : "商户名称 (例如：星巴克)"
           }
         }
       }
@@ -620,7 +631,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Basic Information"
+            "value" : "基本信息"
           }
         }
       }
@@ -636,7 +647,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Base cashback (all purchases)"
+            "value" : "基础返现 (所有消费)"
           }
         }
       }
@@ -652,7 +663,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Foreign currency annual limit"
+            "value" : "外币年上限"
           }
         }
       }
@@ -668,7 +679,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Foreign currency cashback rate (%)"
+            "value" : "外币返现率 (%)"
           }
         }
       }
@@ -684,7 +695,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appearance & Language"
+            "value" : "外观与语言"
           }
         }
       }
@@ -700,7 +711,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Multi-currency Settings"
+            "value" : "多币种设置"
           }
         }
       }
@@ -716,7 +727,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Done"
+            "value" : "完成"
           }
         }
       }
@@ -732,7 +743,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Amount charged"
+            "value" : "实际扣款"
           }
         }
       }
@@ -748,7 +759,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import Cards"
+            "value" : "导入卡片"
           }
         }
       }
@@ -764,7 +775,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import Results"
+            "value" : "导入结果"
           }
         }
       }
@@ -780,7 +791,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import Bills"
+            "value" : "导入账单"
           }
         }
       }
@@ -796,7 +807,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Export Transactions"
+            "value" : "导出交易"
           }
         }
       }
@@ -812,7 +823,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Export Cards"
+            "value" : "导出卡片"
           }
         }
       }
@@ -828,7 +839,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Export Bills"
+            "value" : "导出账单"
           }
         }
       }
@@ -844,7 +855,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last 4 digits"
+            "value" : "尾号 (后四位)"
           }
         }
       }
@@ -860,7 +871,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "General"
+            "value" : "常规"
           }
         }
       }
@@ -876,7 +887,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annual Bills"
+            "value" : "年度账单"
           }
         }
       }
@@ -892,26 +903,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Developer: Junhao Huang"
+            "value" : "开发者: Junhao Huang"
           }
         }
       }
     },
     "总%@趋势" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overall %@ Trend"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overall %@ Trend"
-          }
-        }
-      }
+
     },
     "所有卡片汇总" : {
       "localizations" : {
@@ -924,7 +922,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All Cards Summary"
+            "value" : "所有卡片汇总"
           }
         }
       }
@@ -940,7 +938,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Snap a transaction"
+            "value" : "拍一笔"
           }
         }
       }
@@ -956,7 +954,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reminder feature under development..."
+            "value" : "提醒功能正在开发中..."
           }
         }
       }
@@ -972,26 +970,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Payment Method"
+            "value" : "支付方式"
           }
         }
       }
     },
     "支出" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Expend"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支出"
-          }
-        }
-      }
+
     },
     "收据凭证" : {
       "localizations" : {
@@ -1004,7 +989,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Receipt"
+            "value" : "收据凭证"
           }
         }
       }
@@ -1020,7 +1005,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Data Import/Export"
+            "value" : "数据导入/导出"
           }
         }
       }
@@ -1036,7 +1021,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Data Management"
+            "value" : "数据管理"
           }
         }
       }
@@ -1052,7 +1037,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "None"
+            "value" : "无"
           }
         }
       }
@@ -1068,7 +1053,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No limit"
+            "value" : "无上限"
           }
         }
       }
@@ -1084,7 +1069,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No bills yet"
+            "value" : "暂无账单"
           }
         }
       }
@@ -1100,7 +1085,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "More currency support is under development..."
+            "value" : "更多货币支持正在开发中..."
           }
         }
       }
@@ -1116,7 +1101,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Month"
+            "value" : "月份"
           }
         }
       }
@@ -1132,7 +1117,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Monthly Bills"
+            "value" : "月度账单"
           }
         }
       }
@@ -1148,7 +1133,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cashback for this bill"
+            "value" : "本单返现"
           }
         }
       }
@@ -1164,7 +1149,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local currency annual limit"
+            "value" : "本币年上限"
           }
         }
       }
@@ -1180,7 +1165,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local currency cashback rate (%)"
+            "value" : "本币返现率 (%)"
           }
         }
       }
@@ -1196,7 +1181,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No transactions for this card"
+            "value" : "此卡片暂无交易记录"
           }
         }
       }
@@ -1212,7 +1197,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Light Mode"
+            "value" : "浅色模式"
           }
         }
       }
@@ -1228,7 +1213,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spending Region"
+            "value" : "消费地区"
           }
         }
       }
@@ -1244,7 +1229,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Purchase Date"
+            "value" : "消费日期"
           }
         }
       }
@@ -1260,7 +1245,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spending Category"
+            "value" : "消费类别"
           }
         }
       }
@@ -1276,7 +1261,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Purchase Details"
+            "value" : "消费详情"
           }
         }
       }
@@ -1292,7 +1277,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Purchase Amount"
+            "value" : "消费金额"
           }
         }
       }
@@ -1308,7 +1293,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dark Mode"
+            "value" : "深色模式"
           }
         }
       }
@@ -1324,7 +1309,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Credit Card"
+            "value" : "添加信用卡"
           }
         }
       }
@@ -1340,7 +1325,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gradient Color 1"
+            "value" : "渐变色 1"
           }
         }
       }
@@ -1356,7 +1341,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gradient Color 2"
+            "value" : "渐变色 2"
           }
         }
       }
@@ -1372,7 +1357,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version"
+            "value" : "版本"
           }
         }
       }
@@ -1388,7 +1373,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E-Receipt"
+            "value" : "电子收据"
           }
         }
       }
@@ -1404,7 +1389,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm"
+            "value" : "确定"
           }
         }
       }
@@ -1420,7 +1405,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simplified Chinese"
+            "value" : "简体中文"
           }
         }
       }
@@ -1436,7 +1421,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Category bonus (stackable)"
+            "value" : "类别加成 (额外叠加)"
           }
         }
       }
@@ -1452,7 +1437,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit"
+            "value" : "编辑"
           }
         }
       }
@@ -1468,7 +1453,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Card"
+            "value" : "编辑卡"
           }
         }
       }
@@ -1484,7 +1469,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Bill"
+            "value" : "编辑账单"
           }
         }
       }
@@ -1500,7 +1485,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Custom"
+            "value" : "自定义添加"
           }
         }
       }
@@ -1516,7 +1501,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "See the top-right of the home screen"
+            "value" : "见首页右上角"
           }
         }
       }
@@ -1532,7 +1517,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Record a transaction"
+            "value" : "记一笔"
           }
         }
       }
@@ -1548,7 +1533,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Settings"
+            "value" : "设置"
           }
         }
       }
@@ -1564,7 +1549,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No transactions in this period"
+            "value" : "该时间段内没有交易记录"
           }
         }
       }
@@ -1580,7 +1565,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Language Settings"
+            "value" : "语言设置"
           }
         }
       }
@@ -1596,7 +1581,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bills"
+            "value" : "账单"
           }
         }
       }
@@ -1612,7 +1597,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Follow System"
+            "value" : "跟随系统"
           }
         }
       }
@@ -1622,32 +1607,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last 12 months total: ¥%@"
+            "value" : "Last 12 months total: $%@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last 12 months total: ¥%@"
+            "value" : "近12个月累计: ¥%@"
           }
         }
       }
     },
     "返现" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cashback"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cashback"
-          }
-        }
-      }
+
     },
     "选择信用卡" : {
       "localizations" : {
@@ -1660,7 +1632,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select Credit Card"
+            "value" : "选择信用卡"
           }
         }
       }
@@ -1676,7 +1648,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select a card to view details"
+            "value" : "选择卡片查看详情"
           }
         }
       }
@@ -1692,7 +1664,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose Card Template"
+            "value" : "选择卡片模板"
           }
         }
       }
@@ -1708,7 +1680,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select Time"
+            "value" : "选择时间"
           }
         }
       }
@@ -1724,7 +1696,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Notifications"
+            "value" : "通知提醒"
           }
         }
       }
@@ -1740,7 +1712,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reset all data (use with caution)"
+            "value" : "重置所有数据 (慎用)"
           }
         }
       }
@@ -1756,7 +1728,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Amount"
+            "value" : "金额"
           }
         }
       }
@@ -1772,7 +1744,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bank (e.g., China Merchants Bank)"
+            "value" : "银行 (如: 招商银行)"
           }
         }
       }
@@ -1788,7 +1760,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Project Homepage"
+            "value" : "项目主页"
           }
         }
       }
@@ -1804,7 +1776,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Estimated cashback"
+            "value" : "预计返现"
           }
         }
       }
