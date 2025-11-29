@@ -5,7 +5,7 @@ import SwiftData
 struct CardCSVHelper {
     
     // CSV 表头
-    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限"
+    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限,还款日"
     
     // MARK: - 导出逻辑 (生成字符串)
     static func generateCSV(from cards: [CreditCard]) -> String {
@@ -42,8 +42,11 @@ struct CardCSVHelper {
             let travelCap = fmtCap(card.categoryCaps[.travel])
             let digitalCap = fmtCap(card.categoryCaps[.digital])
             let otherCap = fmtCap(card.categoryCaps[.other])
+            // 👇 6. 新增：还款日
+            // 如果是 0 就不显示，或者显示 0 也可以，看你喜好
+            let rDay = card.repaymentDay > 0 ? String(card.repaymentDay) : ""
             
-            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap)\n"
+            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap),\(rDay)\n"
             csvString.append(row)
         }
         return csvString
@@ -57,8 +60,8 @@ struct CardCSVHelper {
             if index == 0 || row.trimmingCharacters(in: .whitespaces).isEmpty { continue }
             
             let columns = row.components(separatedBy: ",")
-            if columns.count < 20 { continue }
-            
+            if columns.count < 21 { continue }
+        
             // 解析逻辑...
             let bankName = columns[0]
             let type = columns[1]
@@ -87,13 +90,17 @@ struct CardCSVHelper {
             if let c = Double(columns[17]), c > 0 { categoryCaps[.travel] = c }
             if let c = Double(columns[18]), c > 0 { categoryCaps[.digital] = c }
             if let c = Double(columns[19]), c > 0 { categoryCaps[.other] = c }
-            
+            let rDay = Int(columns[20]) ?? 0
             let newCard = CreditCard(
                 bankName: bankName, type: type, endNum: endNum, colorHexes: [c1, c2],
                 defaultRate: defRate, specialRates: specialRates, issueRegion: region,
-                foreignCurrencyRate: forRate, localBaseCap: locCap, foreignBaseCap: forCap, categoryCaps: categoryCaps
+                foreignCurrencyRate: forRate, localBaseCap: locCap, foreignBaseCap: forCap, categoryCaps: categoryCaps,
+                repaymentDay: rDay
             )
             context.insert(newCard)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                NotificationManager.shared.scheduleNotification(for: newCard)
+            }
         }
     }
     

@@ -44,6 +44,9 @@ struct AddCardView: View {
     @State private var digitalCapStr: String = ""
     @State private var otherCapStr: String = ""
     
+    // 新增 State
+    @State private var repaymentDayStr: String = ""
+    
     // --- 2. 核心：自定义初始化 ---
     init(template: CardTemplate? = nil, cardToEdit: CreditCard? = nil, onSaved: (() -> Void)? = nil) {
         self.cardToEdit = cardToEdit
@@ -54,7 +57,9 @@ struct AddCardView: View {
             _bankName = State(initialValue: card.bankName)
             _cardType = State(initialValue: card.type)
             _endNum = State(initialValue: card.endNum)
-            
+            if card.repaymentDay > 0 {
+                _repaymentDayStr = State(initialValue: String(card.repaymentDay))
+            }
             // 颜色回填 (利用 computed property 直接拿 Color)
             if card.colors.count >= 2 {
                 _color1 = State(initialValue: card.colors[0])
@@ -216,6 +221,16 @@ struct AddCardView: View {
                             if newValue.count > 4 { endNum = String(newValue.prefix(4)) }
                         }
                 }
+                HStack {
+                    Text("还款日提醒 (每月)")
+                    Spacer()
+                    TextField("无", text: $repaymentDayStr)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 50)
+                    Text("日")
+                        .foregroundColor(.secondary)
+                }
                 
                 // 3. 颜色设置
                 Section(header: Text("卡面风格")) {
@@ -299,6 +314,7 @@ struct AddCardView: View {
     func saveCard() {
         // 1. 处理费率 (保持不变)
         let defaultRate = (Double(defaultRateStr) ?? 0) / 100.0
+        let rDay = Int(repaymentDayStr) ?? 0
         var foreignRate: Double? = nil
         if !foreignRateStr.isEmpty {
             foreignRate = (Double(foreignRateStr) ?? 0) / 100.0
@@ -339,10 +355,13 @@ struct AddCardView: View {
             existingCard.foreignCurrencyRate = foreignRate
             existingCard.specialRates = specialRates
             
+            
             // 👇 更新新属性
             existingCard.localBaseCap = locBaseCap
             existingCard.foreignBaseCap = forBaseCap
             existingCard.categoryCaps = catCaps
+            existingCard.repaymentDay = rDay // 赋值
+            NotificationManager.shared.scheduleNotification(for: existingCard)
             
         } else {
             // 新建模式
@@ -358,9 +377,13 @@ struct AddCardView: View {
                 // 👇 传入新属性
                 localBaseCap: locBaseCap,
                 foreignBaseCap: forBaseCap,
-                categoryCaps: catCaps
+                categoryCaps: catCaps,
+                repaymentDay: rDay // 赋值
             )
             context.insert(newCard)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                NotificationManager.shared.scheduleNotification(for: newCard)
+            }
         }
         
         dismiss()

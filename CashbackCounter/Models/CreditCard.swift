@@ -15,6 +15,8 @@ class CreditCard: Identifiable {
     var bankName: String
     var type: String
     var endNum: String
+    var repaymentDay: Int = 0
+    var isRemindOpen: Bool = true // 默认为 true (直接开启)
     
     // ⚠️ 2. 颜色处理：数据库存 Hex 字符串，App 用 Color
     var colorHexes: [String]
@@ -49,32 +51,36 @@ class CreditCard: Identifiable {
     var transactions: [Transaction]?
     
     init(bankName: String,
-             type: String,
-             endNum: String,
-             colorHexes: [String],
-             defaultRate: Double,
-             specialRates: [Category: Double],
-             issueRegion: Region,
-             foreignCurrencyRate: Double? = nil,
-             // 新参数
-             localBaseCap: Double = 0,
-             foreignBaseCap: Double = 0,
-             categoryCaps: [Category: Double] = [:] // 改为单字典
-        ) {
-            self.bankName = bankName
-            self.type = type
-            self.endNum = endNum
-            self.colorHexes = colorHexes
-            self.defaultRate = defaultRate
-            self.specialRates = specialRates
-            self.issueRegion = issueRegion
-            self.foreignCurrencyRate = foreignCurrencyRate
-            
-            // 赋值
-            self.localBaseCap = localBaseCap
-            self.foreignBaseCap = foreignBaseCap
-            self.categoryCaps = categoryCaps
-        }
+            type: String,
+            endNum: String,
+            colorHexes: [String],
+            defaultRate: Double,
+            specialRates: [Category: Double],
+            issueRegion: Region,
+            foreignCurrencyRate: Double? = nil,
+            // 新参数
+            localBaseCap: Double = 0,
+            foreignBaseCap: Double = 0,
+            categoryCaps: [Category: Double] = [:], // 改为单字典
+            repaymentDay: Int = 0,
+            isRemindOpen: Bool = true
+    ) {
+        self.bankName = bankName
+        self.type = type
+        self.endNum = endNum
+        self.colorHexes = colorHexes
+        self.defaultRate = defaultRate
+        self.specialRates = specialRates
+        self.issueRegion = issueRegion
+        self.foreignCurrencyRate = foreignCurrencyRate
+        
+        // 赋值
+        self.localBaseCap = localBaseCap
+        self.foreignBaseCap = foreignBaseCap
+        self.categoryCaps = categoryCaps
+        self.repaymentDay = repaymentDay
+        self.isRemindOpen = isRemindOpen
+    }
     
     func getRate(for category: Category, location: Region) -> Double {
         // 1. 获取类别带来的“额外”加成 (Category Bonus)

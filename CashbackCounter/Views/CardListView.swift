@@ -185,6 +185,7 @@ struct CardListView: View {
                                     selectedCardID = nil
                                     // 2. 稍微延迟一点再删除，视觉体验更好，也可以直接删
                                     // 这里直接删除:
+                                    NotificationManager.shared.cancelNotification(for: selectedCard)
                                     context.delete(selectedCard)
                                 }
                             } label: {

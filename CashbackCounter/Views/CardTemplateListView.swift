@@ -20,6 +20,7 @@ struct CardTemplate: Identifiable {
     var localBaseCap: Double = 0
     var foreignBaseCap: Double = 0
     var categoryCaps: [Category: Double] = [:]
+    var paymentDate: String = "0"
     
     
     
