@@ -119,9 +119,13 @@ struct AddTransactionView: View {
                 
                 // --- 第三组：支付方式 ---
                 Section(header: Text("支付方式")) {
-                    Picker("选择信用卡", selection: $selectedCardIndex) {
-                        ForEach(0..<cards.count, id: \.self) { index in
-                            Text(cards[index].bankName + " " + cards[index].type).tag(index)
+                    if cards.isEmpty {
+                        Text("请先添加信用卡").foregroundColor(.secondary)
+                    } else {
+                        Picker("选择信用卡", selection: $selectedCardIndex) {
+                            ForEach(0..<cards.count, id: \.self) { index in
+                                Text(cards[index].bankName + " " + cards[index].type).tag(index)
+                            }
                         }
                     }
                     
@@ -190,7 +194,7 @@ struct AddTransactionView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { saveTransaction() }
-                        .disabled(merchant.isEmpty || amount.isEmpty)
+                        .disabled(merchant.isEmpty || amount.isEmpty || cards.isEmpty)
                 }
             }
             // ⚡️ 修正卡片索引
@@ -345,10 +349,15 @@ struct AddTransactionView: View {
     }
     func updateBillingAmount() {
         guard let amountDouble = Double(amount) else { return }
-        
+
+        guard cards.indices.contains(selectedCardIndex) else {
+            billingAmountStr = amount
+            return
+        }
+
         // 1. 获取消费地货币 (比如 JPY)
         let sourceCurrency = location.currencyCode
-        
+
         // 2. 获取卡片货币 (比如 USD)
         let card = cards[selectedCardIndex]
         let targetCurrency = card.issueRegion.currencyCode
