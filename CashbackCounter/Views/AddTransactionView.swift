@@ -345,36 +345,23 @@ struct AddTransactionView: View {
     }
     func updateBillingAmount() {
         guard let amountDouble = Double(amount) else { return }
-        
-        // 1. 获取消费地货币 (比如 JPY)
+
         let sourceCurrency = location.currencyCode
-        
-        // 2. 获取卡片货币 (比如 USD)
         let card = cards[selectedCardIndex]
         let targetCurrency = card.issueRegion.currencyCode
-        
-        // 如果币种一样，不需要查汇率
-        if sourceCurrency == targetCurrency || sourceCurrency=="TWD" || sourceCurrency == "EUR" {
+
+        if sourceCurrency == targetCurrency {
             billingAmountStr = amount
             return
         }
-        
-        // 3. 异步调用 API
+
         Task {
-            do {
-                // 调用我们刚才写的服务
-                let rate = try await CurrencyService.fetchRate(from: sourceCurrency, to: targetCurrency)
-                
-                // 计算入账金额
-                let billing = amountDouble * rate
-                
-                // 回到主线程更新 UI
-                await MainActor.run {
-                    self.billingAmountStr = String(format: "%.2f", billing)
-                }
-            } catch {
-                print("汇率获取失败: \(error)")
-                // 失败时也可以不做处理，让用户手动填
+            let rates = await CurrencyService.getRates(base: sourceCurrency)
+            let rate = rates[targetCurrency] ?? 1.0
+            let billing = amountDouble * rate
+
+            await MainActor.run {
+                self.billingAmountStr = String(format: "%.2f", billing)
             }
         }
     }

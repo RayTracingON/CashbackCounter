@@ -10,10 +10,15 @@ import Foundation
 struct CashbackService {
     
     static func calculateCashback(for transaction: Transaction) -> Double {
-            // 这里的 cashbackamount 是我们在 AddTransactionView 保存时
-            // 调用 card.calculateCappedCashback 算出来的结果，已经包含上限逻辑
-            return transaction.cashbackamount
-        }
+        guard let card = transaction.card else { return transaction.cashbackamount }
+        return card.calculateCappedCashback(
+            amount: transaction.billingAmount,
+            category: transaction.category,
+            location: transaction.location,
+            date: transaction.date,
+            transactionToExclude: transaction
+        )
+    }
         
         // 👇 2. 修改或废弃：旧的计算方法
         // 这个方法之前用于预览，现在 AddTransactionView 已经直接调用 Card 的方法了。
