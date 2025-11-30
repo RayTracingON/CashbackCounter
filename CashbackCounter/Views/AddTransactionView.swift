@@ -119,9 +119,13 @@ struct AddTransactionView: View {
                 
                 // --- 第三组：支付方式 ---
                 Section(header: Text("支付方式")) {
-                    Picker("选择信用卡", selection: $selectedCardIndex) {
-                        ForEach(0..<cards.count, id: \.self) { index in
-                            Text(cards[index].bankName + " " + cards[index].type).tag(index)
+                    if cards.isEmpty {
+                        Text("请先添加信用卡").foregroundColor(.secondary)
+                    } else {
+                        Picker("选择信用卡", selection: $selectedCardIndex) {
+                            ForEach(0..<cards.count, id: \.self) { index in
+                                Text(cards[index].bankName + " " + cards[index].type).tag(index)
+                            }
                         }
                     }
                     
@@ -190,7 +194,7 @@ struct AddTransactionView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { saveTransaction() }
-                        .disabled(merchant.isEmpty || amount.isEmpty)
+                        .disabled(merchant.isEmpty || amount.isEmpty || cards.isEmpty)
                 }
             }
             // ⚡️ 修正卡片索引
