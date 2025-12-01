@@ -1509,6 +1509,12 @@
     },
     "日" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2195,7 +2201,14 @@
 
     },
     "解析短信内容并新增一笔消费记录" : {
-
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析短信內容並新增一筆消費記錄"
+          }
+        }
+      }
     },
     "解析短信文本 ${smsText}" : {
 
@@ -2289,10 +2302,36 @@
       }
     },
     "请先添加信用卡" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please add cards first"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請先添加信用卡"
+          }
+        }
+      }
     },
     "请粘贴信用卡短信内容" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please paste card message"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請粘貼信用卡短信內容"
+          }
+        }
+      }
     },
     "账单" : {
       "localizations" : {
