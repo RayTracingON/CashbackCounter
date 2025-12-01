@@ -6,59 +6,50 @@
 //
 
 import AppIntents
-import SwiftData
-import Vision
-import VisualIntelligence // 为了用 SemanticContentDescriptor
+import CoreImage
+import SwiftUI
+import VisualIntelligence
 
-
+/// 通过 Visual Intelligence 识别收据后，自动唤起应用并带着图片跳转到记账页。
 struct AddTransactionFromReceiptIntent: AppIntent {
     static var title: LocalizedStringResource = "Add Transaction from Receipt"
 
-    // 如果你不走 Visual Intelligence，也可以用 @Parameter 接 UIImage/INFile，这里先用 SemanticContentDescriptor 展示
+    /// 让 Intent 运行后直接拉起主应用。
+    static var openAppWhenRun: Bool = true
+
+    /// Visual Intelligence 提供的语义内容，包含标签与相机帧。
     @Parameter(title: "Receipt")
     var semanticContent: SemanticContentDescriptor
 
-    @Dependency var modelContext: ModelContext
-    
-    
-    
-    private static let sharedModelContainer: ModelContainer = {
-        do {
-            return try ModelContainer(for: Transaction.self, CreditCard.self)
-        } catch {
-            fatalError("Failed to create shared model container: \(error)")
-        }
-    }()
-    
     @MainActor
     func perform() async throws -> some IntentResult {
-        
-        let modelContext = ModelContext(Self.sharedModelContainer)
-        let parser = ReceiptParser()
-
-        guard let pixelBuffer = semanticContent.pixelBuffer else {
-            // 没有图片，直接结束
-            return .result()
+        // 1. 确认标签确实表示“收据”。
+        let labels = semanticContent.labels.map { $0.lowercased() }
+        guard labels.contains(where: { $0.contains("receipt") || $0.contains("bill") }) else {
+            return .result(dialog: IntentDialog("未识别到收据内容"))
         }
 
-        // 1. OCR + 解析
-        let metadata = await OCRService.analyzeImage(pixelBuffer)
-        // 2. 写入 SwiftData（根据你自己的模型结构来）
-        let transaction = Transaction(
-            id: UUID(),
-            amount: info.amount,
-            date: info.date,
-            merchant: info.merchant
-            // ...
-        )
+        // 2. 拿到像素数据，转成 UIImage。
+        guard let pixelBuffer = semanticContent.pixelBuffer,
+              let image = pixelBuffer.toUIImage(),
+              let imageData = image.jpegData(compressionQuality: 0.7) else {
+            return .result(dialog: IntentDialog("未获取到有效的收据图像"))
+        }
 
-        modelContext.insert(transaction)
-        try modelContext.save()
+        // 3. 把图片暂存到本地，等应用拉起后自动进入 AddTransactionView。
+        ReceiptLaunchStore.shared.storePendingReceipt(data: imageData)
 
-        // 3. 如果你有 TransactionEntity，可以返回给捷径/Spotlight 用
-        // let entity = TransactionEntity(transaction: transaction)
-        // return .result(value: entity)
+        return .result(dialog: IntentDialog("已识别到收据，正在打开应用填写账单"))
+    }
+}
 
-        return .result()
+private extension CVPixelBuffer {
+    func toUIImage() -> UIImage? {
+        let ciImage = CIImage(cvPixelBuffer: self)
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage)
     }
 }

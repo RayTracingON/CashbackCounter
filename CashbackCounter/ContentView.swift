@@ -1,10 +1,13 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 // --- 2. 主入口 (包含底部导航栏) ---
 struct ContentView: View {
     // 选中的 Tab 索引
     @State private var selectedTab = 0
+    @State private var showIntentAddSheet = false
+    @State private var pendingReceiptImage: UIImage?
     
     var body: some View {
         // TabView 是底部导航栏的核心容器
@@ -44,5 +47,28 @@ struct ContentView: View {
                 .tag(3)
         }
         .tint(.blue) // 设置底部选中时的颜色 (Apple 蓝)
+        .onAppear {
+            handlePendingReceipt()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIScene.didActivateNotification)) { _ in
+            handlePendingReceipt()
+        }
+        .sheet(isPresented: $showIntentAddSheet) {
+            AddTransactionView(image: pendingReceiptImage) {
+                // 关闭后刷新账单列表即可
+            }
+            .onDisappear {
+                pendingReceiptImage = nil
+            }
+        }
+    }
+
+    /// 检查是否有来自 AppIntent 的待处理收据，如果有则跳转到记账页。
+    private func handlePendingReceipt() {
+        if let image = ReceiptLaunchStore.shared.consumePendingReceipt() {
+            pendingReceiptImage = image
+            selectedTab = 1
+            showIntentAddSheet = true
+        }
     }
 }
