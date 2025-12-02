@@ -13,6 +13,7 @@ import SwiftData
 struct CashbackCounterApp: App { // 2. 这个结构体必须遵守 App 协议
     @AppStorage("userTheme") private var userTheme: Int = 0
     @AppStorage("userLanguage") private var userLanguage: String = "system"
+    @StateObject private var aiAvailability = AppleIntelligenceAvailability()
     
     init() {
         NotificationManager.shared.requestAuthorization()
@@ -23,6 +24,10 @@ struct CashbackCounterApp: App { // 2. 这个结构体必须遵守 App 协议
             ContentView()
             .preferredColorScheme(userTheme == 1 ? .light : (userTheme == 2 ? .dark : nil))
             .environment(\.locale, userLanguage == "system" ? .current : Locale(identifier: userLanguage))
+            .environmentObject(aiAvailability)
+            .task {
+                aiAvailability.refreshSupportStatus()
+            }
         }
         .modelContainer(for: [Transaction.self, CreditCard.self])
     }

@@ -31,9 +31,11 @@ struct BillHomeView: View {
     
     // 👇👇👇 补回缺失的状态：是否按整年筛选
     @State private var isWholeYear = false
-    
+
     // 4. 汇率表
     @State private var exchangeRates: [String: Double] = [:]
+    @State private var isLoadingRates = false
+    @State private var rateError: String?
     
     // 5. 核心筛选逻辑 (升级版)
     var filteredTransactions: [Transaction] {
@@ -130,7 +132,16 @@ struct BillHomeView: View {
                             .buttonStyle(.plain) // 去掉按钮默认的点击变灰效果，保持 StatBox 原样
                         }
                         .padding(.horizontal).padding(.top)
-                        
+
+                        if isLoadingRates {
+                            ProgressView("正在更新汇率...")
+                        } else if let rateError {
+                            Text(rateError)
+                                .font(.footnote)
+                                .foregroundStyle(.orange)
+                                .padding(.horizontal)
+                        }
+
                         // 2. 控制栏
                         HStack {
                             Text(showAll ? "全部账单" : (isWholeYear ? "年度账单" : "月度账单"))
@@ -289,11 +300,33 @@ struct BillHomeView: View {
                 .presentationDragIndicator(.visible)
             }
         }
-        .task {
-            do {
-                let rates = await CurrencyService.getRates(base: "CNY")
-                await MainActor.run { self.exchangeRates = rates }
-            } catch { print("汇率获取失败") }
+        .task { await refreshRates() }
+        .refreshable { await refreshRates() }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { Task { await refreshRates() } }) {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(isLoadingRates)
+            }
+        }
+    }
+}
+
+private extension BillHomeView {
+    func refreshRates() async {
+        await MainActor.run {
+            isLoadingRates = true
+            rateError = nil
+        }
+
+        let rates = await CurrencyService.getRates(base: "CNY")
+        await MainActor.run {
+            exchangeRates = rates.isEmpty ? ["CNY": 1.0] : rates
+            if rates.isEmpty {
+                rateError = "汇率获取失败，已使用 1.0 作为默认值"
+            }
+            isLoadingRates = false
         }
     }
 }

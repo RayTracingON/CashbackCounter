@@ -27,9 +27,10 @@ struct AddTransactionView: View {
     @State private var location: Region = .cn
     @State private var billingAmountStr: String = ""
     @State private var receiptImage: UIImage?
-    
+
     // 👇 新增：控制 AI 分析的加载状态
     @State private var isAnalyzing: Bool = false
+    @EnvironmentObject private var aiAvailability: AppleIntelligenceAvailability
     @State private var showFullImage = false
     @State private var showImagePicker: Bool = false
 
@@ -71,7 +72,7 @@ struct AddTransactionView: View {
                 // --- 第一组：消费详情 ---
                 Section(header: Text("消费详情")) {
                     TextField("商户名称 (例如：星巴克)", text: $merchant)
-                    
+
                     HStack {
                         Text(location.currencySymbol)
                             .fontWeight(.bold)
@@ -90,11 +91,17 @@ struct AddTransactionView: View {
                             .tag(c)
                         }
                     }
-                    
+
                     Picker("消费地区", selection: $location) {
                         ForEach(Region.allCases, id: \.self) { r in
                             Text("\(r.icon) \(r.rawValue)").tag(r)
                         }
+                    }
+                }
+
+                if !aiAvailability.isSupported {
+                    Section {
+                        Label("Apple Intelligence 当前不可用，已切换为手动填写模式。", systemImage: "info.circle")
                     }
                 }
                 
@@ -260,10 +267,11 @@ struct AddTransactionView: View {
     // --- 4. 抽离出 AI 分析逻辑 ---
     func analyzeReceipt() {
         guard let image = receiptImage else { return }
-        
+        guard aiAvailability.isSupported else { return }
+
         // 避免重复分析 (比如编辑模式进来已有数据)
         if !merchant.isEmpty || !amount.isEmpty { return }
-        
+
         isAnalyzing = true // 开始转圈
         
         Task {
@@ -382,6 +390,7 @@ struct AddTransactionView: View {
     func updateBillingAmount() {
         guard let amountDouble = Double(amount) else { return }
 
+        let sourceCurrency = location.currencyCode
         guard cards.indices.contains(selectedCardIndex) else {
             billingAmountStr = amount
             return
@@ -393,29 +402,19 @@ struct AddTransactionView: View {
         // 2. 获取卡片货币 (比如 USD)
         let card = cards[selectedCardIndex]
         let targetCurrency = card.issueRegion.currencyCode
-        
-        // 如果币种一样，不需要查汇率
-        if sourceCurrency == targetCurrency || sourceCurrency=="TWD" || sourceCurrency == "EUR" {
+
+        if sourceCurrency == targetCurrency {
             billingAmountStr = amount
             return
         }
-        
-        // 3. 异步调用 API
+
         Task {
-            do {
-                // 调用我们刚才写的服务
-                let rate = try await CurrencyService.fetchRate(from: sourceCurrency, to: targetCurrency)
-                
-                // 计算入账金额
-                let billing = amountDouble * rate
-                
-                // 回到主线程更新 UI
-                await MainActor.run {
-                    self.billingAmountStr = String(format: "%.2f", billing)
-                }
-            } catch {
-                print("汇率获取失败: \(error)")
-                // 失败时也可以不做处理，让用户手动填
+            let rates = await CurrencyService.getRates(base: sourceCurrency)
+            let rate = rates[targetCurrency] ?? 1.0
+            let billing = amountDouble * rate
+
+            await MainActor.run {
+                self.billingAmountStr = String(format: "%.2f", billing)
             }
         }
     }
