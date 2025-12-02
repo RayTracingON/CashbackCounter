@@ -8,6 +8,11 @@
 import SwiftUI
 import SwiftData
 
+enum CapPeriod: Codable {
+    case yearly
+    case monthly
+}
+
 @Model // 👈 1. 变身数据库表
 class CreditCard: Identifiable {
     // 自动生成的主键，不需要手动 id 了
@@ -39,9 +44,12 @@ class CreditCard: Identifiable {
     // 0 代表无上限
     var localBaseCap: Double
     var foreignBaseCap: Double
+    
+    // 返现上限结算周期：按年 / 按月
+    var capPeriod: CapPeriod
         
     // B. 类别加成上限 (共用制：不分地区，只看类别)
-    // Key: 消费类别, Value: 该类别的年度总加成上限
+    // Key: 消费类别, Value: 该类别在一个结算周期(capPeriod)内的总加成上限
     var categoryCaps: [Category: Double]
         
     
@@ -62,6 +70,7 @@ class CreditCard: Identifiable {
             localBaseCap: Double = 0,
             foreignBaseCap: Double = 0,
             categoryCaps: [Category: Double] = [:], // 改为单字典
+            capPeriod: CapPeriod = .yearly,
             repaymentDay: Int = 0,
             isRemindOpen: Bool = true
     ) {
@@ -77,6 +86,7 @@ class CreditCard: Identifiable {
         // 赋值
         self.localBaseCap = localBaseCap
         self.foreignBaseCap = foreignBaseCap
+        self.capPeriod = capPeriod
         self.categoryCaps = categoryCaps
         self.repaymentDay = repaymentDay
         self.isRemindOpen = isRemindOpen
@@ -120,18 +130,30 @@ class CreditCard: Identifiable {
             // --- 第三步：统计历史用量 ---
             let calendar = Calendar.current
             let currentYear = calendar.component(.year, from: date)
+            let currentMonth = calendar.component(.month, from: date)
             
-            // 👇 核心修复：筛选时排除掉“正在编辑的这一笔”
-            let yearlyTransactions = (transactions ?? []).filter {
-                let isSameYear = calendar.component(.year, from: $0.date) == currentYear
-                let isNotSelf = ($0 != transactionToExclude) // 排除自己
-                return isSameYear && isNotSelf
+            // 筛选同一张卡在同一结算周期内的交易（排除正在编辑的这一笔）
+            let periodTransactions = (transactions ?? []).filter { t in
+                let year = calendar.component(.year, from: t.date)
+                guard year == currentYear else { return false }
+                
+                let isNotSelf = (t != transactionToExclude)
+                guard isNotSelf else { return false }
+                
+                switch capPeriod {
+                case .yearly:
+                    // 同一年即可
+                    return true
+                case .monthly:
+                    let month = calendar.component(.month, from: t.date)
+                    return month == currentMonth
+                }
             }
             
             // A. 计算已用基础返现 (估算值)
             var usedBase: Double = 0
             if baseCapLimit > 0 {
-                usedBase = yearlyTransactions
+                usedBase = periodTransactions
                     .filter { ($0.location != self.issueRegion) == isForeign }
                     .reduce(0) { sum, t in
                         let tBaseRate = ((t.location != self.issueRegion) && (foreignCurrencyRate ?? 0) > 0) ? (foreignCurrencyRate ?? 0) : defaultRate
@@ -142,7 +164,7 @@ class CreditCard: Identifiable {
             // B. 计算已用加成返现 (估算值)
             var usedBonus: Double = 0
             if categoryCapLimit > 0 {
-                usedBonus = yearlyTransactions
+                usedBonus = periodTransactions
                     .filter { $0.category == category }
                     .reduce(0) { sum, t in
                         let tBonusRate = specialRates[t.category] ?? 0.0
@@ -188,21 +210,32 @@ class CreditCard: Identifiable {
             let categoryCapLimit = categoryCaps[category] ?? 0.0
             
             // --- 第三步：统计历史用量 (关键) ---
-            // 我们需要计算“今年已经产生了多少理论返现”，来看看是否触发上限
+            // 我们需要计算“当前结算周期已经产生了多少理论返现”，来看看是否触发上限
             
             let calendar = Calendar.current
             let currentYear = calendar.component(.year, from: date)
+            let currentMonth = calendar.component(.month, from: date)
             
-            // 筛选今年的所有交易
-            let yearlyTransactions = (transactions ?? []).filter {
-                calendar.component(.year, from: $0.date) == currentYear
+            // 筛选当前结算周期内的所有交易
+            let periodTransactions = (transactions ?? []).filter { t in
+                let year = calendar.component(.year, from: t.date)
+                guard year == currentYear else { return false }
+                
+                switch capPeriod {
+                case .yearly:
+                    // 同一年即可
+                    return true
+                case .monthly:
+                    let month = calendar.component(.month, from: t.date)
+                    return month == currentMonth
+                }
             }
             
             // A. 计算已用的“基础额度”
             // 规则：只累加“同区域类型”(本币vs外币) 的交易产生的“基础返现”
             var usedBase: Double = 0
             if baseCapLimit > 0 {
-                usedBase = yearlyTransactions
+                usedBase = periodTransactions
                     .filter { ($0.location != self.issueRegion) == isForeign } // 筛选同区域
                     .reduce(0) { sum, t in
                         // 估算历史交易的基础返现 (Spend * BaseRate)
@@ -216,7 +249,7 @@ class CreditCard: Identifiable {
             // 规则：累加“同类别”的交易产生的“加成返现” (不管它是在哪里消费的，因为是共用池)
             var usedBonus: Double = 0
             if categoryCapLimit > 0 {
-                usedBonus = yearlyTransactions
+                usedBonus = periodTransactions
                     .filter { $0.category == category } // 筛选同类别
                     .reduce(0) { sum, t in
                         // 估算历史交易的加成返现

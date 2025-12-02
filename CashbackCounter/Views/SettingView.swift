@@ -15,6 +15,10 @@ struct SettingsView: View {
         
     // 2. 语言设置 "system" = 跟随系统, "zh-Hans" = 中文, "en" = 英文
     @AppStorage("userLanguage") private var userLanguage: String = "system"
+    
+    // 3. 主货币设置，默认人民币
+    @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
+    
     var body: some View {
         NavigationView {
             List {
@@ -75,10 +79,13 @@ struct SettingsView: View {
                         Text("English").tag("en")
                     }
                 }
-                // 1. 常规设置 (预留位置)
+                // 1. 常规设置
                 Section(header: Text("常规")) {
-                    NavigationLink(destination: Text("更多货币支持正在开发中...")) {
-                        Label("多币种设置", systemImage: "banknote")
+                    Picker(selection: $mainCurrencyCode, label: Label("主货币", systemImage: "banknote")) {
+                        Text("人民币 (CNY)").tag("CNY")
+                        Text("美元 (USD)").tag("USD")
+                        Text("港币 (HKD)").tag("HKD")
+                        Text("日元 (JPY)").tag("JPY")
                     }
                     
                     NavigationLink(destination: NotificationSettingsView()) {

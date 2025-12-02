@@ -34,7 +34,7 @@ struct BillHomeView: View {
     
     // 4. 汇率表
     @State private var exchangeRates: [String: Double] = [:]
-    
+    @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
     // 5. 核心筛选逻辑 (升级版)
     var filteredTransactions: [Transaction] {
         if showAll { return dbTransactions }
@@ -97,7 +97,7 @@ struct BillHomeView: View {
                             }) {
                                 StatBox(
                                     title: showAll ? "总支出" : (isWholeYear ? "本年支出" : "本月支出"),
-                                    amount: exchangeRates.isEmpty ? "..." : "¥\(String(format: "%.2f", totalExpense))",
+                                    amount: exchangeRates.isEmpty ? "..." : totalExpense.formatted(.currency(code: mainCurrencyCode)),
                                     icon: "arrow.down.circle.fill", color: .red
                                 )
                                 .overlay(
@@ -115,7 +115,7 @@ struct BillHomeView: View {
                             }) {
                                 StatBox(
                                     title: showAll ? "总返现" : (isWholeYear ? "本年返现" : "本月返现"),
-                                    amount: exchangeRates.isEmpty ? "..." : "¥\(String(format: "%.2f", totalCashback))",
+                                    amount: exchangeRates.isEmpty ? "..." : totalCashback.formatted(.currency(code: mainCurrencyCode)),
                                     icon: "arrow.up.circle.fill", color: .green
                                 )
                                 // 添加一个小箭头暗示可以点击 (可选)
@@ -291,10 +291,19 @@ struct BillHomeView: View {
         }
         .task {
             do {
-                let rates = await CurrencyService.getRates(base: "CNY")
+                let rates = await CurrencyService.getRates(base: mainCurrencyCode)
                 await MainActor.run { self.exchangeRates = rates }
             } catch { print("汇率获取失败") }
         }
+        .onChange(of: mainCurrencyCode) { newCode in
+            Task {
+                do {
+                    let rates = await CurrencyService.getRates(base: newCode)
+                    await MainActor.run { self.exchangeRates = rates }
+                } catch {
+                    print("汇率获取失败：\(error)")
+                }
+            }
+        }
     }
 }
-

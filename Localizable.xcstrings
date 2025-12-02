@@ -443,6 +443,9 @@
         }
       }
     },
+    "主货币" : {
+
+    },
     "主题模式" : {
       "localizations" : {
         "en" : {
@@ -464,6 +467,9 @@
           }
         }
       }
+    },
+    "人民币 (CNY)" : {
+
     },
     "从信用卡通知短信添加交易" : {
 
@@ -933,7 +939,11 @@
         }
       }
     },
+    "外币%@上限" : {
+
+    },
     "外币年上限" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1000,6 +1010,7 @@
       }
     },
     "多币种设置" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1365,6 +1376,12 @@
         }
       }
     },
+    "按年" : {
+
+    },
+    "按月" : {
+
+    },
     "支付方式" : {
       "localizations" : {
         "en" : {
@@ -1523,6 +1540,9 @@
         }
       }
     },
+    "日元 (JPY)" : {
+
+    },
     "暂无卡片，请先添加信用卡" : {
       "localizations" : {
         "en" : {
@@ -1562,6 +1582,7 @@
       }
     },
     "更多货币支持正在开发中..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1665,7 +1686,11 @@
         }
       }
     },
+    "本币%@上限" : {
+
+    },
     "本币年上限" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1971,6 +1996,9 @@
         }
       }
     },
+    "港币 (HKD)" : {
+
+    },
     "版本" : {
       "localizations" : {
         "en" : {
@@ -2151,6 +2179,9 @@
       }
     },
     "繁體中文" : {
+
+    },
+    "美元 (USD)" : {
 
     },
     "自定义添加" : {
@@ -2381,6 +2412,9 @@
           }
         }
       }
+    },
+    "返现上限周期" : {
+
     },
     "还款提醒" : {
       "localizations" : {

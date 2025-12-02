@@ -31,6 +31,7 @@ struct MonthlyData: Identifiable {
 
 struct TrendAnalysisView: View {
     @Environment(\.dismiss) var dismiss
+    @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
     
     // 外部传入的数据
     var transactions: [Transaction]
@@ -94,7 +95,7 @@ struct TrendAnalysisView: View {
                         .padding(.top, 16)
                     
                     // 动态颜色
-                    Text("近12个月累计: ¥\(String(format: "%.2f", chartData.reduce(0){$0 + $1.amount}))")
+                    Text("近12个月累计: \(chartData.reduce(0){ $0 + $1.amount }.formatted(.currency(code: mainCurrencyCode)))")
                         .font(.title2)
                         .fontWeight(.bold)
                         .padding(.horizontal)

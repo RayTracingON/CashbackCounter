@@ -21,6 +21,7 @@ struct CardTemplate: Identifiable {
     var foreignBaseCap: Double = 0
     var categoryCaps: [Category: Double] = [:]
     var paymentDate: String = "0"
+    var capPeriod: CapPeriod = .yearly   // 默认按年
     
     
     
@@ -35,7 +36,7 @@ struct CardTemplate: Identifiable {
         
         CardTemplate(bankName: "工銀亞洲", type: "Visa Signature", colors: ["121212", "EDC457"], region: .hk, specialRate: [ .grocery: 15], defaultRate: 1.5, foreignCurrencyRate: 1.5, categoryCaps: [.grocery: 2400]),
         CardTemplate(bankName: "工銀亞洲", type: "粵港澳灣區信用卡", colors: ["0F0F0F", "C0C0C0"], region: .cn, specialRate: [ .grocery: 15], defaultRate: 1.5, foreignCurrencyRate: 1.5, categoryCaps: [.grocery: 2400]),
-        CardTemplate(bankName: "信銀國際", type: "大灣區雙幣信用卡", colors: ["8A8F99", "E3DEE9"], region: .cn, specialRate: [ .other: 6], defaultRate: 4, foreignCurrencyRate: 0.4, localBaseCap: 1800, foreignBaseCap: 0, categoryCaps: [.other: 3000]),
+        CardTemplate(bankName: "信銀國際", type: "大灣區雙幣信用卡", colors: ["8A8F99", "E3DEE9"], region: .cn, specialRate: [ .other: 6], defaultRate: 4, foreignCurrencyRate: 0.4, localBaseCap: 1800, foreignBaseCap: 0, categoryCaps: [.other: 3000],capPeriod: .monthly),
         CardTemplate(bankName: "中銀香港", type: "萬事達卡扣賬卡", colors: ["121212", "D4B979"], region: .hk, specialRate: [ : ], defaultRate: 0.5, foreignCurrencyRate: 0.5),
 
         

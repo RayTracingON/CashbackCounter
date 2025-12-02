@@ -13,19 +13,23 @@ struct CurrencyService {
     // --- 缓存配置 ---
     private static let kRatesKey = "cached_exchange_rates" // 存汇率数据的 Key
     private static let kDateKey = "last_fetch_date"        // 存上次更新时间的 Key
+    private static let kBaseKey = "last_rates_base"        // 存上次汇率基准币种
     
     // --- 🚀 智能入口：获取汇率 ---
     // View 层只调用这个方法，不需要关心内部逻辑
     static func getRates(base: String = "CNY") async -> [String: Double] {
         
-        // 1. 检查：今天是不是已经更新过了？
-        if let lastDate = UserDefaults.standard.object(forKey: kDateKey) as? Date {
-            if Calendar.current.isDateInToday(lastDate) {
-                // 如果最后更新时间是“今天”，直接读缓存
-                if let cachedRates = loadLocalRates() {
-                    print("✅ 汇率无需更新，使用本地缓存")
-                    return cachedRates
-                }
+        // 1. 检查：今天是不是已经更新过了？并且基准币种一致？
+        if
+            let lastDate = UserDefaults.standard.object(forKey: kDateKey) as? Date,
+            let lastBase = UserDefaults.standard.string(forKey: kBaseKey),
+            lastBase == base,
+            Calendar.current.isDateInToday(lastDate)
+        {
+            // 如果最后更新时间是“今天”，并且基准币种一致，直接读缓存
+            if let cachedRates = loadLocalRates() {
+                print("✅ 汇率无需更新，使用本地缓存 (\(base))")
+                return cachedRates
             }
         }
         
@@ -34,7 +38,7 @@ struct CurrencyService {
         do {
             let rates = try await fetchRemoteRates(base: base)
             // 下载成功后，立刻存入本地
-            saveRatesLocally(rates)
+            saveRatesLocally(rates, base: base)
             return rates
         } catch {
             print("❌ 网络请求失败: \(error)")
@@ -54,13 +58,15 @@ struct CurrencyService {
     }
     
     // --- 内部方法：存入 UserDefaults ---
-    private static func saveRatesLocally(_ rates: [String: Double]) {
+    private static func saveRatesLocally(_ rates: [String: Double], base: String) {
         // 1. 存汇率 (字典自动转 Data)
         if let data = try? JSONEncoder().encode(rates) {
             UserDefaults.standard.set(data, forKey: kRatesKey)
         }
         // 2. 存时间 (存当前时间)
         UserDefaults.standard.set(Date(), forKey: kDateKey)
+        // 3. 存当前基准币种
+        UserDefaults.standard.set(base, forKey: kBaseKey)
     }
     
     // --- 内部方法：读取 UserDefaults ---

@@ -5,7 +5,7 @@ import SwiftData
 struct CardCSVHelper {
     
     // CSV 表头
-    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限,还款日"
+    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限,上限周期(monthly/yearly),还款日"
     
     // MARK: - 导出逻辑 (生成字符串)
     static func generateCSV(from cards: [CreditCard]) -> String {
@@ -45,8 +45,15 @@ struct CardCSVHelper {
             // 👇 6. 新增：还款日
             // 如果是 0 就不显示，或者显示 0 也可以，看你喜好
             let rDay = card.repaymentDay > 0 ? String(card.repaymentDay) : ""
+            let capPeriodStr: String
+            switch card.capPeriod {
+            case .monthly:
+                capPeriodStr = "monthly"
+            case .yearly:
+                capPeriodStr = "yearly"
+            }
             
-            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap),\(rDay)\n"
+            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap),\(capPeriodStr),\(rDay)\n"
             csvString.append(row)
         }
         return csvString
@@ -90,12 +97,32 @@ struct CardCSVHelper {
             if let c = Double(columns[17]), c > 0 { categoryCaps[.travel] = c }
             if let c = Double(columns[18]), c > 0 { categoryCaps[.digital] = c }
             if let c = Double(columns[19]), c > 0 { categoryCaps[.other] = c }
-            let rDay = Int(columns[20]) ?? 0
+            
+            // 旧版本 CSV 没有“上限周期”这一列；新版本在 index 20 上多了一列
+            let capPeriod: CapPeriod
+            let rDay: Int
+            if columns.count >= 22 {
+                let capStr = columns[20].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                switch capStr {
+                case "monthly", "month", "m", "按月":
+                    capPeriod = .monthly
+                case "yearly", "year", "y", "按年":
+                    capPeriod = .yearly
+                default:
+                    capPeriod = .yearly   // 默认按年，兼容脏数据
+                }
+                rDay = Int(columns[21]) ?? 0
+            } else {
+                // 兼容旧 CSV：没有这一列时，统一按年计算
+                capPeriod = .yearly
+                rDay = Int(columns[20]) ?? 0
+            }
+            
             let newCard = CreditCard(
                 bankName: bankName, type: type, endNum: endNum, colorHexes: [c1, c2],
                 defaultRate: defRate, specialRates: specialRates, issueRegion: region,
                 foreignCurrencyRate: forRate, localBaseCap: locCap, foreignBaseCap: forCap, categoryCaps: categoryCaps,
-                repaymentDay: rDay
+                capPeriod: capPeriod, repaymentDay: rDay
             )
             context.insert(newCard)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

@@ -22,6 +22,7 @@ struct AddCardView: View {
     @State private var endNum: String
     
     @State private var color1: Color
+    @State private var capPeriod: CapPeriod
     @State private var color2: Color
     @State private var region: Region
     
@@ -70,6 +71,7 @@ struct AddCardView: View {
             }
             
             _region = State(initialValue: card.issueRegion)
+            _capPeriod = State(initialValue: card.capPeriod)
             
             // 费率回填 (注意：数据库存的是 0.01，界面显示要 *100 变成 "1.0")
             _defaultRateStr = State(initialValue: String(card.defaultRate * 100))
@@ -145,6 +147,7 @@ struct AddCardView: View {
             }
             
             _region = State(initialValue: template.region)
+            _capPeriod = State(initialValue: .monthly)
             let defStr = String(format: "%.1f", template.defaultRate)
             _defaultRateStr = State(initialValue: defStr.replacingOccurrences(of: ".0", with: ""))
             
@@ -190,6 +193,7 @@ struct AddCardView: View {
             _color1 = State(initialValue: .blue)
             _color2 = State(initialValue: .purple)
             _region = State(initialValue: .cn)
+            _capPeriod = State(initialValue: .monthly)
             _defaultRateStr = State(initialValue: "1.0")
             _foreignRateStr = State(initialValue: "")
         }
@@ -237,9 +241,17 @@ struct AddCardView: View {
                     ColorPicker("渐变色 1", selection: $color1)
                     ColorPicker("渐变色 2", selection: $color2)
                 }
+                Section(header: Text("返现上限周期")){
+                    Picker("返现上限周期", selection: $capPeriod) {
+                        Text("按月").tag(CapPeriod.monthly)
+                        Text("按年").tag(CapPeriod.yearly)
+                    }
+                }
                 
+                .pickerStyle(.segmented)
                 // 4. 规则设置
                 Section(header: Text("基础返现 (所有消费)")) {
+
                     Picker("发行地区", selection: $region) {
                         ForEach(Region.allCases, id: \.self) { r in
                             Text("\(r.icon) \(r.rawValue)").tag(r)
@@ -256,7 +268,7 @@ struct AddCardView: View {
                             .frame(width: 50)
                     }
                     HStack {
-                        Text("本币年上限")
+                        Text("本币\(capPeriod == .monthly ? "月" : "年")上限")
                             .font(.caption).foregroundColor(.secondary)
                         Spacer()
                         TextField("无上限", text: $localBaseCapStr) // 👈 新增
@@ -275,7 +287,7 @@ struct AddCardView: View {
                             .frame(width: 50)
                     }
                     HStack {
-                        Text("外币年上限")
+                        Text("外币\(capPeriod == .monthly ? "月" : "年")上限")
                             .font(.caption).foregroundColor(.secondary)
                         Spacer()
                         TextField("无上限", text: $foreignBaseCapStr) // 👈 新增
@@ -353,6 +365,7 @@ struct AddCardView: View {
             existingCard.defaultRate = defaultRate
             existingCard.issueRegion = region
             existingCard.foreignCurrencyRate = foreignRate
+            existingCard.capPeriod = capPeriod
             existingCard.specialRates = specialRates
             
             
@@ -378,6 +391,7 @@ struct AddCardView: View {
                 localBaseCap: locBaseCap,
                 foreignBaseCap: forBaseCap,
                 categoryCaps: catCaps,
+                capPeriod: capPeriod,
                 repaymentDay: rDay // 赋值
             )
             context.insert(newCard)
