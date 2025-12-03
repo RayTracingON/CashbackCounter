@@ -344,7 +344,7 @@ struct AddTransactionView: View {
                 t.date = date
                 
                 // 如果关键信息变了，更新关联属性
-                if t.card != card || t.billingAmount != billingDouble || t.category != selectedCategory || t.date != date {
+                if t.card != card || t.billingAmount != billingDouble || t.category != selectedCategory || t.date != date || t.cashbackamount != finalCashback {
                     
                     t.card = card
                     t.billingAmount = billingDouble
