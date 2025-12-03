@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     // 获取 App 版本号
@@ -18,6 +19,9 @@ struct SettingsView: View {
     
     // 3. 主货币设置，默认人民币
     @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
+    @Environment(\.modelContext) var context
+    @State private var showConfirmClear: Bool = false
+
     
     var body: some View {
         NavigationView {
@@ -95,7 +99,7 @@ struct SettingsView: View {
                 
                 // 2. 数据管理 (你可以考虑把导入导出逻辑迁移到这里)
                 Section(header: Text("数据管理")) {
-                    Label("iCloud 同步 (自动开启)", systemImage: "icloud")
+                    Label("iCloud 同步 (功能正在开发中)", systemImage: "icloud")
                         .foregroundColor(.secondary)
                     
                     // 这是一个提示，告诉用户去哪里导出
@@ -117,21 +121,29 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Label("开发者: Junhao Huang", systemImage: "person.crop.circle")
-                    
-                    // 如果有 GitHub 地址可以放这里
-                    Link(destination: URL(string: "https://github.com/raytracingon/cashbackcounter")!) {
-                        Label("项目主页", systemImage: "link")
+                    NavigationLink(destination: DeveloperView()) {
+                        Label("开发者/贡献者", systemImage: "person.crop.circle")
                     }
+                    
                 }
                 
                 // 4. 其它
                 Section {
                     Button(role: .destructive) {
-                        // 这里可以放清空数据的逻辑
+                        showConfirmClear = true
                     } label: {
                         Label("重置所有数据 (慎用)", systemImage: "trash")
                             .foregroundColor(.red)
+                    }
+                    .confirmationDialog(
+                        "确定要清除所有数据吗？",
+                        isPresented: $showConfirmClear,
+                        titleVisibility: .visible
+                    ) {
+                        Button("清除", role: .destructive) {
+                            clearAllData()
+                        }
+                        Button("取消", role: .cancel) {}
                     }
                 }
             }
@@ -139,8 +151,22 @@ struct SettingsView: View {
             .listStyle(.insetGrouped) // 使用 iOS 风格的分组列表
         }
     }
-}
+    private func clearAllData() {
+            do {
+                try deleteAll(of: Transaction.self)
+                try deleteAll(of: CreditCard.self)
+                try context.save()
+                print("✅ All data cleared")
+            } catch {
+                print("❌ Failed to clear data: \(error)")
+            }
+        }
 
-#Preview {
-    SettingsView()
+        private func deleteAll<T>(of type: T.Type) throws where T: SwiftData.PersistentModel {
+            let descriptor = SwiftData.FetchDescriptor<T>()
+            let items = try context.fetch(descriptor)
+            for item in items {
+                context.delete(item)
+            }
+        }
 }

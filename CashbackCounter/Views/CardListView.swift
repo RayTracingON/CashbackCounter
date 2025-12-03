@@ -206,7 +206,8 @@ struct CardListView: View {
                             
                             Divider()
                             
-                            if let csvURL = cards.exportCSVFile() {
+                            if !cardfli.isEmpty,
+                               let csvURL = cards.exportCSVFile() {
                                 ShareLink(item: csvURL) {
                                     Label("导出卡片", systemImage: "square.and.arrow.up")
                                 }

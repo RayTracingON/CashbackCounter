@@ -275,6 +275,9 @@
         }
       }
     },
+    "Cashback Counter 仓库" : {
+
+    },
     "English" : {
       "localizations" : {
         "en" : {
@@ -297,7 +300,11 @@
         }
       }
     },
+    "iCloud 同步 (功能正在开发中)" : {
+
+    },
     "iCloud 同步 (自动开启)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -318,6 +325,9 @@
           }
         }
       }
+    },
+    "Junhao Huang" : {
+
     },
     "Month" : {
       "localizations" : {
@@ -340,6 +350,9 @@
           }
         }
       }
+    },
+    "Mr." : {
+
     },
     "trend.expense" : {
       "extractionState" : "manual",
@@ -1284,7 +1297,11 @@
         }
       }
     },
+    "开发者" : {
+
+    },
     "开发者: Junhao Huang" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1305,6 +1322,9 @@
           }
         }
       }
+    },
+    "开发者/贡献者" : {
+
     },
     "开启后，将在每月还款日上午 9:00 推送提醒。" : {
       "localizations" : {
@@ -1331,6 +1351,9 @@
           }
         }
       }
+    },
+    "感谢所有对项目提出建议与贡献的朋友们！" : {
+
     },
     "所有卡片汇总" : {
       "localizations" : {
@@ -1952,6 +1975,9 @@
         }
       }
     },
+    "清除" : {
+
+    },
     "渐变色 1" : {
       "localizations" : {
         "en" : {
@@ -2067,6 +2093,9 @@
           }
         }
       }
+    },
+    "确定要清除所有数据吗？" : {
+
     },
     "简体中文" : {
       "localizations" : {
@@ -2206,6 +2235,9 @@
         }
       }
     },
+    "致谢" : {
+
+    },
     "见首页右上角" : {
       "localizations" : {
         "en" : {
@@ -2331,6 +2363,9 @@
     "请粘贴信用卡短信内容" : {
 
     },
+    "贡献者" : {
+
+    },
     "账单" : {
       "localizations" : {
         "en" : {
@@ -2375,7 +2410,11 @@
         }
       }
     },
+    "近12个月累计: %@" : {
+
+    },
     "近12个月累计: ¥%@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2615,7 +2654,11 @@
         }
       }
     },
+    "项目" : {
+
+    },
     "项目主页" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
