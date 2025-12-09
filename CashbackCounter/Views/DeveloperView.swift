@@ -25,7 +25,7 @@ struct DeveloperView: View {
                                 .foregroundColor(.blue)
                         }
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Junhao Huang")
+                            Text("RTXON")
                                 .font(.headline)
                             Text("开发者")
                                 .font(.subheadline)

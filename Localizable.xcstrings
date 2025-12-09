@@ -320,6 +320,12 @@
             "state" : "translated",
             "value" : "iCloud Sync (Developing)"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud 同步 (功能正在開發中)"
+          }
         }
       }
     },
@@ -401,7 +407,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "版本 %@"
+            "value" : "Version %@"
           }
         }
       }
@@ -423,7 +429,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "年"
+            "value" : "Year"
           }
         }
       }
@@ -1268,6 +1274,12 @@
     },
     "已成功添加账单：%@ – ¥%lf" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Transaction Successful: %1$@ - $ %2$lf"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1439,10 +1451,24 @@
       }
     },
     "按年" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Year"
+          }
+        }
+      }
     },
     "按月" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Month"
+          }
+        }
+      }
     },
     "支付方式" : {
       "localizations" : {
@@ -1746,6 +1772,12 @@
     },
     "本币%@上限" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currency %@ Total"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1816,6 +1848,12 @@
     },
     "每月 %lld 日还款" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payment Date: %lld"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2359,7 +2397,14 @@
       }
     },
     "解析信用卡短信" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse SMS"
+          }
+        }
+      }
     },
     "解析短信内容并新增一笔消费记录" : {
       "localizations" : {
@@ -2372,7 +2417,14 @@
       }
     },
     "解析短信文本 ${smsText}" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse SMS ${smsText}"
+          }
+        }
+      }
     },
     "记一笔" : {
       "localizations" : {
@@ -2543,7 +2595,14 @@
       }
     },
     "近12个月累计: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12 Month Total: %@"
+          }
+        }
+      }
     },
     "返现" : {
       "localizations" : {
