@@ -276,7 +276,20 @@
       }
     },
     "Cashback Counter 仓库" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repository"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cashback Counter 倉庫"
+          }
+        }
+      }
     },
     "English" : {
       "localizations" : {
@@ -301,27 +314,11 @@
       }
     },
     "iCloud 同步 (功能正在开发中)" : {
-
-    },
-    "iCloud 同步 (自动开启)" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iCloud Sync (Automatically Enabled)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud 同步 (自动开启)"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud 同步 (自動開啟)"
+            "value" : "iCloud Sync (Developing)"
           }
         }
       }
@@ -432,7 +429,20 @@
       }
     },
     "上传收据图片" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload Photo"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上傳收據圖片"
+          }
+        }
+      }
     },
     "上限" : {
       "localizations" : {
@@ -457,7 +467,20 @@
       }
     },
     "主货币" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main currency"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主貨幣"
+          }
+        }
+      }
     },
     "主题模式" : {
       "localizations" : {
@@ -482,10 +505,36 @@
       }
     },
     "人民币 (CNY)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CNY"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人民幣 (CNY)"
+          }
+        }
+      }
     },
     "从信用卡通知短信添加交易" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Transaction From SMS"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從信用卡通知短信添加交易"
+          }
+        }
+      }
     },
     "从模板添加" : {
       "localizations" : {
@@ -730,7 +779,20 @@
       }
     },
     "删除图片" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Photo"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除圖片"
+          }
+        }
+      }
     },
     "加成%" : {
       "localizations" : {
@@ -953,27 +1015,11 @@
       }
     },
     "外币%@上限" : {
-
-    },
-    "外币年上限" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Foreign currency annual limit"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "外币年上限"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "外幣年上限"
+            "value" : "Foreign %@ Total"
           }
         }
       }
@@ -1018,29 +1064,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "外觀與語言"
-          }
-        }
-      }
-    },
-    "多币种设置" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Multi-currency Settings"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "多币种设置"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "多幣種設定"
           }
         }
       }
@@ -1250,6 +1273,12 @@
             "state" : "new",
             "value" : "已成功添加账单：%1$@ – ¥%2$lf"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已成功添加賬單：%1$@ – ¥%2$lf"
+          }
         }
       }
     },
@@ -1298,36 +1327,33 @@
       }
     },
     "开发者" : {
-
-    },
-    "开发者: Junhao Huang" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Developer: Junhao Huang"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开发者: Junhao Huang"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開發者: Junhao Huang"
+            "value" : "Developer"
           }
         }
       }
     },
     "开发者/贡献者" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Developer / Contributor"
+          }
+        }
+      }
     },
     "开启后，将在每月还款日上午 9:00 推送提醒。" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification will be pushed when set "
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1353,7 +1379,20 @@
       }
     },
     "感谢所有对项目提出建议与贡献的朋友们！" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks to all Contributor"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感謝所有對項目提出建議與貢獻的朋友們！"
+          }
+        }
+      }
     },
     "所有卡片汇总" : {
       "localizations" : {
@@ -1555,6 +1594,12 @@
     },
     "日" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1564,7 +1609,20 @@
       }
     },
     "日元 (JPY)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JPY"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日元 (JPY)"
+          }
+        }
+      }
     },
     "暂无卡片，请先添加信用卡" : {
       "localizations" : {
@@ -1600,29 +1658,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "暫無帳單"
-          }
-        }
-      }
-    },
-    "更多货币支持正在开发中..." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More currency support is under development..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更多货币支持正在开发中..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更多貨幣支持正在開發中..."
           }
         }
       }
@@ -1710,27 +1745,11 @@
       }
     },
     "本币%@上限" : {
-
-    },
-    "本币年上限" : {
-      "extractionState" : "stale",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Local currency annual limit"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本币年上限"
-          }
-        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本幣年上限"
+            "value" : "本幣￼%@上限"
           }
         }
       }
@@ -1759,6 +1778,12 @@
     },
     "松手导入图片" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release To Import"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1976,7 +2001,14 @@
       }
     },
     "清除" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        }
+      }
     },
     "渐变色 1" : {
       "localizations" : {
@@ -2023,7 +2055,20 @@
       }
     },
     "港币 (HKD)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HKD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "貢獻者"
+          }
+        }
+      }
     },
     "版本" : {
       "localizations" : {
@@ -2070,7 +2115,20 @@
       }
     },
     "短信全文" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SMS Text"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "短信全文"
+          }
+        }
+      }
     },
     "确定" : {
       "localizations" : {
@@ -2095,7 +2153,20 @@
       }
     },
     "确定要清除所有数据吗？" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sure To Delete All Data?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確定要清除所有數據嗎？"
+          }
+        }
+      }
     },
     "简体中文" : {
       "localizations" : {
@@ -2208,10 +2279,24 @@
       }
     },
     "繁體中文" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simplified Chinese"
+          }
+        }
+      }
     },
     "美元 (USD)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USD"
+          }
+        }
+      }
     },
     "自定义添加" : {
       "localizations" : {
@@ -2236,7 +2321,20 @@
       }
     },
     "致谢" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "致謝"
+          }
+        }
+      }
     },
     "见首页右上角" : {
       "localizations" : {
@@ -2264,7 +2362,14 @@
 
     },
     "解析短信内容并新增一笔消费记录" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Transaction from SMS"
+          }
+        }
+      }
     },
     "解析短信文本 ${smsText}" : {
 
@@ -2358,13 +2463,40 @@
       }
     },
     "请先添加信用卡" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Card First"
+          }
+        }
+      }
     },
     "请粘贴信用卡短信内容" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste SMS Text"
+          }
+        }
+      }
     },
     "贡献者" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contributor"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "貢獻者"
+          }
+        }
+      }
     },
     "账单" : {
       "localizations" : {
@@ -2413,29 +2545,6 @@
     "近12个月累计: %@" : {
 
     },
-    "近12个月累计: ¥%@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last 12 months total: $%@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "近12个月累计: ¥%@"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "近12個月累計: ¥%@"
-          }
-        }
-      }
-    },
     "返现" : {
       "localizations" : {
         "en" : {
@@ -2453,10 +2562,29 @@
       }
     },
     "返现上限周期" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Cashback Term"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返現上限週期"
+          }
+        }
+      }
     },
     "还款提醒" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payment Reminder"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2467,6 +2595,12 @@
     },
     "还款日提醒 (每月)" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payment Day Reminder"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2586,7 +2720,20 @@
       }
     },
     "重新上传" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-Upload"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新上傳"
+          }
+        }
+      }
     },
     "重置所有数据 (慎用)" : {
       "localizations" : {
@@ -2655,27 +2802,17 @@
       }
     },
     "项目" : {
-
-    },
-    "项目主页" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Project Homepage"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "项目主页"
+            "value" : "Project"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "項目主頁"
+            "value" : "項目"
           }
         }
       }
