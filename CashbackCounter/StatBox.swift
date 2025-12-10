@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct StatBox: View {
-    let title: String
+    let title: LocalizedStringKey
     let amount: String
     let icon: String
     let color: Color

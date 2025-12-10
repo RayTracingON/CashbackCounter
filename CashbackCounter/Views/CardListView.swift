@@ -168,8 +168,8 @@ struct CardListView: View {
                             
                             // 选项 2: 导出 (这里先预留位置)
                             
-                            
-                            if let csvURL = cardfli.exportCSVFile() {
+                            if !cardfli.isEmpty,
+                               let csvURL = cardfli.exportCSVFile() {
                                 ShareLink(item: csvURL) {
                                     Label("导出交易", systemImage: "square.and.arrow.up")
                                 }
@@ -206,7 +206,7 @@ struct CardListView: View {
                             
                             Divider()
                             
-                            if !cardfli.isEmpty,
+                            if !cards.isEmpty,
                                let csvURL = cards.exportCSVFile() {
                                 ShareLink(item: csvURL) {
                                     Label("导出卡片", systemImage: "square.and.arrow.up")

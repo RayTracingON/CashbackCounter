@@ -11,6 +11,9 @@
         }
       }
     },
+    " " : {
+
+    },
     "- %@%@" : {
       "localizations" : {
         "en" : {
@@ -77,28 +80,6 @@
         }
       }
     },
-    "%@ %@趋势" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@%2$@ Trend"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@趋势"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ %2$@趨勢"
-          }
-        }
-      }
-    },
     "%@%@" : {
       "localizations" : {
         "en" : {
@@ -117,28 +98,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@%@"
-          }
-        }
-      }
-    },
-    "%@分析" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ Analysis"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@分析"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@分析"
           }
         }
       }
@@ -740,6 +699,22 @@
         }
       }
     },
+    "分析" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分析"
+          }
+        }
+      }
+    },
     "删除" : {
       "localizations" : {
         "en" : {
@@ -1026,6 +1001,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Foreign %@ Total"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外幣%@上限"
           }
         }
       }
@@ -1345,6 +1326,12 @@
             "state" : "translated",
             "value" : "Developer"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開發者"
+          }
         }
       }
     },
@@ -1354,6 +1341,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Developer / Contributor"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開發者/貢獻者"
           }
         }
       }
@@ -1374,21 +1367,27 @@
         }
       }
     },
-    "总%@趋势" : {
+    "总" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Total %@ Trend"
+            "value" : "Total"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "總%@趨勢"
+            "value" : "總"
           }
         }
       }
+    },
+    "总支出" : {
+
+    },
+    "总返现" : {
+
     },
     "感谢所有对项目提出建议与贡献的朋友们！" : {
       "localizations" : {
@@ -1456,6 +1455,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "By Year"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按年"
           }
         }
       }
@@ -1808,6 +1813,64 @@
         }
       }
     },
+    "本年支出" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Year Expense"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本年支出"
+          }
+        }
+      }
+    },
+    "本年返现" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Year Cashback"
+          }
+        }
+      }
+    },
+    "本月支出" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Month Expense"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月支出"
+          }
+        }
+      }
+    },
+    "本月返现" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Month Cashback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月返現"
+          }
+        }
+      }
+    },
     "松手导入图片" : {
       "localizations" : {
         "en" : {
@@ -2045,6 +2108,12 @@
             "state" : "translated",
             "value" : "Clear"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除"
+          }
         }
       }
     },
@@ -2211,7 +2280,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simplified Chinese"
+            "value" : "简体中文"
           }
         },
         "zh-Hans" : {
@@ -2321,7 +2390,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simplified Chinese"
+            "value" : "繁體中文"
           }
         }
       }
@@ -2332,6 +2401,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "USD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "美元 (USD)"
           }
         }
       }
@@ -2403,6 +2478,12 @@
             "state" : "translated",
             "value" : "Analyse SMS"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析信用卡短信"
+          }
         }
       }
     },
@@ -2413,6 +2494,12 @@
             "state" : "translated",
             "value" : "Add Transaction from SMS"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析短信內容並新增一筆消費記錄"
+          }
         }
       }
     },
@@ -2422,6 +2509,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Analyse SMS ${smsText}"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析短信文本　${smsText}"
           }
         }
       }
@@ -2521,6 +2614,12 @@
             "state" : "translated",
             "value" : "Add Card First"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請先添加信用卡"
+          }
         }
       }
     },
@@ -2530,6 +2629,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paste SMS Text"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請粘貼信用卡短信內容"
           }
         }
       }
@@ -2572,6 +2677,22 @@
         }
       }
     },
+    "趋势" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trend"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "趨勢"
+          }
+        }
+      }
+    },
     "跟随系统" : {
       "localizations" : {
         "en" : {
@@ -2600,6 +2721,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "12 Month Total: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近12個月累計: %@"
           }
         }
       }

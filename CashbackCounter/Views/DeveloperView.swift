@@ -71,7 +71,3 @@ struct DeveloperView: View {
         }
     }
 }
-
-#Preview {
-    DeveloperView()
-}

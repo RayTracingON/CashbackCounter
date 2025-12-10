@@ -7,10 +7,10 @@ enum TrendType {
     case expense  // 支出
     case cashback // 返现
     
-    var title: String {
+    var title: LocalizedStringKey {
         switch self {
-        case .expense: return String(localized:"支出")
-        case .cashback: return String(localized:"返现")
+        case .expense : return "支出"
+        case .cashback: return "返现"
         }
     }
     
@@ -89,10 +89,21 @@ struct TrendAnalysisView: View {
                 
                 // --- 1. 图表区域 ---
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(selectedCard == nil ? "总\(type.title)趋势" : "\(selectedCard!.bankName) \(type.title)趋势")
-                        .font(.headline)
-                        .padding(.horizontal)
-                        .padding(.top, 16)
+                    Group {
+                        if let card = selectedCard {
+                            // 「招商银行 支出趋势」这种
+                            (Text(card.bankName) + Text(" ") + Text(type.title) + Text("趋势"))
+                                .font(.headline)
+                                .padding(.horizontal)
+                                .padding(.top, 16)
+                        } else {
+                            // 「总支出趋势」这种
+                            (Text("总") + Text(type.title) + Text("趋势"))
+                                .font(.headline)
+                                .padding(.horizontal)
+                                .padding(.top, 16)
+                        }
+                    }
                     
                     // 动态颜色
                     Text("近12个月累计: \(chartData.reduce(0){ $0 + $1.amount }.formatted(.currency(code: mainCurrencyCode)))")
@@ -210,7 +221,9 @@ struct TrendAnalysisView: View {
                 .listStyle(.insetGrouped)
             }
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("\(type.title)分析") // 👇 动态标题
+            .navigationTitle(
+                Text(type.title) + Text("分析")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
