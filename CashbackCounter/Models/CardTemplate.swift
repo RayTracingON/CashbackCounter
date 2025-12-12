@@ -10,6 +10,10 @@ import SwiftData
 
 @Model
 final class CardTemplate: Identifiable {
+    static func templateKey(bankName: String, type: String) -> String {
+        "\(bankName)-\(type)"
+    }
+
     @Attribute(.unique) var templateKey: String
     var id: UUID = UUID()
     var bankName: String
@@ -80,7 +84,7 @@ struct CardTemplateSeed {
     var categoryCaps: [Category: Double] = [:]
     var capPeriod: CapPeriod = .yearly
 
-    var templateKey: String { "\(bankName)-\(type)" }
+    var templateKey: String { CardTemplate.templateKey(bankName: bankName, type: type) }
 
     func makeModel() -> CardTemplate {
         CardTemplate(

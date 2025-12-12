@@ -62,7 +62,9 @@ struct CardCSVHelper {
     // MARK: - 导入逻辑 (解析字符串)
     static func parseCSV(content: String, into context: ModelContext) throws {
         let rows = content.components(separatedBy: .newlines)
-        
+        let templates = try context.fetch(FetchDescriptor<CardTemplate>())
+        let templateMap = Dictionary(uniqueKeysWithValues: templates.map { ($0.templateKey, $0) })
+
         for (index, row) in rows.enumerated() {
             if index == 0 || row.trimmingCharacters(in: .whitespaces).isEmpty { continue }
             
@@ -124,6 +126,12 @@ struct CardCSVHelper {
                 foreignCurrencyRate: forRate, localBaseCap: locCap, foreignBaseCap: forCap, categoryCaps: categoryCaps,
                 capPeriod: capPeriod, repaymentDay: rDay
             )
+
+            let templateKey = CardTemplate.templateKey(bankName: bankName, type: type)
+            if let template = templateMap[templateKey] {
+                template.applyRules(to: newCard)
+            }
+
             context.insert(newCard)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 NotificationManager.shared.scheduleNotification(for: newCard)
