@@ -37,6 +37,9 @@ class CreditCard: Identifiable {
     
     var issueRegion: Region
     var foreignCurrencyRate: Double?
+
+    // 记录该卡是否来源于某个模板，便于模板更新时同步规则
+    var templateKey: String?
     
     // 👇👇👇 1. 修改上限属性
         
@@ -66,6 +69,7 @@ class CreditCard: Identifiable {
             specialRates: [Category: Double],
             issueRegion: Region,
             foreignCurrencyRate: Double? = nil,
+            templateKey: String? = nil,
             // 新参数
             localBaseCap: Double = 0,
             foreignBaseCap: Double = 0,
@@ -82,7 +86,8 @@ class CreditCard: Identifiable {
         self.specialRates = specialRates
         self.issueRegion = issueRegion
         self.foreignCurrencyRate = foreignCurrencyRate
-        
+        self.templateKey = templateKey
+
         // 赋值
         self.localBaseCap = localBaseCap
         self.foreignBaseCap = foreignBaseCap

@@ -61,6 +61,7 @@ struct CardTemplateListView: View {
             .onAppear {
                 do {
                     try CardTemplate.syncDefaultTemplates(in: context)
+                    try CardTemplate.refreshCardsFromTemplates(in: context)
                 } catch {
                     print("Failed to sync card templates: \(error)")
                 }

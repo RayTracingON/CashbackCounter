@@ -14,6 +14,7 @@ struct AddCardView: View {
     
     // 1. 接收要编辑的卡片 (如果是 nil 就是添加模式)
     var cardToEdit: CreditCard?
+    private let template: CardTemplate?
     var onSaved: (() -> Void)? = nil
     
     // --- 表单状态 ---
@@ -51,6 +52,7 @@ struct AddCardView: View {
     // --- 2. 核心：自定义初始化 ---
     init(template: CardTemplate? = nil, cardToEdit: CreditCard? = nil, onSaved: (() -> Void)? = nil) {
         self.cardToEdit = cardToEdit
+        self.template = template
         self.onSaved = onSaved
         
         // 逻辑 A: 如果是编辑模式 (cardToEdit 有值) -> 填充旧数据
@@ -387,6 +389,7 @@ struct AddCardView: View {
                 specialRates: specialRates,
                 issueRegion: region,
                 foreignCurrencyRate: foreignRate,
+                templateKey: template?.templateKey,
                 // 👇 传入新属性
                 localBaseCap: locBaseCap,
                 foreignBaseCap: forBaseCap,

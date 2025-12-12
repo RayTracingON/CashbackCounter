@@ -24,6 +24,21 @@ final class CardTemplate: Identifiable {
     var categoryCaps: [Category: Double]
     var capPeriod: CapPeriod
 
+    func applyRules(to card: CreditCard) {
+        card.bankName = bankName
+        card.type = type
+        card.colorHexes = colors
+        card.issueRegion = region
+        card.specialRates = Dictionary(uniqueKeysWithValues: specialRate.map { ($0.key, $0.value / 100.0) })
+        card.defaultRate = defaultRate / 100.0
+        card.foreignCurrencyRate = foreignCurrencyRate.map { $0 / 100.0 }
+        card.localBaseCap = localBaseCap
+        card.foreignBaseCap = foreignBaseCap
+        card.categoryCaps = categoryCaps
+        card.capPeriod = capPeriod
+        card.templateKey = templateKey
+    }
+
     init(templateKey: String,
          bankName: String,
          type: String,
@@ -128,6 +143,17 @@ extension CardTemplate {
             } else {
                 context.insert(seed.makeModel())
             }
+        }
+    }
+
+    static func refreshCardsFromTemplates(in context: ModelContext) throws {
+        let templates = try context.fetch(FetchDescriptor<CardTemplate>())
+        let templateMap = Dictionary(uniqueKeysWithValues: templates.map { ($0.templateKey, $0) })
+        let cards = try context.fetch(FetchDescriptor<CreditCard>())
+
+        for card in cards {
+            guard let key = card.templateKey, let template = templateMap[key] else { continue }
+            template.applyRules(to: card)
         }
     }
 }
