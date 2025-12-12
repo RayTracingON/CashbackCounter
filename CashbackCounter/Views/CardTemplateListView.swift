@@ -11,7 +11,10 @@ import SwiftData
 struct CardTemplateListView: View {
     @Environment(\.modelContext) var context
     @Environment(\.dismiss) var dismiss
-    @Query(sort: [SortDescriptor(\.bankName), SortDescriptor(\.type)]) private var templates: [CardTemplate]
+    @Query(sort: [
+        SortDescriptor<CardTemplate>(\.bankName),
+        SortDescriptor<CardTemplate>(\.type)
+    ]) private var templates: [CardTemplate]
 
     // 1. 控制跳转的状态：存用户选了哪个模板
     @State private var selectedTemplate: CardTemplate?
