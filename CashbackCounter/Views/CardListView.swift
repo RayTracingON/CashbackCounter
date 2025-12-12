@@ -170,8 +170,14 @@ struct CardListView: View {
                             
                             if !cardfli.isEmpty,
                                let csvURL = cardfli.exportCSVFile() {
-                                ShareLink(item: csvURL) {
-                                    Label("导出交易", systemImage: "square.and.arrow.up")
+                                if let receiptsZipURL = cardfli.exportReceiptsZip() {
+                                    ShareLink(items: [csvURL, receiptsZipURL]) {
+                                        Label("导出交易与收据", systemImage: "square.and.arrow.up")
+                                    }
+                                } else {
+                                    ShareLink(item: csvURL) {
+                                        Label("导出交易", systemImage: "square.and.arrow.up")
+                                    }
                                 }
                             }
                             

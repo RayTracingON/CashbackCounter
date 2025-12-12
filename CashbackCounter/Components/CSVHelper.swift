@@ -177,4 +177,88 @@ extension Array where Element == Transaction {
             return nil
         }
     }
+
+    /// 导出带收据图片的压缩包，文件名中会包含交易日期与商户，便于识别。
+    /// - Returns: 生成的 zip 文件 URL，如果当前没有收据则返回 nil。
+    func exportReceiptsZip() -> URL? {
+        // 仅处理包含收据图片的交易
+        let transactionsWithReceipts: [(index: Int, transaction: Transaction, data: Data)] =
+            self.enumerated().compactMap { index, transaction in
+                guard let data = transaction.receiptData else { return nil }
+                return (index, transaction, data)
+            }
+
+        guard !transactionsWithReceipts.isEmpty else { return nil }
+
+        let fileManager = FileManager.default
+
+        // 生成时间戳，便于区分导出批次
+        let timestampFormatter = DateFormatter()
+        timestampFormatter.dateFormat = "yyyyMMdd_HHmmss"
+        let timestamp = timestampFormatter.string(from: Date())
+
+        // 临时收据目录
+        let receiptsDirectory = fileManager.temporaryDirectory
+            .appendingPathComponent("Cashback_Receipts_\(timestamp)")
+
+        do {
+            // 如果目录已存在，先清理
+            if fileManager.fileExists(atPath: receiptsDirectory.path) {
+                try fileManager.removeItem(at: receiptsDirectory)
+            }
+            try fileManager.createDirectory(at: receiptsDirectory, withIntermediateDirectories: true)
+        } catch {
+            print("收据目录创建失败: \(error)")
+            return nil
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+
+        // 写入所有收据图片
+        for entry in transactionsWithReceipts {
+            let transaction = entry.transaction
+            let dateString = dateFormatter.string(from: transaction.date)
+
+            // 商户名称用于文件名，移除不安全字符并控制长度
+            let sanitizedMerchant = transaction.merchant
+                .replacingOccurrences(of: "[^A-Za-z0-9_-]", with: "_", options: .regularExpression)
+                .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+
+            let merchantComponent: String
+            if sanitizedMerchant.isEmpty {
+                merchantComponent = "receipt"
+            } else {
+                let prefix = sanitizedMerchant.prefix(40) // 避免文件名过长
+                merchantComponent = String(prefix)
+            }
+
+            let filename = "receipt_\(dateString)_\(merchantComponent)_\(entry.index + 1).jpg"
+            let fileURL = receiptsDirectory.appendingPathComponent(filename)
+
+            do {
+                try entry.data.write(to: fileURL)
+            } catch {
+                print("写入收据失败: \(error)")
+            }
+        }
+
+        // 将收据目录压缩为 zip
+        let zipURL = fileManager.temporaryDirectory.appendingPathComponent("Cashback_Receipts_\(timestamp).zip")
+
+        do {
+            if fileManager.fileExists(atPath: zipURL.path) {
+                try fileManager.removeItem(at: zipURL)
+            }
+
+            try fileManager.zipItem(at: receiptsDirectory, to: zipURL, shouldKeepParent: false)
+
+            // 清理中间目录
+            try fileManager.removeItem(at: receiptsDirectory)
+            return zipURL
+        } catch {
+            print("收据压缩失败: \(error)")
+            return nil
+        }
+    }
 }

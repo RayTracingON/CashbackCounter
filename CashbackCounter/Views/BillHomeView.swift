@@ -199,8 +199,14 @@ struct BillHomeView: View {
                         // 1. 导出选项
                         if !filteredTransactions.isEmpty,
                            let csvURL = filteredTransactions.exportCSVFile() {
-                            ShareLink(item: csvURL) {
-                                Label("导出账单", systemImage: "square.and.arrow.up")
+                            if let receiptsZipURL = filteredTransactions.exportReceiptsZip() {
+                                ShareLink(items: [csvURL, receiptsZipURL]) {
+                                    Label("导出账单与收据", systemImage: "square.and.arrow.up")
+                                }
+                            } else {
+                                ShareLink(item: csvURL) {
+                                    Label("导出账单", systemImage: "square.and.arrow.up")
+                                }
                             }
                         }
                                                 
