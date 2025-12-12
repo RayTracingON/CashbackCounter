@@ -145,12 +145,12 @@ struct AddCardView: View {
             if let cap = template.categoryCaps[.other], cap > 0 {
                 _otherCapStr = State(initialValue: String(format: "%.0f", cap))
             }
-            
+
             _region = State(initialValue: template.region)
-            _capPeriod = State(initialValue: .monthly)
+            _capPeriod = State(initialValue: template.capPeriod)
             let defStr = String(format: "%.1f", template.defaultRate)
             _defaultRateStr = State(initialValue: defStr.replacingOccurrences(of: ".0", with: ""))
-            
+
             if let fr = template.foreignCurrencyRate {
                 let frStr = String(format: "%.1f", fr)
                 _foreignRateStr = State(initialValue: frStr.replacingOccurrences(of: ".0", with: ""))
