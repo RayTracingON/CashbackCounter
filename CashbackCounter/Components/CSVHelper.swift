@@ -7,6 +7,7 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import ZIPFoundation
 
 // 👇 1. 新增：专门负责导入解析的结构体
 struct CSVHelper {
