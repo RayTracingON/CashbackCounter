@@ -13,65 +13,118 @@ import ZIPFoundation
 struct CSVHelper {
     
     // MARK: - 导入交易逻辑
-    static func parseTransactionCSV(content: String, context: ModelContext, allCards: [CreditCard]) throws {
+    static func importBackupZip(url: URL, context: ModelContext, allCards: [CreditCard]) throws {
+            let fileManager = FileManager.default
+            // 创建临时目录用于解压
+            let tempDir = fileManager.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            
+            try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+            defer { try? fileManager.removeItem(at: tempDir) } // 结束后清理
+            
+            // 1. 解压文件
+            try fileManager.unzipItem(at: url, to: tempDir)
+            
+            // 2. 寻找 CSV 文件
+            // 注意：根据导出逻辑，CSV 可能直接在根目录，或者解压后的同名文件夹内
+            // 这里假设结构是标准的: /Transactions.csv 和 /Receipts/
+            let csvURL = tempDir.appendingPathComponent("Transactions.csv")
+            
+            guard fileManager.fileExists(atPath: csvURL.path) else {
+                throw NSError(domain: "CSVHelper", code: 404, userInfo: [NSLocalizedDescriptionKey: "ZIP 文件中未找到 Transactions.csv"])
+            }
+            
+            // 3. 读取 CSV 内容
+            let content = try String(contentsOf: csvURL, encoding: .utf8)
+            
+            // 4. 定位收据文件夹 (如果存在)
+            let receiptsDir = tempDir.appendingPathComponent("Receipts")
+            let receiptsURL = fileManager.fileExists(atPath: receiptsDir.path) ? receiptsDir : nil
+            
+            // 5. 调用核心解析逻辑，并传入收据路径
+            try parseTransactionCSV(content: content, context: context, allCards: allCards, receiptsDirectory: receiptsURL)
+        }
+
+        // MARK: - 导入 CSV 核心逻辑 (修改版)
+        // 👇 新增 receiptsDirectory 参数
+    static func parseTransactionCSV(content: String, context: ModelContext, allCards: [CreditCard], receiptsDirectory: URL? = nil) throws {
         let rows = content.components(separatedBy: .newlines)
         
-        // 预先准备反查字典，提高匹配效率
-        // 把 "餐饮美食" -> .dining
         let categoryMap: [String: Category] = Dictionary(uniqueKeysWithValues: Category.allCases.map { ($0.displayName, $0) })
-        // 把 "中国大陆" -> .cn
         let regionMap: [String: Region] = Dictionary(uniqueKeysWithValues: Region.allCases.map { ($0.rawValue, $0) })
         
+        // 准备日期格式化器 (用于重建图片文件名)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        
         for (index, row) in rows.enumerated() {
-            // 跳过表头(第0行)和空行
+            // index 0 是表头，index 1 是第一条数据
             if index == 0 || row.trimmingCharacters(in: .whitespaces).isEmpty { continue }
             
-            // 👇 使用智能分割，处理你导出时加的引号
             let columns = splitCSVLine(row)
-            
-            // 确保列数足够 (你的 generateCSV 生成了 9 列)
             if columns.count < 9 { continue }
             
-            // --- 1. 解析字段 (对应 generateCSV 的顺序) ---
-            // 顺序: 0:时间, 1:商户, 2:类别, 3:原币金额, 4:入账金额, 5:返现, 6:卡名, 7:尾号, 8:地区
-            
+            // 1. 解析基础字段
             let dateStr = columns[0]
-            // 处理商户名：去掉包裹的引号，并把双引号转义还原 ("" -> ")
             let merchant = cleanCSVField(columns[1])
             let categoryName = columns[2]
             let amount = Double(columns[3]) ?? 0.0
             let billing = Double(columns[4]) ?? 0.0
             let cashback = Double(columns[5]) ?? 0.0
-            let cardNameRaw = cleanCSVField(columns[6]) // 去掉卡名的引号
+            let cardNameRaw = cleanCSVField(columns[6])
             let cardEndNum = columns[7]
-            let regionName = columns[8] // 注意：这里可能带有换行符，需要小心
+            let regionName = columns[8]
             
-            // --- 2. 类型转换 ---
-            let date = dateStr.toDate() // 使用你项目里的 toDate()
+            let date = dateStr.toDate()
             let category = categoryMap[categoryName] ?? .other
-            // regionName 可能会带 \r (Windows换行符)，需要 trim 一下
             let cleanRegionName = regionName.trimmingCharacters(in: .whitespacesAndNewlines)
             let region = regionMap[cleanRegionName] ?? .cn
             
-            // --- 3. 核心：找回对应的信用卡 ---
-            // 逻辑：尝试在 allCards 中找到一张卡，它的 (BankName + Type) 和 尾号 都匹配
-            var matchedCard: CreditCard? = nil
+            // 2. 尝试匹配收据图片
+            var receiptData: Data? = nil
+            if let receiptsDir = receiptsDirectory {
+                // 重建文件名逻辑 (必须与导出时完全一致)
+                // 导出时用的逻辑: "receipt_\(dateString)_\(sanitizedMerchant)_\(index + 1).jpg"
+                // 这里的 index 是 CSV 行号。
+                // 导出循环: for (i, t) in self.enumerated() -> 对应文件名后缀 i+1
+                // 导入循环: index 0 是 Header, index 1 是第一条数据。
+                // 所以：第一条数据(行号1) 对应 文件后缀 1。
+                // 结论：直接使用 index 即可。
+                
+                let dateString = dateFormatter.string(from: date)
+                let sanitizedMerchant = merchant
+                    .replacingOccurrences(of: "[^A-Za-z0-9_\\u4e00-\\u9fa5-]", with: "_", options: .regularExpression)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+                
+                // 处理商户名截断 (导出时限制了前40个字符)
+                let merchantComponent: String
+                if sanitizedMerchant.isEmpty {
+                    merchantComponent = "receipt"
+                } else {
+                    merchantComponent = String(sanitizedMerchant.prefix(40))
+                }
+                
+                let filename = "receipt_\(dateString)_\(merchantComponent)_\(index).jpg"
+                let fileURL = receiptsDir.appendingPathComponent(filename)
+                
+                // 如果文件存在，读取数据
+                if FileManager.default.fileExists(atPath: fileURL.path) {
+                    receiptData = try? Data(contentsOf: fileURL)
+                }
+            }
             
+            // 3. 匹配卡片
+            var matchedCard: CreditCard? = nil
             if cardEndNum != "无卡" && cardNameRaw != "已删除卡片" {
-                // 优先尝试全匹配 (卡名+尾号)
                 matchedCard = allCards.first { card in
                     let dbCardName = "\(card.bankName) \(card.type)"
                     return card.endNum == cardEndNum && dbCardName == cardNameRaw
                 }
-                
-                // 如果找不到（可能用户改了卡名），尝试只匹配尾号作为兜底
                 if matchedCard == nil {
                     matchedCard = allCards.first { $0.endNum == cardEndNum }
                 }
             }
             
-            // --- 4. 创建并插入交易 ---
-            // 注意：直接使用 CSV 里的 cashbackAmount，保证历史数据一致性
+            // 4. 创建交易
             let newTransaction = Transaction(
                 merchant: merchant,
                 category: category,
@@ -79,6 +132,7 @@ struct CSVHelper {
                 amount: amount,
                 date: date,
                 card: matchedCard,
+                receiptData: receiptData, // 👈 传入读取到的图片数据
                 billingAmount: billing,
                 cashbackAmount: cashback
             )
@@ -154,111 +208,73 @@ extension Array where Element == Transaction {
         return csvString
     }
     
-    // 生成临时的 CSV 文件 URL (用于分享)
-    func exportCSVFile() -> URL? {
-        // ... (保持你发来的代码不变) ...
-        let bom = "\u{FEFF}"
-        let csvString = bom + self.generateCSV()
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd_HHmmss"
-        let dateString = formatter.string(from: Date())
-        
-        let fileName = "Cashback_Export_\(dateString).csv"
-        
-        // ⚠️ 建议：如果你之前遇到过 tmp 目录分享报错的问题
-        // 可以改用 .cachesDirectory，不过 .temporaryDirectory 也是标准的做法
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        
-        do {
-            try csvString.write(to: tempURL, atomically: true, encoding: .utf8)
-            return tempURL
-        } catch {
-            print("CSV 生成失败: \(error)")
-            return nil
-        }
-    }
 
     /// 导出带收据图片的压缩包，文件名中会包含交易日期与商户，便于识别。
     /// - Returns: 生成的 zip 文件 URL，如果当前没有收据则返回 nil。
     func exportReceiptsZip() -> URL? {
-        // 仅处理包含收据图片的交易
-        let transactionsWithReceipts: [(index: Int, transaction: Transaction, data: Data)] =
-            self.enumerated().compactMap { index, transaction in
-                guard let data = transaction.receiptData else { return nil }
-                return (index, transaction, data)
-            }
-
-        guard !transactionsWithReceipts.isEmpty else { return nil }
-
         let fileManager = FileManager.default
-
-        // 生成时间戳，便于区分导出批次
         let timestampFormatter = DateFormatter()
         timestampFormatter.dateFormat = "yyyyMMdd_HHmmss"
         let timestamp = timestampFormatter.string(from: Date())
-
-        // 临时收据目录
-        let receiptsDirectory = fileManager.temporaryDirectory
-            .appendingPathComponent("Cashback_Receipts_\(timestamp)")
-
+        
+        // 1. 创建临时导出根目录 (例如: tmp/Cashback_Export_20251212_101010)
+        let rootFolderName = "Cashback_Export_\(timestamp)"
+        let rootURL = fileManager.temporaryDirectory.appendingPathComponent(rootFolderName)
+        
+        // 最终的 Zip 路径
+        let zipURL = fileManager.temporaryDirectory.appendingPathComponent("\(rootFolderName).zip")
+        
         do {
-            // 如果目录已存在，先清理
-            if fileManager.fileExists(atPath: receiptsDirectory.path) {
-                try fileManager.removeItem(at: receiptsDirectory)
+            // 清理旧文件
+            if fileManager.fileExists(atPath: rootURL.path) {
+                try fileManager.removeItem(at: rootURL)
             }
-            try fileManager.createDirectory(at: receiptsDirectory, withIntermediateDirectories: true)
-        } catch {
-            print("收据目录创建失败: \(error)")
-            return nil
-        }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyMMdd"
-
-        // 写入所有收据图片
-        for entry in transactionsWithReceipts {
-            let transaction = entry.transaction
-            let dateString = dateFormatter.string(from: transaction.date)
-
-            // 商户名称用于文件名，移除不安全字符并控制长度
-            let sanitizedMerchant = transaction.merchant
-                .replacingOccurrences(of: "[^A-Za-z0-9_-]", with: "_", options: .regularExpression)
-                .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
-
-            let merchantComponent: String
-            if sanitizedMerchant.isEmpty {
-                merchantComponent = "receipt"
-            } else {
-                let prefix = sanitizedMerchant.prefix(40) // 避免文件名过长
-                merchantComponent = String(prefix)
-            }
-
-            let filename = "receipt_\(dateString)_\(merchantComponent)_\(entry.index + 1).jpg"
-            let fileURL = receiptsDirectory.appendingPathComponent(filename)
-
-            do {
-                try entry.data.write(to: fileURL)
-            } catch {
-                print("写入收据失败: \(error)")
-            }
-        }
-
-        // 将收据目录压缩为 zip
-        let zipURL = fileManager.temporaryDirectory.appendingPathComponent("Cashback_Receipts_\(timestamp).zip")
-
-        do {
             if fileManager.fileExists(atPath: zipURL.path) {
                 try fileManager.removeItem(at: zipURL)
             }
-
-            try fileManager.zipItem(at: receiptsDirectory, to: zipURL, shouldKeepParent: false)
-
-            // 清理中间目录
-            try fileManager.removeItem(at: receiptsDirectory)
+            
+            // 创建根目录
+            try fileManager.createDirectory(at: rootURL, withIntermediateDirectories: true)
+            
+            // --- A. 写入 CSV ---
+            let bom = "\u{FEFF}"
+            let csvString = bom + self.generateCSV()
+            let csvURL = rootURL.appendingPathComponent("Transactions.csv")
+            try csvString.write(to: csvURL, atomically: true, encoding: .utf8)
+            
+            // --- B. 写入收据图片 ---
+            // 创建 Receipts 子文件夹
+            let receiptsDir = rootURL.appendingPathComponent("Receipts")
+            try fileManager.createDirectory(at: receiptsDir, withIntermediateDirectories: true)
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyyMMdd"
+            
+            // 遍历并保存图片
+            for (index, transaction) in self.enumerated() {
+                if let data = transaction.receiptData {
+                    let dateString = dateFormatter.string(from: transaction.date)
+                    // 清理商户名中的非法字符
+                    let sanitizedMerchant = transaction.merchant
+                        .replacingOccurrences(of: "[^A-Za-z0-9_\\u4e00-\\u9fa5-]", with: "_", options: .regularExpression)
+                    
+                    let filename = "receipt_\(dateString)_\(sanitizedMerchant)_\(index + 1).jpg"
+                    let fileURL = receiptsDir.appendingPathComponent(filename)
+                    try? data.write(to: fileURL)
+                }
+            }
+            
+            // --- C. 压缩整个根目录 ---
+            // shouldKeepParent: false 表示解压后直接看到 CSV 和 Receipts 文件夹，不用再点一层
+            try fileManager.zipItem(at: rootURL, to: zipURL, shouldKeepParent: false)
+            
+            // 清理临时目录
+            try? fileManager.removeItem(at: rootURL)
+            
             return zipURL
+            
         } catch {
-            print("收据压缩失败: \(error)")
+            print("打包导出失败: \(error)")
             return nil
         }
     }

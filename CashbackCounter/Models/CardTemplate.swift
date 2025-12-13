@@ -122,7 +122,7 @@ struct CardTemplateSeed {
 extension CardTemplate {
     static let defaultSeeds: [CardTemplateSeed] = [
         CardTemplateSeed(bankName: "滙豐香港", type: "Red信用卡", colors: ["DA291C", "005863"], region: .hk, specialRate: [ : ], defaultRate: 4.0, foreignCurrencyRate: 1.0, localBaseCap: 4800, foreignBaseCap: 0, categoryCaps: [: ]),
-        CardTemplateSeed(bankName: "滙豐香港", type: "Pulse銀聯信用卡 ", colors: ["DB0011", "1A1A1A"], region: .cn, specialRate: [ .dining: 5 ], defaultRate: 4.4, foreignCurrencyRate: 2.4, localBaseCap: 4400, foreignBaseCap: 2400, categoryCaps: [.dining: 500]),
+        CardTemplateSeed(bankName: "滙豐香港", type: "Pulse銀聯信用卡 ", colors: ["DB0011", "1A1A1A"], region: .cn, specialRate: [ .dining: 6 ], defaultRate: 4.4, foreignCurrencyRate: 2.4, localBaseCap: 4400, foreignBaseCap: 2400, categoryCaps: [.dining: 500]),
         CardTemplateSeed(bankName: "滙豐香港", type: "卓越理財信用卡", colors: ["111111", "D9D9D9"], region: .hk, specialRate: [ : ], defaultRate: 0.4, foreignCurrencyRate: 2.4),
         CardTemplateSeed(bankName: "滙豐香港", type: "Visa Signature卡", colors: ["1C1C1C", "757575"], region: .hk, specialRate: [ : ], defaultRate: 1.6, foreignCurrencyRate: 3.6, foreignBaseCap: 3600),
         CardTemplateSeed(bankName: "滙豐香港", type: "萬事達卡扣賬卡", colors: ["1D5564", "85BDCD"], region: .hk, specialRate: [ : ], defaultRate: 0.4, foreignCurrencyRate: 0.4),

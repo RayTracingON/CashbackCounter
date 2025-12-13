@@ -58,20 +58,6 @@ struct CardTemplateListView: View {
                     rootSheet = nil
                 })
             }
-            .onAppear {
-                do {
-                    try CardTemplate.syncDefaultTemplates(in: context)
-                    try CardTemplate.refreshCardsFromTemplates(in: context)
-                } catch {
-                    print("Failed to sync card templates: \(error)")
-                }
-            }
         }
     }
-}
-
-#Preview {
-    // 使用 .constant 来模拟一个 Binding
-    CardTemplateListView(rootSheet: .constant(.template))
-        .modelContainer(for: [CreditCard.self, CardTemplate.self], inMemory: true)
 }

@@ -611,6 +611,16 @@
         }
       }
     },
+    "全部数据导出" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export All Data"
+          }
+        }
+      }
+    },
     "全部账单" : {
       "localizations" : {
         "en" : {
@@ -1187,9 +1197,6 @@
         }
       }
     },
-    "导出交易与收据" : {
-
-    },
     "导出卡片" : {
       "localizations" : {
         "en" : {
@@ -1208,6 +1215,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "匯出卡片"
+          }
+        }
+      }
+    },
+    "导出卡片与账单" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯出卡片與帳單"
           }
         }
       }
@@ -1233,9 +1250,6 @@
           }
         }
       }
-    },
-    "导出账单与收据" : {
-
     },
     "尾号 (后四位)" : {
       "localizations" : {
@@ -1390,10 +1404,36 @@
       }
     },
     "总支出" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Expense"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "總支出"
+          }
+        }
+      }
     },
     "总返现" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Cashback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "總返現"
+          }
+        }
+      }
     },
     "感谢所有对项目提出建议与贡献的朋友们！" : {
       "localizations" : {
@@ -1537,28 +1577,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收據憑證"
-          }
-        }
-      }
-    },
-    "数据导入/导出" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Data Import/Export"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "数据导入/导出"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "資料匯入/匯出"
           }
         }
       }
@@ -2451,28 +2469,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "致謝"
-          }
-        }
-      }
-    },
-    "见首页右上角" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "See the top-right of the home screen"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "见首页右上角"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "見首頁右上角"
           }
         }
       }
