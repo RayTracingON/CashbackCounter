@@ -169,11 +169,12 @@ struct CardListView: View {
                             // 选项 2: 导出 (这里先预留位置)
                             
                             if !cardfli.isEmpty,
-                               let csvURL = cardfli.exportCSVFile() {
-                                ShareLink(item: csvURL) {
-                                    Label("导出交易", systemImage: "square.and.arrow.up")
-                                }
-                            }
+                               let receiptsZipURL = cardfli.exportReceiptsZip() {
+                                    ShareLink(items: [receiptsZipURL]) {
+                                        Label("导出交易", systemImage: "square.and.arrow.up")
+                                    }
+                            } 
+                            
                             
                             
                             Divider() // 分割线，把危险操作隔开
@@ -223,6 +224,14 @@ struct CardListView: View {
                             Image(systemName: "ellipsis.circle.fill").font(.system(size: 24))
                         }
                     }
+                }
+            }
+            .onAppear {
+                do {
+                    try CardTemplate.syncDefaultTemplates(in: context)
+                    try CardTemplate.refreshCardsFromTemplates(in: context)
+                } catch {
+                    print("Failed to sync card templates: \(error)")
                 }
             }
             .sheet(item: $activeSheet) { type in

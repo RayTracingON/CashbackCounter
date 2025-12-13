@@ -198,11 +198,12 @@ struct BillHomeView: View {
                     Menu {
                         // 1. 导出选项
                         if !filteredTransactions.isEmpty,
-                           let csvURL = filteredTransactions.exportCSVFile() {
-                            ShareLink(item: csvURL) {
-                                Label("导出账单", systemImage: "square.and.arrow.up")
+                           let receiptsZipURL = filteredTransactions.exportReceiptsZip() {
+                                ShareLink(items: [receiptsZipURL]) {
+                                    Label("导出账单", systemImage: "square.and.arrow.up")
+                                }
                             }
-                        }
+                        
                                                 
                         // 2. 导入选项
                         Button {
@@ -221,7 +222,7 @@ struct BillHomeView: View {
             }
             .fileImporter(
                 isPresented: $showFileImporter,
-                allowedContentTypes: [.commaSeparatedText], // 兼容 .csv
+                allowedContentTypes: [.commaSeparatedText, .zip], // 兼容 .csv
                 allowsMultipleSelection: false
             ) { result in
                 switch result {
@@ -232,11 +233,18 @@ struct BillHomeView: View {
                     defer { url.stopAccessingSecurityScopedResource() }
                     
                     do {
-                        let content = try String(contentsOf: url, encoding: .utf8)
-                        // 调用刚才写的 Helper，传入 context 和当前的卡片列表
-                        try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
+                        // 👇 判断文件类型
+                        if url.pathExtension.lowercased() == "zip" {
+                            // 调用 ZIP 导入 (包含收据)
+                            try CSVHelper.importBackupZip(url: url, context: context, allCards: cards)
+                            importMessage = "ZIP 备份导入成功！"
+                        } else {
+                            // 调用普通 CSV 导入 (无收据)
+                            let content = try String(contentsOf: url, encoding: .utf8)
+                            try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
+                            importMessage = "CSV 导入成功！"
+                        }
                         
-                        importMessage = "导入成功！"
                         showImportAlert = true
                     } catch {
                         importMessage = "导入失败：\(error.localizedDescription)"
@@ -303,6 +311,14 @@ struct BillHomeView: View {
                 } catch {
                     print("汇率获取失败：\(error)")
                 }
+            }
+        }
+        .onAppear {
+            do {
+                try CardTemplate.syncDefaultTemplates(in: context)
+                try CardTemplate.refreshCardsFromTemplates(in: context)
+            } catch {
+                print("Failed to sync card templates: \(error)")
             }
         }
     }
