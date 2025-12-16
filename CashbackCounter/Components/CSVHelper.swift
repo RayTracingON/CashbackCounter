@@ -12,6 +12,29 @@ import ZIPFoundation
 // 👇 1. 新增：专门负责导入解析的结构体
 struct CSVHelper {
     
+    // MARK: - Receipt filename helpers (shared by import/export)
+    private static let receiptDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd"
+        return formatter
+    }()
+    
+    private static func sanitizedMerchantComponent(_ merchant: String) -> String {
+        let sanitized = merchant
+            .replacingOccurrences(of: "[^A-Za-z0-9_\\u4e00-\\u9fa5-]", with: "_", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+        
+        // 限制最长 40 个字符，避免过长文件名导入时无法匹配
+        let truncated = String(sanitized.prefix(40))
+        return truncated.isEmpty ? "receipt" : truncated
+    }
+    
+    private static func receiptFilename(for merchant: String, date: Date, index: Int) -> String {
+        let dateString = receiptDateFormatter.string(from: date)
+        let merchantComponent = sanitizedMerchantComponent(merchant)
+        return "receipt_\(dateString)_\(merchantComponent)_\(index).jpg"
+    }
+    
     // MARK: - 导入交易逻辑
     static func importBackupZip(url: URL, context: ModelContext, allCards: [CreditCard]) throws {
             let fileManager = FileManager.default
@@ -52,10 +75,6 @@ struct CSVHelper {
         let categoryMap: [String: Category] = Dictionary(uniqueKeysWithValues: Category.allCases.map { ($0.displayName, $0) })
         let regionMap: [String: Region] = Dictionary(uniqueKeysWithValues: Region.allCases.map { ($0.rawValue, $0) })
         
-        // 准备日期格式化器 (用于重建图片文件名)
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyMMdd"
-        
         for (index, row) in rows.enumerated() {
             // index 0 是表头，index 1 是第一条数据
             if index == 0 || row.trimmingCharacters(in: .whitespaces).isEmpty { continue }
@@ -90,20 +109,7 @@ struct CSVHelper {
                 // 所以：第一条数据(行号1) 对应 文件后缀 1。
                 // 结论：直接使用 index 即可。
                 
-                let dateString = dateFormatter.string(from: date)
-                let sanitizedMerchant = merchant
-                    .replacingOccurrences(of: "[^A-Za-z0-9_\\u4e00-\\u9fa5-]", with: "_", options: .regularExpression)
-                    .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
-                
-                // 处理商户名截断 (导出时限制了前40个字符)
-                let merchantComponent: String
-                if sanitizedMerchant.isEmpty {
-                    merchantComponent = "receipt"
-                } else {
-                    merchantComponent = String(sanitizedMerchant.prefix(40))
-                }
-                
-                let filename = "receipt_\(dateString)_\(merchantComponent)_\(index).jpg"
+                let filename = receiptFilename(for: merchant, date: date, index: index)
                 let fileURL = receiptsDir.appendingPathComponent(filename)
                 
                 // 如果文件存在，读取数据
@@ -247,18 +253,14 @@ extension Array where Element == Transaction {
             let receiptsDir = rootURL.appendingPathComponent("Receipts")
             try fileManager.createDirectory(at: receiptsDir, withIntermediateDirectories: true)
             
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyyMMdd"
-            
             // 遍历并保存图片
             for (index, transaction) in self.enumerated() {
                 if let data = transaction.receiptData {
-                    let dateString = dateFormatter.string(from: transaction.date)
-                    // 清理商户名中的非法字符
-                    let sanitizedMerchant = transaction.merchant
-                        .replacingOccurrences(of: "[^A-Za-z0-9_\\u4e00-\\u9fa5-]", with: "_", options: .regularExpression)
-                    
-                    let filename = "receipt_\(dateString)_\(sanitizedMerchant)_\(index + 1).jpg"
+                    let filename = CSVHelper.receiptFilename(
+                        for: transaction.merchant,
+                        date: transaction.date,
+                        index: index + 1
+                    )
                     let fileURL = receiptsDir.appendingPathComponent(filename)
                     try? data.write(to: fileURL)
                 }

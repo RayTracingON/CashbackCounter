@@ -170,12 +170,23 @@ struct BillHomeView: View {
                         // 3. 列表
                         LazyVStack(spacing: 15) {
                             ForEach(filteredTransactions) { item in
-                                TransactionRow(transaction: item)
-                                    .onTapGesture { selectedTransaction = item }
-                                    .contextMenu {
-                                        Button { transactionToEdit = item } label: { Label("编辑", systemImage: "pencil") }
-                                        Button(role: .destructive) { context.delete(item) } label: { Label("删除", systemImage: "trash") }
+                                VStack(alignment: .leading, spacing: 8) {
+                                    TransactionRow(transaction: item)
+                                        .onTapGesture { selectedTransaction = item }
+                                        .contextMenu {
+                                            Button { transactionToEdit = item } label: { Label("编辑", systemImage: "pencil") }
+                                            Button(role: .destructive) { context.delete(item) } label: { Label("删除", systemImage: "trash") }
+                                        }
+                                    
+                                    if let incomes = item.incomes, !incomes.isEmpty {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            ForEach(incomes.sorted(by: { $0.date > $1.date })) { income in
+                                                IncomeRow(income: income)
+                                            }
+                                        }
+                                        .padding(.leading, 8)
                                     }
+                                }
                             }
                             
                             if filteredTransactions.isEmpty {
