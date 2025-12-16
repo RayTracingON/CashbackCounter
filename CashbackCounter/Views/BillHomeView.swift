@@ -16,6 +16,7 @@ struct BillHomeView: View {
     @State private var selectedTransaction: Transaction? = nil
     @State private var transactionToEdit: Transaction?
     @State private var incomeTargetTransaction: Transaction?
+    @State private var incomeToEdit: Income?
     @State private var showDatePicker = false
     
     // 3. 筛选状态
@@ -187,6 +188,11 @@ struct BillHomeView: View {
                                             ForEach(incomes.sorted(by: { $0.date > $1.date })) { income in
                                                 IncomeRow(income: income)
                                                     .contextMenu {
+                                                        Button {
+                                                            incomeToEdit = income
+                                                        } label: {
+                                                            Label("编辑收入", systemImage: "pencil")
+                                                        }
                                                         Button(role: .destructive) {
                                                             context.delete(income)
                                                             try? context.save()
@@ -264,7 +270,7 @@ struct BillHomeView: View {
                         } else {
                             // 调用普通 CSV 导入 (无收据)
                             let content = try String(contentsOf: url, encoding: .utf8)
-                            try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
+                            _ = try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
                             importMessage = "CSV 导入成功！"
                         }
                         
@@ -290,6 +296,9 @@ struct BillHomeView: View {
             }
             .sheet(item: $incomeTargetTransaction) { transaction in
                 AddIncomeView(transaction: transaction)
+            }
+            .sheet(item: $incomeToEdit) { income in
+                EditIncomeView(income: income)
             }
             .sheet(item: $transactionToEdit) { item in
                 AddTransactionView(transaction: item)

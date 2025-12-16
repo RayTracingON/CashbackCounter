@@ -64,13 +64,21 @@ struct CSVHelper {
             let receiptsURL = fileManager.fileExists(atPath: receiptsDir.path) ? receiptsDir : nil
             
             // 5. 调用核心解析逻辑，并传入收据路径
-            try parseTransactionCSV(content: content, context: context, allCards: allCards, receiptsDirectory: receiptsURL)
+            let createdTransactions = try parseTransactionCSV(content: content, context: context, allCards: allCards, receiptsDirectory: receiptsURL)
+            
+            // 6. 如果存在 Income.csv，再解析收入数据
+            let incomeURL = tempDir.appendingPathComponent("Income.csv")
+            if fileManager.fileExists(atPath: incomeURL.path) {
+                let incomeContent = try String(contentsOf: incomeURL, encoding: .utf8)
+                parseIncomeCSV(content: incomeContent, context: context, transactions: createdTransactions)
+            }
         }
 
         // MARK: - 导入 CSV 核心逻辑 (修改版)
         // 👇 新增 receiptsDirectory 参数
-    static func parseTransactionCSV(content: String, context: ModelContext, allCards: [CreditCard], receiptsDirectory: URL? = nil) throws {
+    static func parseTransactionCSV(content: String, context: ModelContext, allCards: [CreditCard], receiptsDirectory: URL? = nil) throws -> [Transaction] {
         let rows = content.components(separatedBy: .newlines)
+        var createdTransactions: [Transaction] = []
         
         let categoryMap: [String: Category] = Dictionary(uniqueKeysWithValues: Category.allCases.map { ($0.displayName, $0) })
         let regionMap: [String: Region] = Dictionary(uniqueKeysWithValues: Region.allCases.map { ($0.rawValue, $0) })
@@ -144,6 +152,60 @@ struct CSVHelper {
             )
             
             context.insert(newTransaction)
+            createdTransactions.append(newTransaction)
+        }
+        return createdTransactions
+    }
+    
+    /// 解析收入 CSV 并根据索引或字段关联到交易
+    private static func parseIncomeCSV(content: String, context: ModelContext, transactions: [Transaction]) {
+        let rows = content.components(separatedBy: .newlines)
+        let regionMap: [String: Region] = Dictionary(uniqueKeysWithValues: Region.allCases.map { ($0.rawValue, $0) })
+        
+        for (index, row) in rows.enumerated() {
+            if index == 0 || row.trimmingCharacters(in: .whitespaces).isEmpty { continue }
+            let columns = splitCSVLine(row)
+            if columns.count < 11 { continue }
+            
+            let dateStr = columns[0]
+            let amount = Double(columns[1]) ?? 0.0
+            let regionRaw = columns[2].trimmingCharacters(in: .whitespacesAndNewlines)
+            let detail = cleanCSVField(columns[3])
+            let platform = cleanCSVField(columns[4])
+            let isReceived = (columns[5].trimmingCharacters(in: .whitespacesAndNewlines) == "1")
+            let transactionIndex = Int(columns[6])
+            let txMerchant = cleanCSVField(columns[7])
+            let txDateStr = columns[8]
+            let txAmount = Double(columns[9]) ?? 0.0
+            let txRegionRaw = columns[10].trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            let date = dateStr.toDate()
+            let region = regionMap[regionRaw] ?? .cn
+            
+            // 优先使用交易索引匹配
+            var matchedTransaction: Transaction? = nil
+            if let idx = transactionIndex, idx > 0, idx <= transactions.count {
+                matchedTransaction = transactions[idx - 1]
+            } else {
+                // 兜底：按商户 + 日期 + 金额 + 地区匹配
+                matchedTransaction = transactions.first(where: { t in
+                    t.merchant == txMerchant &&
+                    t.dateString == txDateStr &&
+                    abs(t.amount - txAmount) < 0.0001 &&
+                    t.location.rawValue == txRegionRaw
+                })
+            }
+            
+            let income = Income(
+                amount: amount,
+                date: date,
+                location: region,
+                transaction: matchedTransaction,
+                detail: detail,
+                platform: platform,
+                isReceived: isReceived
+            )
+            context.insert(income)
         }
     }
     
@@ -248,6 +310,11 @@ extension Array where Element == Transaction {
             let csvURL = rootURL.appendingPathComponent("Transactions.csv")
             try csvString.write(to: csvURL, atomically: true, encoding: .utf8)
             
+            // 记录收入行
+            var incomeRows: [String] = []
+            let incomeHeader = "收入日期,收入金额,收入地区,交易内容,交易平台,是否收款,交易索引,关联商户,关联交易日期,关联交易金额,关联交易地区\n"
+            incomeRows.append(incomeHeader)
+            
             // --- B. 写入收据图片 ---
             // 创建 Receipts 子文件夹
             let receiptsDir = rootURL.appendingPathComponent("Receipts")
@@ -264,7 +331,19 @@ extension Array where Element == Transaction {
                     let fileURL = receiptsDir.appendingPathComponent(filename)
                     try? data.write(to: fileURL)
                 }
+                
+                if let incomes = transaction.incomes {
+                    for income in incomes {
+                        let row = Self.incomeCSVRow(for: income, transaction: transaction, transactionIndex: index + 1)
+                        incomeRows.append(row)
+                    }
+                }
             }
+            
+            // 写入 Income.csv
+            let incomeContent = "\u{FEFF}" + incomeRows.joined()
+            let incomeURL = rootURL.appendingPathComponent("Income.csv")
+            try incomeContent.write(to: incomeURL, atomically: true, encoding: .utf8)
             
             // --- C. 压缩整个根目录 ---
             // shouldKeepParent: false 表示解压后直接看到 CSV 和 Receipts 文件夹，不用再点一层
@@ -279,5 +358,21 @@ extension Array where Element == Transaction {
             print("打包导出失败: \(error)")
             return nil
         }
+    }
+    
+    private static func incomeCSVRow(for income: Income, transaction: Transaction, transactionIndex: Int) -> String {
+        let incomeDate = income.dateString
+        let incomeAmount = String(format: "%.2f", income.amount)
+        let incomeRegion = income.location.rawValue
+        let detail = "\"\(income.detail.replacingOccurrences(of: "\"", with: "\"\""))\""
+        let platform = "\"\(income.platform.replacingOccurrences(of: "\"", with: "\"\""))\""
+        let receivedFlag = income.isReceived ? "1" : "0"
+        
+        let txMerchant = "\"\(transaction.merchant.replacingOccurrences(of: "\"", with: "\"\""))\""
+        let txDate = transaction.dateString
+        let txAmount = String(format: "%.2f", transaction.amount)
+        let txRegion = transaction.location.rawValue
+        
+        return "\(incomeDate),\(incomeAmount),\(incomeRegion),\(detail),\(platform),\(receivedFlag),\(transactionIndex),\(txMerchant),\(txDate),\(txAmount),\(txRegion)\n"
     }
 }
