@@ -270,7 +270,7 @@ struct BillHomeView: View {
                         } else {
                             // 调用普通 CSV 导入 (无收据)
                             let content = try String(contentsOf: url, encoding: .utf8)
-                            try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
+                            _ = try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
                             importMessage = "CSV 导入成功！"
                         }
                         
