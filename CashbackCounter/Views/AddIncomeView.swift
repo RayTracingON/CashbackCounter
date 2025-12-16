@@ -10,7 +10,7 @@ struct AddIncomeView: View {
     @State private var amount: String = ""
     @State private var detail: String = ""
     @State private var platform: String = ""
-    @State private var location: Region
+    @State private var location: Region = .cn
     @State private var date: Date = Date()
     
     

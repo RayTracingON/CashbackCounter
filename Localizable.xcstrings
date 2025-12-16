@@ -267,7 +267,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "英文"
+            "value" : "English"
           }
         }
       }
@@ -470,10 +470,36 @@
       }
     },
     "交易内容" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交易內容"
+          }
+        }
+      }
     },
     "交易平台" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Platform"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交易平台"
+          }
+        }
+      }
     },
     "人民币 (CNY)" : {
       "localizations" : {
@@ -552,7 +578,20 @@
       }
     },
     "入账日期" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Income Date"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入賬日期"
+          }
+        }
+      }
     },
     "入账金额 (%@)" : {
       "localizations" : {
@@ -627,6 +666,12 @@
             "state" : "translated",
             "value" : "Export All Data"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部數據導出"
+          }
         }
       }
     },
@@ -675,7 +720,20 @@
       }
     },
     "关联交易" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link To"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關聯交易"
+          }
+        }
+      }
     },
     "关闭" : {
       "localizations" : {
@@ -1233,6 +1291,12 @@
     },
     "导出卡片与账单" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export All"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1572,13 +1636,52 @@
       }
     },
     "收入信息" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Income Information"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收入信息"
+          }
+        }
+      }
     },
     "收入地区" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Income Region"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收入地區"
+          }
+        }
+      }
     },
     "收入金额" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Income Amount"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收入金額"
+          }
+        }
+      }
     },
     "收据凭证" : {
       "localizations" : {
@@ -1881,6 +1984,12 @@
             "state" : "translated",
             "value" : "Year Cashback"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本年返現"
+          }
         }
       }
     },
@@ -2147,7 +2256,14 @@
       }
     },
     "添加收入" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Income"
+          }
+        }
+      }
     },
     "清除" : {
       "localizations" : {
@@ -2340,7 +2456,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "簡體中文"
+            "value" : "简体中文"
           }
         }
       }
@@ -2407,6 +2523,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "編輯卡片"
+          }
+        }
+      }
+    },
+    "编辑收入" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Income"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編輯收入"
           }
         }
       }
