@@ -29,7 +29,7 @@ struct CSVHelper {
         return truncated.isEmpty ? "receipt" : truncated
     }
     
-    private static func receiptFilename(for merchant: String, date: Date, index: Int) -> String {
+    fileprivate static func receiptFilename(for merchant: String, date: Date, index: Int) -> String {
         let dateString = receiptDateFormatter.string(from: date)
         let merchantComponent = sanitizedMerchantComponent(merchant)
         return "receipt_\(dateString)_\(merchantComponent)_\(index).jpg"
