@@ -8,17 +8,19 @@ class Income: Identifiable {
     var location: Region
     var detail : String
     var platform : String
+    var isReceived: Bool
     
     @Relationship(deleteRule: .nullify)
     var transaction: Transaction?
     
-    init(amount: Double, date: Date, location: Region, transaction: Transaction? = nil, detail: String = "",platform : String = "") {
+    init(amount: Double, date: Date, location: Region, transaction: Transaction? = nil, detail: String = "",platform : String = "", isReceived: Bool = false) {
         self.amount = amount
         self.date = date
         self.location = location
         self.transaction = transaction
         self.detail = detail
         self.platform = platform
+        self.isReceived = isReceived
     }
     var dateString: String {
             let formatter = DateFormatter()
