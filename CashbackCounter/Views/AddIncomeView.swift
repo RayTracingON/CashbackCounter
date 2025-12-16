@@ -79,6 +79,7 @@ struct AddIncomeView: View {
         guard let amt = Double(amount) else { return }
         let income = Income(amount: amt, date: date, location: location, transaction: transaction, detail: detail, platform: platform)
         context.insert(income)
+        try? context.save()
         dismiss()
     }
 }
