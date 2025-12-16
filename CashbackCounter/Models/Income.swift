@@ -7,7 +7,7 @@ class Income: Identifiable {
     var date: Date
     var currencyCode: String
     
-    @Relationship(deleteRule: .nullify, inverse: \Transaction.incomes)
+    @Relationship(deleteRule: .nullify)
     var transaction: Transaction?
     
     init(amount: Double, date: Date, currencyCode: String, transaction: Transaction? = nil) {
