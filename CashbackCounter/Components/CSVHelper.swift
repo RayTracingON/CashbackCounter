@@ -334,7 +334,7 @@ extension Array where Element == Transaction {
                 
                 if let incomes = transaction.incomes {
                     for income in incomes {
-                        let row = Self.incomeCSVRow(for: income, transaction: transaction, transactionIndex: index + 1)
+                        let row = incomeCSVRow(for: income, transaction: transaction, transactionIndex: index + 1)
                         incomeRows.append(row)
                     }
                 }
