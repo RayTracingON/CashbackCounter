@@ -18,6 +18,9 @@ class Transaction: Identifiable {
     
     @Attribute(.externalStorage) var receiptData: Data?
     
+    @Relationship(deleteRule: .cascade, inverse: \Income.transaction)
+    var incomes: [Income]?
+    
     // 👇 修改 init 方法，增加 cashbackAmount 参数
     init(merchant: String,
          category: Category,
