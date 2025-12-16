@@ -15,6 +15,7 @@ enum Category: String, CaseIterable, Codable {
     case grocery    // 超市
     case travel     // 出行
     case digital    // 数码
+    case anime      // 二次元
     case other      // 其他
     
     // 计算属性：专门负责返回对应的图标
@@ -24,6 +25,7 @@ enum Category: String, CaseIterable, Codable {
         case .grocery: return "cart.fill"
         case .travel: return "car.fill"
         case .digital: return "laptopcomputer.and.iphone"
+        case .anime: return "sparkles"
         case .other: return "creditcard"
         }
     }
@@ -35,6 +37,7 @@ enum Category: String, CaseIterable, Codable {
         case .grocery: return "超市便利"
         case .travel: return "交通出行"
         case .digital: return "数码产品"
+        case .anime: return "二次元"
         case .other: return "其他消费"
         }
     }
@@ -44,6 +47,7 @@ enum Category: String, CaseIterable, Codable {
             case .digital: return .gray
             case .grocery: return .green
             case .travel: return .purple
+            case .anime: return .blue
             case .other: return .red
             }
         }
