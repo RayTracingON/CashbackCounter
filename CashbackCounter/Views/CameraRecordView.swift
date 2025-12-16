@@ -114,6 +114,9 @@ struct CameraRecordView: View {
         .onAppear {
             cameraService.checkPermissions() // 页面出现时，启动相机
         }
+        .onDisappear {
+            cameraService.stopSession() // 页面消失时，关闭相机
+        }
         // 监听：如果相机拍到了照片，就跳转
         .onChange(of: cameraService.recentImage) { oldValue, newImage in
             if let img = newImage {
