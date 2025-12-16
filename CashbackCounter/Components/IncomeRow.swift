@@ -6,15 +6,22 @@ struct IncomeRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(income.currencyCode) \(String(format: \"%.2f\", income.amount))")
-                    .font(.subheadline).fontWeight(.semibold)
-                Text(income.date.formatted(date: .abbreviated, time: .omitted))
+                Text(income.detail)
+                    .font(.headline)
+                
+                Text(income.platform+"交易")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
             }
+
             Spacer()
-            Image(systemName: "arrow.down.backward.and.arrow.up.forward")
-                .foregroundColor(.green)
+
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("\(income.location.currencyCode) \(income.amount, format: .number.precision(.fractionLength(2)))")
+                    .fontWeight(.bold)
+                Text(income.dateString)
+                    .font(.caption)
+            }
         }
         .padding(10)
         .background(Color(uiColor: .secondarySystemGroupedBackground))

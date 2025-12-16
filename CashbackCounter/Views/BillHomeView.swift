@@ -15,6 +15,7 @@ struct BillHomeView: View {
     // 2. 控制弹窗
     @State private var selectedTransaction: Transaction? = nil
     @State private var transactionToEdit: Transaction?
+    @State private var incomeTargetTransaction: Transaction?
     @State private var showDatePicker = false
     
     // 3. 筛选状态
@@ -175,16 +176,27 @@ struct BillHomeView: View {
                                         .onTapGesture { selectedTransaction = item }
                                         .contextMenu {
                                             Button { transactionToEdit = item } label: { Label("编辑", systemImage: "pencil") }
+                                            Button { incomeTargetTransaction = item } label: { Label("添加收入", systemImage: "plus.rectangle.on.rectangle") }
+                                            Divider() // 分割线，把危险操作隔开
                                             Button(role: .destructive) { context.delete(item) } label: { Label("删除", systemImage: "trash") }
                                         }
                                     
+                                    
                                     if let incomes = item.incomes, !incomes.isEmpty {
-                                        VStack(alignment: .leading, spacing: 6) {
+                                        VStack(alignment: .leading, spacing: 8) {
                                             ForEach(incomes.sorted(by: { $0.date > $1.date })) { income in
                                                 IncomeRow(income: income)
+                                                    .contextMenu {
+                                                        Button(role: .destructive) {
+                                                            context.delete(income)
+                                                            try? context.save()
+                                                        } label: {
+                                                            Label("删除", systemImage: "trash")
+                                                        }
+                                                    }
                                             }
                                         }
-                                        .padding(.leading, 8)
+                                        .padding(.leading, 30)
                                     }
                                 }
                             }
@@ -275,6 +287,9 @@ struct BillHomeView: View {
             // 弹窗绑定
             .sheet(item: $selectedTransaction) { item in
                 TransactionDetailView(transaction: item).presentationDetents([.large])
+            }
+            .sheet(item: $incomeTargetTransaction) { transaction in
+                AddIncomeView(transaction: transaction)
             }
             .sheet(item: $transactionToEdit) { item in
                 AddTransactionView(transaction: item)

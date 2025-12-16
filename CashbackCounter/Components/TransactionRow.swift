@@ -43,7 +43,7 @@ struct TransactionRow: View {
             // 3. 右侧金额
             VStack(alignment: .trailing, spacing: 4) {
                 // 消费金额
-                Text("\(transaction.location.currencySymbol)\(String(format: "%.2f", transaction.amount))")
+                Text("\(transaction.location.currencyCode) \(String(format: "%.2f", transaction.amount))")
                     .fontWeight(.bold)
                 
                 // 日期

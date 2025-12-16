@@ -66,8 +66,3 @@ struct ReceiptFullScreenView: View {
         }
     }
 }
-
-#Preview {
-    // 随便找个系统图标做预览
-    ReceiptFullScreenView(image: UIImage(systemName: "doc.text.viewfinder")!)
-}
