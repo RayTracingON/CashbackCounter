@@ -173,7 +173,7 @@ struct BillHomeView: View {
                         LazyVStack(spacing: 15) {
                             ForEach(filteredTransactions) { item in
                                 VStack(alignment: .leading, spacing: 8) {
-                                    TransactionRow(transaction: item)
+                                    TransactionRow(transaction: item, exchangeRates: exchangeRates)
                                         .onTapGesture { selectedTransaction = item }
                                         .contextMenu {
                                             Button { transactionToEdit = item } label: { Label("编辑", systemImage: "pencil") }
