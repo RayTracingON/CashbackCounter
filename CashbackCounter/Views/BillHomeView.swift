@@ -63,13 +63,22 @@ struct BillHomeView: View {
         }
     }
     
-    // 计算总支出
+    // 计算总支出（已扣除收入）
     var totalExpense: Double {
         if exchangeRates.isEmpty { return 0.0 }
         return filteredTransactions.reduce(0) { total, t in
             let code = t.card?.issueRegion.currencyCode ?? "CNY"
             let rate = exchangeRates[code] ?? 1.0
-            return total + (t.billingAmount / rate)
+            let incomerate = exchangeRates[mainCurrencyCode] ?? 1.0
+
+            let expenseInMain = t.billingAmount / rate
+
+            // 如果你的 Income 金额字段不是 `amount`，把这里改成你实际的字段名
+            let incomeInMain = (t.incomes ?? []).reduce(0) { partial, income in
+                partial + (income.amount / incomerate)
+            }
+
+            return total + (expenseInMain - incomeInMain)
         }
     }
     
@@ -99,7 +108,7 @@ struct BillHomeView: View {
                             }) {
                                 StatBox(
                                     title: showAll ? "总支出" : (isWholeYear ? "本年支出" : "本月支出"),
-                                    amount: exchangeRates.isEmpty ? "..." : totalExpense.formatted(.currency(code: mainCurrencyCode)),
+                                    amount: exchangeRates.isEmpty ? "..." : String(format: "%.2f", totalExpense),
                                     icon: "arrow.down.circle.fill", color: .red
                                 )
                                 .overlay(
@@ -117,7 +126,7 @@ struct BillHomeView: View {
                             }) {
                                 StatBox(
                                     title: showAll ? "总返现" : (isWholeYear ? "本年返现" : "本月返现"),
-                                    amount: exchangeRates.isEmpty ? "..." : totalCashback.formatted(.currency(code: mainCurrencyCode)),
+                                    amount: exchangeRates.isEmpty ? "..." : String(format: "%.2f", totalCashback),
                                     icon: "arrow.up.circle.fill", color: .green
                                 )
                                 // 添加一个小箭头暗示可以点击 (可选)

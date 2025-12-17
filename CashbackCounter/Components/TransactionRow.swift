@@ -27,7 +27,7 @@ struct TransactionRow: View {
             .reduce(0, +)
 
         guard totalIncome > expense else { return nil }
-        return totalIncome.formatted(.currency(code: mainCurrencyCode))
+        return (totalIncome-expense).formatted(.currency(code: mainCurrencyCode))
     }
 
     private func convertToMainCurrency(amount: Double, currencyCode: String) -> Double? {
