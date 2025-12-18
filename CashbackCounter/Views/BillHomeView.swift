@@ -30,18 +30,18 @@ struct BillHomeView: View {
     @State private var showFileImporter = false
     @State private var showImportAlert = false
     @State private var importMessage = ""
-    
+
     // 👇👇👇 补回缺失的状态：是否按整年筛选
     @State private var isWholeYear = false
-    
+    @State private var selectedCategory: Category? = nil
+    @State private var showIncomeOnly = false
+
     // 4. 汇率表
     @State private var exchangeRates: [String: Double] = [:]
     @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
     // 5. 核心筛选逻辑 (升级版)
     var filteredTransactions: [Transaction] {
-        if showAll { return dbTransactions }
-        
-        return dbTransactions.filter { t in
+        var results = showAll ? dbTransactions : dbTransactions.filter { t in
             if isWholeYear {
                 // 👉 按“年”筛选 (只要年份相同)
                 return Calendar.current.isDate(t.date, equalTo: selectedDate, toGranularity: .year)
@@ -50,6 +50,16 @@ struct BillHomeView: View {
                 return Calendar.current.isDate(t.date, equalTo: selectedDate, toGranularity: .month)
             }
         }
+
+        if let category = selectedCategory {
+            results = results.filter { $0.category == category }
+        }
+
+        if showIncomeOnly {
+            results = results.filter { ($0.incomes?.isEmpty == false) }
+        }
+
+        return results
     }
     
     // 辅助：按钮显示的文字
@@ -160,7 +170,43 @@ struct BillHomeView: View {
                                         .cornerRadius(8)
                                         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue, lineWidth: 1))
                                 }
-                                
+
+                                Menu {
+                                    Button(action: { selectedCategory = nil }) {
+                                        Label("全部种类", systemImage: "checkmark.circle")
+                                    }
+
+                                    ForEach(Category.allCases, id: \.self) { category in
+                                        Button(action: { selectedCategory = category }) {
+                                            Label(category.displayName, systemImage: category.iconName)
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: selectedCategory?.iconName ?? "line.3.horizontal.decrease.circle")
+                                        Text(selectedCategory?.displayName ?? "种类")
+                                    }
+                                    .font(.subheadline)
+                                    .padding(.horizontal, 10).padding(.vertical, 5)
+                                    .background(selectedCategory == nil ? Color.clear : Color.blue)
+                                    .foregroundColor(selectedCategory == nil ? .blue : .white)
+                                    .cornerRadius(8)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue, lineWidth: 1))
+                                }
+
+                                Button(action: { showIncomeOnly.toggle() }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "tray.and.arrow.down.fill")
+                                        Text("收入单")
+                                    }
+                                    .font(.subheadline)
+                                    .padding(.horizontal, 10).padding(.vertical, 5)
+                                    .background(showIncomeOnly ? Color.blue : Color.clear)
+                                    .foregroundColor(showIncomeOnly ? .white : .blue)
+                                    .cornerRadius(8)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue, lineWidth: 1))
+                                }
+
                                 // "选择日期" 按钮
                                 Button(action: { showDatePicker = true }) {
                                     HStack(spacing: 4) {
