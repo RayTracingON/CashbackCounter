@@ -637,28 +637,6 @@
         }
       }
     },
-    "全部" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全部"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全部"
-          }
-        }
-      }
-    },
     "全部数据导出" : {
       "localizations" : {
         "en" : {
@@ -675,24 +653,18 @@
         }
       }
     },
-    "全部账单" : {
+    "全部种类" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All Bills"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全部账单"
+            "value" : "All Category"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "全部帳單"
+            "value" : "全部種類"
           }
         }
       }
@@ -1393,28 +1365,6 @@
         }
       }
     },
-    "年度账单" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annual Bills"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "年度账单"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "年度帳單"
-          }
-        }
-      }
-    },
     "开发者" : {
       "localizations" : {
         "en" : {
@@ -1636,7 +1586,14 @@
       }
     },
     "收入 %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Income %@"
+          }
+        }
+      }
     },
     "收入信息" : {
       "localizations" : {
@@ -1650,6 +1607,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收入信息"
+          }
+        }
+      }
+    },
+    "收入单" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Income"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收入單"
           }
         }
       }
@@ -1862,28 +1835,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "月份"
-          }
-        }
-      }
-    },
-    "月度账单" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monthly Bills"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "月度账单"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "月度帳單"
           }
         }
       }

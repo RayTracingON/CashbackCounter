@@ -400,7 +400,12 @@ struct AddTransactionView: View {
             return
         }
         
-        // 3. 异步调用 API
+        // 3. 异步调用 API（仅在新建模式下自动换算；编辑模式不自动请求汇率）
+        guard transactionToEdit == nil else {
+            return
+        }
+
+        // 4. 异步调用 API
         Task {
             do {
                 // 调用我们刚才写的服务

@@ -154,23 +154,9 @@ struct BillHomeView: View {
                         
                         // 2. 控制栏
                         HStack {
-                            Text(showAll ? "全部账单" : (isWholeYear ? "年度账单" : "月度账单"))
-                                .font(.headline).foregroundColor(.secondary)
-                            
-                            Spacer()
                             
                             HStack(spacing: 10) {
-                                // "显示全部" 按钮
-                                Button(action: { withAnimation { showAll = true } }) {
-                                    Text("全部")
-                                        .font(.subheadline)
-                                        .padding(.horizontal, 10).padding(.vertical, 5)
-                                        .background(showAll ? Color.blue : Color.clear)
-                                        .foregroundColor(showAll ? .white : .blue)
-                                        .cornerRadius(8)
-                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue, lineWidth: 1))
-                                }
-
+                                Spacer()
                                 Menu {
                                     Button(action: { selectedCategory = nil }) {
                                         Label("全部种类", systemImage: "checkmark.circle")
@@ -184,7 +170,7 @@ struct BillHomeView: View {
                                 } label: {
                                     HStack(spacing: 4) {
                                         Image(systemName: selectedCategory?.iconName ?? "line.3.horizontal.decrease.circle")
-                                        Text(selectedCategory?.displayName ?? "种类")
+                                        Text(selectedCategory?.displayName ?? "全部种类")
                                     }
                                     .font(.subheadline)
                                     .padding(.horizontal, 10).padding(.vertical, 5)
