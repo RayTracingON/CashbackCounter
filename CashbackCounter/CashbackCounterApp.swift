@@ -16,6 +16,7 @@ struct CashbackCounterApp: App { // 2. 这个结构体必须遵守 App 协议
     
     init() {
         NotificationManager.shared.requestAuthorization()
+        
     }
     
     var body: some Scene {
