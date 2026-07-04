@@ -50,10 +50,17 @@ struct TrendAnalysisView: View {
     let type: TrendType
     
     @State private var selectedDate: Date? = nil
-    
+
     // 可滚动 & 可缩放图表状态
     @State private var visibleMonths: Double = 6.0
     @State private var baseVisibleMonths: Double = 6.0
+
+    // 图表数据缓存：只在 onAppear 计算一次。
+    // 如果用计算属性，body 里每处引用（总额/峰值/十字线/图表本身）都会全量重算，
+    // 拖动十字线时每帧重算多遍，交易多时明显卡顿。
+    @State private var chartData: [MonthlyData] = []
+    @State private var cardPieData: [PieSliceData] = []
+    @State private var categoryPieData: [PieSliceData] = []
 
     private func exchangeRate(for currencyCode: String) -> Double {
         if currencyCode == mainCurrencyCode { return 1.0 }
@@ -77,62 +84,61 @@ struct TrendAnalysisView: View {
         return card.issueRegion.currencyCode
     }
     
+    /// 单笔交易换算到主货币后的金额（按分析类型取支出或返现）
+    private func convertedAmount(for t: Transaction) -> Double {
+        let value: Double
+        let currencyCode: String
+        if type == .expense {
+            value = t.billingAmount // 支出算入账金额
+            currencyCode = billingCurrencyCode(for: t)
+        } else {
+            value = CashbackService.calculateCashback(for: t) // 返现算返现额
+            currencyCode = t.card?.issueRegion.currencyCode ?? mainCurrencyCode
+        }
+        return value / exchangeRate(for: currencyCode)
+    }
+
     // 计算图表数据 — 覆盖全部历史月份
-    var chartData: [MonthlyData] {
+    private func computeChartData() -> [MonthlyData] {
         let calendar = Calendar.current
         let now = Date()
-        
+
         // 确定最早的交易月份
         guard let earliest = transactions.map({ $0.date }).min() else { return [] }
-        
+
+        // 一次遍历按 (年×100+月) 分组累加，O(N)；避免逐月扫描全部交易
+        var monthlyTotals: [Int: Double] = [:]
+        for t in transactions {
+            let comps = calendar.dateComponents([.year, .month], from: t.date)
+            guard let year = comps.year, let month = comps.month else { continue }
+            monthlyTotals[year * 100 + month, default: 0] += convertedAmount(for: t)
+        }
+
         let nowComponents = calendar.dateComponents([.year, .month], from: now)
         let earliestComponents = calendar.dateComponents([.year, .month], from: earliest)
         let totalMonths = max(1, (nowComponents.year! - earliestComponents.year!) * 12
                                + (nowComponents.month! - earliestComponents.month!) + 1)
-        
+
         var data: [MonthlyData] = []
-        
+
         for i in 0..<totalMonths {
             if let date = calendar.date(byAdding: .month, value: -i, to: now) {
                 let components = calendar.dateComponents([.year, .month], from: date)
-                
+
                 // 使用规范化日期 (每月1号) 以获得更好的图表显示
-                guard let normalizedDate = calendar.date(from: components) else { continue }
-                
-                // 筛选
-                let monthlyTransactions = transactions.filter { t in
-                    let tComponents = calendar.dateComponents([.year, .month], from: t.date)
-                    return tComponents.year == components.year && tComponents.month == components.month
-                }
-                
-                // 计算总额 (根据类型区分逻辑)
-                let total = monthlyTransactions.reduce(0) { sum, t in
-                    let amountToAdd: Double
-                    let currencyCode: String
-                    // 👇 分支逻辑
-                    if type == .expense {
-                        amountToAdd = t.billingAmount // 支出算入账金额
-                        currencyCode = billingCurrencyCode(for: t)
-                    } else {
-                        amountToAdd = CashbackService.calculateCashback(for: t) // 返现算返现额
-                        currencyCode = t.card?.issueRegion.currencyCode ?? mainCurrencyCode
-                    }
-                    
-                    // 汇率换算
-                    let rate = exchangeRate(for: currencyCode)
-                    return sum + (amountToAdd / rate)
-                }
-                
-                data.append(MonthlyData(date: normalizedDate, amount: total))
+                guard let normalizedDate = calendar.date(from: components),
+                      let year = components.year, let month = components.month else { continue }
+
+                data.append(MonthlyData(date: normalizedDate, amount: monthlyTotals[year * 100 + month] ?? 0))
             }
         }
         return data.reversed()
     }
-    
+
     // MARK: - 扇形图数据
-    
+
     /// 按卡片分组的消费/返现数据
-    var cardPieData: [PieSliceData] {
+    private func computeCardPieData() -> [PieSliceData] {
         var grouped: [String: (amount: Double, color: Color)] = [:]
         
         for t in transactions {
@@ -146,44 +152,23 @@ struct TrendAnalysisView: View {
                 cardColor = .gray
             }
             
-            let value: Double
-            let currencyCode: String
-            if type == .expense {
-                value = t.billingAmount
-                currencyCode = billingCurrencyCode(for: t)
-            } else {
-                value = CashbackService.calculateCashback(for: t)
-                currencyCode = t.card?.issueRegion.currencyCode ?? mainCurrencyCode
-            }
-            let rate = exchangeRate(for: currencyCode)
-            let converted = value / rate
-            
+            let converted = convertedAmount(for: t)
+
             let existing = grouped[cardName] ?? (amount: 0, color: cardColor)
             grouped[cardName] = (amount: existing.amount + converted, color: existing.color)
         }
-        
+
         return grouped
             .map { PieSliceData(label: $0.key, amount: $0.value.amount, color: $0.value.color) }
             .sorted { $0.amount > $1.amount }
     }
-    
+
     /// 按消费类别分组的消费/返现数据
-    var categoryPieData: [PieSliceData] {
+    private func computeCategoryPieData() -> [PieSliceData] {
         var grouped: [Category: Double] = [:]
-        
+
         for t in transactions {
-            let value: Double
-            let currencyCode: String
-            if type == .expense {
-                value = t.billingAmount
-                currencyCode = billingCurrencyCode(for: t)
-            } else {
-                value = CashbackService.calculateCashback(for: t)
-                currencyCode = t.card?.issueRegion.currencyCode ?? mainCurrencyCode
-            }
-            let rate = exchangeRate(for: currencyCode)
-            let converted = value / rate
-            grouped[t.category, default: 0] += converted
+            grouped[t.category, default: 0] += convertedAmount(for: t)
         }
         
         return grouped
@@ -491,6 +476,12 @@ struct TrendAnalysisView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { dismiss() }
                 }
+            }
+            .onAppear {
+                // 数据在弹窗生命周期内不变，只计算一次
+                chartData = computeChartData()
+                cardPieData = computeCardPieData()
+                categoryPieData = computeCategoryPieData()
             }
         }
     }

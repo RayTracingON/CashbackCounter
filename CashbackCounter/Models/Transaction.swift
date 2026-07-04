@@ -60,7 +60,8 @@ class Transaction: Identifiable {
         
         if let providedCashback = cashbackAmount {
             self.cashbackamount = providedCashback
-            self.rate = (providedCashback / finalBilling * 100).rounded() / 100
+            // 防止 finalBilling 为 0（如 CSV 导入解析失败）时产生 NaN
+            self.rate = finalBilling != 0 ? (providedCashback / finalBilling * 100).rounded() / 100 : 0
         } else {
             self.cashbackamount = finalBilling * nominalRate
             self.rate = nominalRate

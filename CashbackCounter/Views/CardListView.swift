@@ -138,12 +138,14 @@ struct CardListView: View {
                                 Label("编辑卡片", systemImage: "pencil")
                             }
                             
-                            let cardfli = viewModel.selectedCardTransactions(from: cards)
-                            if !cardfli.isEmpty,
-                               let receiptsZipURL = cardfli.exportReceiptsZip() {
-                                    ShareLink(items: [receiptsZipURL]) {
-                                        Label("导出交易", systemImage: "square.and.arrow.up")
-                                    }
+                            // 延迟到按钮点击时才生成 ZIP，避免在视图构建时打包收据阻塞主线程
+                            if !(selectedCard.transactions?.isEmpty ?? true) {
+                                Button {
+                                    let cardfli = viewModel.selectedCardTransactions(from: cards)
+                                    viewModel.exportedFileURL = cardfli.exportReceiptsZip()
+                                } label: {
+                                    Label("导出交易", systemImage: "square.and.arrow.up")
+                                }
                             }
                             
                             Divider()
@@ -170,9 +172,11 @@ struct CardListView: View {
                             Divider()
                             
                             
-                            if !cards.isEmpty,
-                               let csvURL = cards.exportCSVFile() {
-                                ShareLink(item: csvURL) {
+                            // 同样延迟到点击时才生成 CSV
+                            if !cards.isEmpty {
+                                Button {
+                                    viewModel.exportedFileURL = cards.exportCSVFile()
+                                } label: {
                                     Label("导出卡片", systemImage: "square.and.arrow.up")
                                 }
                             }
@@ -203,6 +207,14 @@ struct CardListView: View {
                 switch type {
                 case .template: CardTemplateListView(rootSheet: $viewModel.activeSheet)
                 case .custom: AddCardView()
+                }
+            }
+            .sheet(isPresented: Binding(
+                get: { viewModel.exportedFileURL != nil },
+                set: { if !$0 { viewModel.exportedFileURL = nil } }
+            )) {
+                if let url = viewModel.exportedFileURL {
+                    ActivityViewController(activityItems: [url])
                 }
             }
             .sheet(item: $viewModel.cardToEdit) { card in

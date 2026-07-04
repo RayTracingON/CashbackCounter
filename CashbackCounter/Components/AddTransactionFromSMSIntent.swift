@@ -22,26 +22,11 @@ struct AddTransactionFromSMSIntent: AppIntent {
         Summary("解析短信文本 \(\.$smsText)")
     }
 
-    private static let sharedModelContainer: ModelContainer = {
-        let schema = Schema([Transaction.self, CreditCard.self, Point.self, Income.self, PointAdjustment.self])
-        do {
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            return try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            print("⚠️ Intent ModelContainer 创建失败，回退内存模式: \(error)")
-            do {
-                let memConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-                return try ModelContainer(for: schema, configurations: [memConfig])
-            } catch {
-                fatalError("Intent 无法创建任何 ModelContainer: \(error)")
-            }
-        }
-    }()
-
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        
-        let modelContext = ModelContext(Self.sharedModelContainer)
+
+        // 与主 App 共用同一个容器和 mainContext，避免另起 CloudKit 同步栈
+        let modelContext = SharedModelContainer.shared.mainContext
         
         
         let textToParse = smsText.trimmingCharacters(in: .whitespacesAndNewlines)

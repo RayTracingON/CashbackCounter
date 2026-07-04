@@ -62,15 +62,33 @@ final class CardTemplateManager {
         })
     }
     
+    /// 去重逻辑版本号：只有版本号变化（通常伴随 schema 变更发版）、或数据库被重建后，
+    /// 才会重新执行一次全量去重。日常启动/切换 Tab 不再触发全表扫描。
+    private static let deduplicationVersion = 1
+
+    @MainActor
+    func runDeduplicationIfNeeded(in context: ModelContext) {
+        let defaults = UserDefaults.standard
+        let lastVersion = defaults.integer(forKey: AppConfig.UserDefaultsKey.lastDeduplicationVersion)
+        let needsDedup = defaults.bool(forKey: AppConfig.UserDefaultsKey.needsDataDeduplication)
+
+        guard lastVersion < Self.deduplicationVersion || needsDedup else { return }
+
+        // 1. 对信用卡去重，防止 CloudKit 同步或多次导入导致卡包重复卡片
+        deduplicateCards(in: context)
+
+        // 2. 对交易去重，防止 CloudKit 同步在 schema 迁移后产生重复交易记录
+        deduplicateTransactions(in: context)
+
+        defaults.set(Self.deduplicationVersion, forKey: AppConfig.UserDefaultsKey.lastDeduplicationVersion)
+        defaults.set(false, forKey: AppConfig.UserDefaultsKey.needsDataDeduplication)
+    }
+
     @MainActor
     func refreshCardsFromTemplates(in context: ModelContext, force: Bool = false) throws {
-        // 1. 先对信用卡进行去重，防止 CloudKit 同步或多次导入导致卡包重复卡片
-        deduplicateCards(in: context)
-        
-        // 2. 对交易进行去重，防止 CloudKit 同步在 schema 迁移后产生重复交易记录
-        deduplicateTransactions(in: context)
-        
         if hasRefreshedThisLaunch && !force { return }
+
+        runDeduplicationIfNeeded(in: context)
         
         let templateMap = Dictionary(self.templates.map { ($0.templateKey, $0) }, uniquingKeysWith: { first, _ in first })
         if templateMap.isEmpty { return }

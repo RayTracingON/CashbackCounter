@@ -30,6 +30,11 @@ final class AddTransactionViewModel {
     let prefillCardLast4: String?
     let shouldSkipRateUpdate: Bool
 
+    // 编辑模式下记录原始收据：只有用户换图/删图时才重新压缩写入，
+    // 避免每次编辑都 解码→再压缩 导致画质逐次劣化
+    private var originalReceiptData: Data?
+    private var originalReceiptImage: UIImage?
+
     // MARK: - Nested Types
 
     struct RewardPreview {
@@ -66,7 +71,9 @@ final class AddTransactionViewModel {
             paymentMethod = t.paymentMethod
 
             if let data = t.receiptData {
+                originalReceiptData = data
                 receiptImage = UIImage(data: data)
+                originalReceiptImage = receiptImage
             }
         } else {
             receiptImage = image
@@ -280,7 +287,18 @@ final class AddTransactionViewModel {
 
         if cards.indices.contains(selectedCardIndex) {
             let card = cards[selectedCardIndex]
-            let imageData = receiptImage?.jpegData(compressionQuality: 0.5)
+
+            // 收据数据：未改动时沿用原始 Data，避免反复 JPEG 压缩劣化画质
+            let imageData: Data?
+            if let image = receiptImage {
+                if image === originalReceiptImage, let original = originalReceiptData {
+                    imageData = original
+                } else {
+                    imageData = image.jpegData(compressionQuality: AppConfig.receiptJPEGQuality)
+                }
+            } else {
+                imageData = nil
+            }
 
             var finalCashback: Double = 0
             var pointsEarned: Int = 0
@@ -313,19 +331,21 @@ final class AddTransactionViewModel {
 
             if let t = transactionToEdit {
                 // --- 编辑模式 ---
-                t.merchant = merchant
-                t.amount = amountDouble
-                t.location = location
-                t.date = date
-
-                if t.card != card ||
+                // ⚠️ 必须先比较再赋值：判断条件里用到的旧值（如 t.date）一旦先被覆盖，比较就永远为 false
+                let needsRewardUpdate = t.card != card ||
                     t.billingAmount != billingDouble ||
                     t.category != selectedCategory ||
                     t.paymentMethod != paymentMethod ||
                     t.date != date ||
                     t.cashbackamount != finalCashback ||
-                    t.pointsEarned != pointsEarned {
+                    t.pointsEarned != pointsEarned
 
+                t.merchant = merchant
+                t.amount = amountDouble
+                t.location = location
+                t.date = date
+
+                if needsRewardUpdate {
                     t.card = card
                     t.billingAmount = billingDouble
                     t.category = selectedCategory
@@ -336,8 +356,8 @@ final class AddTransactionViewModel {
                     t.pointsEarned = pointsEarned
                 }
 
-                if let img = imageData { t.receiptData = img } else {
-                    t.receiptData = nil
+                if t.receiptData != imageData {
+                    t.receiptData = imageData
                 }
 
             } else {

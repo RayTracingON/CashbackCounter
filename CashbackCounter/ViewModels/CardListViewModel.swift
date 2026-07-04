@@ -17,6 +17,8 @@ final class CardListViewModel {
     var showFileImporter = false
     var importError: String?
     var showImportAlert = false
+    /// 点击导出按钮后生成的文件 URL（延迟生成，避免在视图构建时打包阻塞主线程）
+    var exportedFileURL: URL? = nil
     
     // MARK: - Card Selection State
     var selectedCardID: PersistentIdentifier? = nil

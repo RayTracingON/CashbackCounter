@@ -58,6 +58,14 @@ struct ContentView: View {
             } catch {
                 print("❌ \(AppError.networkFailure(underlying: error).localizedDescription)")
             }
+
+            // 一次性迁移：旧版通知 identifier 基于 hashValue，重启后无法取消，
+            // 这里清理孤儿通知并按稳定 identifier 重新注册
+            if !UserDefaults.standard.bool(forKey: AppConfig.UserDefaultsKey.didMigrateReminderIdentifiers) {
+                let cards = (try? context.fetch(FetchDescriptor<CreditCard>())) ?? []
+                NotificationManager.shared.migrateLegacyReminders(cards: cards)
+                UserDefaults.standard.set(true, forKey: AppConfig.UserDefaultsKey.didMigrateReminderIdentifiers)
+            }
         }
         .fullScreenCover(
             isPresented: Binding(

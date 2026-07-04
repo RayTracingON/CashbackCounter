@@ -28,27 +28,14 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
         Summary("识别截图 \(\.$screenshot) 并记账")
     }
 
-    private static let sharedModelContainer: ModelContainer = {
-        let schema = Schema([Transaction.self, CreditCard.self, Point.self, Income.self, PointAdjustment.self])
-        do {
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            return try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            print("⚠️ Intent ModelContainer 创建失败，回退内存模式: \(error)")
-            do {
-                let memConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-                return try ModelContainer(for: schema, configurations: [memConfig])
-            } catch {
-                fatalError("Intent 无法创建任何 ModelContainer: \(error)")
-            }
-        }
-    }()
-
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         print("[AddTransactionFromScreenshotIntent] 🏁 快捷指令开始执行")
         do {
-            let modelContext = ModelContext(Self.sharedModelContainer)
+            // 与主 App 共用同一个容器和 mainContext：
+            // 避免另起 CloudKit 同步栈（后台拉起时会报 BGTaskScheduler notPermitted），
+            // 且写入后主界面 @Query 能立即刷新
+            let modelContext = SharedModelContainer.shared.mainContext
 
             // 1. IntentFile → UIImage
             let imageData = screenshot.data

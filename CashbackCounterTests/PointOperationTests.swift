@@ -158,24 +158,24 @@ final class PointOperationTests: XCTestCase {
         XCTAssertEqual(allPoints.count, Point.defaultSeeds.count)
     }
 
-    func testSyncDefaultPoints_UpdateExisting() throws {
-        // 先插入一个默认积分但值不同
+    func testSyncDefaultPoints_PreservesUserModifiedValue() throws {
+        // 先插入一个默认积分但值不同（模拟用户手动修改过估值）
         let seed = Point.defaultSeeds[0]
         let existingPoint = Point(
             bankName: seed.bankName,
             pointName: seed.pointName,
-            pointValue: 999.0, // 故意改错
+            pointValue: 999.0, // 用户自定义值
             valueCurrencyCode: seed.valueCurrencyCode
         )
         context.insert(existingPoint)
         try context.save()
 
-        // 同步应更新值
+        // 同步不应覆盖用户修改过的值
         try Point.syncDefaultPoints(in: context)
 
         let allPoints = try context.fetch(FetchDescriptor<Point>())
-        let updated = allPoints.first { $0.bankName == seed.bankName && $0.pointName == seed.pointName }
-        XCTAssertEqual(updated?.pointValue, seed.pointValue)
+        let point = allPoints.first { $0.bankName == seed.bankName && $0.pointName == seed.pointName }
+        XCTAssertEqual(point?.pointValue, 999.0, "同步不应覆盖用户自定义的积分估值")
     }
 
     func testSyncDefaultPoints_Idempotent() throws {

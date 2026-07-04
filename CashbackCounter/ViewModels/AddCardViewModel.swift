@@ -286,6 +286,9 @@ final class AddCardViewModel {
         let resolvedPointProgram = rewardType == .points ? selectedPoint : nil
 
         if let existingCard = cardToEdit {
+            // 通知 identifier 由 bankName/type/endNum 生成，必须在改字段前用旧值取消旧通知
+            NotificationManager.shared.cancelNotification(for: existingCard)
+
             existingCard.bankName = bankName
             existingCard.type = cardType
             existingCard.endNum = endNum

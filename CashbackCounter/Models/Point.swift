@@ -138,20 +138,11 @@ extension Point {
             }
 
             // ── 第 2 步：同步种子数据 ──
-            for seed in defaultSeeds {
-                let key = seed.templateKey
-
-                if let existingPoint = deduplicatedMap[key] {
-                    // 同步默认积分价值的更新
-                    if existingPoint.pointValue != seed.pointValue {
-                        existingPoint.pointValue = seed.pointValue
-                        hasChanges = true
-                    }
-                } else {
-                    // 插入全新缺失的种子数据
-                    context.insert(seed.makeModel())
-                    hasChanges = true
-                }
+            // 只补插缺失的种子，不覆盖已存在记录的 pointValue——
+            // 用户可能手动修改过估值，每次启动强刷回默认值会丢失用户设置
+            for seed in defaultSeeds where deduplicatedMap[seed.templateKey] == nil {
+                context.insert(seed.makeModel())
+                hasChanges = true
             }
 
             // ── 第 3 步：有实质性变更时才落盘 ──

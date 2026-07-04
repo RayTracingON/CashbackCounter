@@ -40,8 +40,11 @@ final class SwiftDataTransactionRepository: TransactionRepository {
     }
 
     func fetchForCard(_ card: CreditCard) -> [Transaction] {
-        let allTransactions = fetchAll()
-        return allTransactions.filter { $0.card?.persistentModelID == card.persistentModelID }
+        let cardID = card.persistentModelID
+        let descriptor = FetchDescriptor<Transaction>(
+            predicate: #Predicate<Transaction> { $0.card?.persistentModelID == cardID }
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
     }
 
     func insert(_ transaction: Transaction) {
