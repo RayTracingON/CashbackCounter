@@ -239,13 +239,11 @@ struct EmbeddedTransactionListView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            
-            Text("")
-                .font(.headline)
-                .foregroundColor(.secondary)
-                .padding(.leading, 16)
+
+            // 返现/积分上限使用进度（卡片图片与交易列表之间）
+            CashbackProgressSection(card: card)
                 .padding(.top, 5)
-            
+
             if sortedTransactions.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "clock.arrow.circlepath")
