@@ -21,7 +21,7 @@ struct TransactionRow: View {
             !incomes.isEmpty,
             let expense = convertToMainCurrency(
                 amount: transaction.billingAmount,
-                currencyCode: transaction.card?.issueRegion.currencyCode ?? mainCurrencyCode
+                currencyCode: transaction.card != nil ? transaction.resolvedBillingCurrencyCode : mainCurrencyCode
             )
         else { return nil }
 
@@ -35,7 +35,7 @@ struct TransactionRow: View {
     
     // 2. 计算标准返现文本
     private var cashbackText: String {
-        let billingCurrency = transaction.card?.issueRegion.currencyCode ?? mainCurrencyCode
+        let billingCurrency = transaction.card != nil ? transaction.resolvedBillingCurrencyCode : mainCurrencyCode
         let amount = convertToMainCurrency(amount: transaction.cashbackamount, currencyCode: billingCurrency) ?? transaction.cashbackamount
         return amount.formatted(.currency(code: mainCurrencyCode))
     }

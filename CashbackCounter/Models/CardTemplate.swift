@@ -34,10 +34,15 @@ struct CardTemplate: Identifiable, Codable, Hashable {
     var pictureURL: String? = nil
     var memo: String? = nil
 
+    // 双币卡模板字段 (费率按百分数，同 foreignCurrencyRate)
+    var secondaryRegion: Region? = nil
+    var dualCurrencyMode: DualCurrencyMode? = nil
+    var secondaryRate: Double? = nil
+
     var templateKey: String { Self.templateKey(bankName: bankName, type: type) }
 
     enum CodingKeys: String, CodingKey {
-        case bankName, type, colors, region, specialRate, paymentMethodRates, rewardType, pointProgramKey, defaultRate, foreignCurrencyRate, localBaseCap, foreignBaseCap, categoryCaps, paymentCaps, capPeriod, pictureURL, memo
+        case bankName, type, colors, region, specialRate, paymentMethodRates, rewardType, pointProgramKey, defaultRate, foreignCurrencyRate, localBaseCap, foreignBaseCap, categoryCaps, paymentCaps, capPeriod, pictureURL, memo, secondaryRegion, dualCurrencyMode, secondaryRate
     }
 
     static func pointTemplateKey(bankName: String, pointName: String, currencyCode: Region) -> String {
@@ -102,6 +107,24 @@ struct CardTemplate: Identifiable, Codable, Hashable {
             modified = true
         }
         
+        if card.secondaryRegion != secondaryRegion {
+            card.secondaryRegion = secondaryRegion
+            modified = true
+        }
+        // 仅双币模板才同步 mode，避免单币卡被无意义地改动
+        if secondaryRegion != nil {
+            let newMode = dualCurrencyMode ?? .secondaryAsLocal
+            if card.dualCurrencyMode != newMode {
+                card.dualCurrencyMode = newMode
+                modified = true
+            }
+        }
+        let newSecondaryRate = secondaryRate.map { $0 / 100.0 }
+        if card.secondaryRate != newSecondaryRate {
+            card.secondaryRate = newSecondaryRate
+            modified = true
+        }
+
         if card.localBaseCap != localBaseCap {
             card.localBaseCap = localBaseCap
             modified = true

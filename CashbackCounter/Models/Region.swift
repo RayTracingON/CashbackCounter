@@ -59,3 +59,11 @@ enum Region: String, CaseIterable, Codable {
         }
     }
 }
+
+extension Region {
+    /// 根据货币代码 (如 "CNY") 反查地区
+    static func from(currencyCode: String) -> Region? {
+        let code = currencyCode.uppercased()
+        return Region.allCases.first { $0.currencyCode == code }
+    }
+}

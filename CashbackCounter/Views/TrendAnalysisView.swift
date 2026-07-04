@@ -70,30 +70,16 @@ struct TrendAnalysisView: View {
         return 1.0
     }
 
-    private func billingCurrencyCode(for transaction: Transaction) -> String {
-        guard let card = transaction.card else {
-            return transaction.location.currencyCode
-        }
-
-        // Legacy import: billingAmount was saved in transaction currency (no FX conversion).
-        if transaction.location != card.issueRegion,
-           abs(transaction.billingAmount - transaction.amount) < 0.0001 {
-            return transaction.location.currencyCode
-        }
-
-        return card.issueRegion.currencyCode
-    }
-    
     /// 单笔交易换算到主货币后的金额（按分析类型取支出或返现）
     private func convertedAmount(for t: Transaction) -> Double {
         let value: Double
         let currencyCode: String
         if type == .expense {
             value = t.billingAmount // 支出算入账金额
-            currencyCode = billingCurrencyCode(for: t)
+            currencyCode = t.resolvedBillingCurrencyCode
         } else {
-            value = CashbackService.calculateCashback(for: t) // 返现算返现额
-            currencyCode = t.card?.issueRegion.currencyCode ?? mainCurrencyCode
+            value = CashbackService.calculateCashback(for: t) // 返现算返现额，随入账币种计价
+            currencyCode = t.card != nil ? t.resolvedBillingCurrencyCode : mainCurrencyCode
         }
         return value / exchangeRate(for: currencyCode)
     }

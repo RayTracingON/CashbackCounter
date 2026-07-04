@@ -145,15 +145,30 @@ struct AddTransactionView: View {
                     
                     if cards.indices.contains(viewModel.selectedCardIndex) {
                         let card = cards[viewModel.selectedCardIndex]
-                        if viewModel.location.currencySymbol != card.issueRegion.currencySymbol {
+                        let billingRegion = viewModel.resolvedBillingRegion(cards: cards)
+                        if viewModel.location.currencyCode != billingRegion.currencyCode {
                             HStack {
-                                Text("入账金额 (\(card.issueRegion.currencySymbol))")
+                                Text("入账金额 (\(billingRegion.currencySymbol))")
                                     .font(.caption).foregroundColor(.red)
                                 Spacer()
                                 TextField("实际扣款", text: $viewModel.billingAmountStr)
                                     .keyboardType(.decimalPad)
                                     .multilineTextAlignment(.trailing)
                             }
+                        }
+                        if card.isDualCurrency, let secondary = card.secondaryRegion {
+                            Picker("入账币种", selection: Binding(
+                                get: { viewModel.resolvedBillingRegion(cards: cards) },
+                                set: { newRegion in
+                                    viewModel.billingRegionOverride = newRegion
+                                    viewModel.updateBillingAmount(cards: cards)
+                                    viewModel.updateRewardPreview(cards: cards)
+                                }
+                            )) {
+                                Text(card.issueRegion.currencyCode).tag(card.issueRegion)
+                                Text(secondary.currencyCode).tag(secondary)
+                            }
+                            .pickerStyle(.segmented)
                         }
                     }
                     
@@ -227,10 +242,12 @@ struct AddTransactionView: View {
                 viewModel.updateRewardPreview(cards: cards)
             }
             .onChange(of: viewModel.location) {
+                viewModel.billingRegionOverride = nil
                 viewModel.updateBillingAmount(cards: cards)
                 viewModel.updateRewardPreview(cards: cards)
             }
             .onChange(of: viewModel.selectedCardIndex) {
+                viewModel.billingRegionOverride = nil
                 viewModel.updateBillingAmount(cards: cards)
                 viewModel.updateRewardPreview(cards: cards)
             }

@@ -166,7 +166,32 @@ struct AddCardView: View {
                             Text("\(r.icon) \(r.rawValue)").tag(r)
                         }
                     }
-                    
+
+                    Toggle("双币卡", isOn: $viewModel.isDualCurrency)
+                    if viewModel.isDualCurrency {
+                        Picker("第二币种地区", selection: $viewModel.secondaryRegion) {
+                            ForEach(Region.allCases.filter { $0 != viewModel.region }, id: \.self) { r in
+                                Text("\(r.icon) \(r.currencyCode)").tag(r)
+                            }
+                        }
+                        Picker("上限模式", selection: $viewModel.dualCurrencyMode) {
+                            ForEach(DualCurrencyMode.allCases, id: \.self) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        HStack {
+                            Text("副币种费率 (%)")
+                            Spacer()
+                            TextField("同本币", text: $viewModel.secondaryRateStr)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 50)
+                        }
+                        Text("并入本币上限：仅第二币种地区消费入账副币，金额按 1:1 计入本币上限（如港币+人民币卡）。\n独立外币上限：所有境外消费入账副币种，使用外币费率与外币上限（如人民币+美元卡）。")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+
                     HStack {
                         Text(viewModel.localRateTitle)
                         Spacer()

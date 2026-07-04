@@ -134,6 +134,7 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
         }()
 
         // 7. 计算入账金额和返现
+        // TODO: billingAmount 未做换汇，异币种消费的原始金额会直接进入以卡币种计价的上限统计
         let billingAmount = amount
         var cashback: Double = 0.0
         var pointsEarned: Int = 0
@@ -187,7 +188,9 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                 billingAmount: billingAmount,
                 cashbackAmount: cashback,
                 pointsEarned: pointsEarned,
-                paymentMethod: .online
+                paymentMethod: .online,
+                // billingAmount 即原币金额，入账币种如实记为消费地币种
+                billingCurrencyCode: region.currencyCode
             )
             modelContext.insert(newTransaction)
             try modelContext.save()

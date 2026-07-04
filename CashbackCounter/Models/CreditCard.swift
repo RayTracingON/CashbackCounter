@@ -13,6 +13,28 @@ enum CapPeriod: Codable {
     case monthly
 }
 
+enum DualCurrencyMode: String, Codable, CaseIterable {
+    // 港式双币 (如 HKD+CNY)：仅副币种地区消费入账副币，费率/上限并入本币轨道 (金额 1:1 计入 localBaseCap)
+    case secondaryAsLocal
+    // 陆式双币 (如 CNY+USD)：所有境外消费入账副币种，走外币轨道 (foreignBaseCap 即副币种独立上限)
+    case secondaryAsForeign
+
+    var displayName: String {
+        switch self {
+        case .secondaryAsLocal:
+            return "并入本币上限 (1:1)"
+        case .secondaryAsForeign:
+            return "独立外币上限"
+        }
+    }
+}
+
+// 消费落在哪条基础费率/上限轨道上，纯计算辅助，不持久化
+enum RewardTrack {
+    case local
+    case foreign
+}
+
 enum RewardType: String, Codable, CaseIterable {
     case cashback
     case points
@@ -56,6 +78,17 @@ class CreditCard: Identifiable {
     
     var issueRegion: Region = Region.cn
     var foreignCurrencyRate: Double?
+
+    // 双币卡：第二入账币种地区，nil = 单币卡
+    var secondaryRegion: Region? = nil
+    var dualCurrencyMode: DualCurrencyMode = DualCurrencyMode.secondaryAsLocal
+    // 副币种入账消费的基础费率覆盖 (小数，0.01 = 1%)；nil 则用所在轨道的常规费率
+    var secondaryRate: Double? = nil
+
+    @Transient
+    var isDualCurrency: Bool {
+        secondaryRegion != nil && secondaryRegion != issueRegion
+    }
 
     // 记录该卡是否来源于某个模板，便于模板更新时同步规则
     var templateKey: String?
@@ -102,7 +135,10 @@ class CreditCard: Identifiable {
         paymentCaps: [PaymentMethod: Double] = [:],
         rewardType: RewardType = RewardType.cashback,
         pointProgram: Point? = nil,
-        cardImageData: Data? = nil // 👈 新增参数
+        cardImageData: Data? = nil, // 👈 新增参数
+        secondaryRegion: Region? = nil,
+        dualCurrencyMode: DualCurrencyMode = .secondaryAsLocal,
+        secondaryRate: Double? = nil
     ) {
         self.bankName = bankName
         self.type = type
@@ -127,6 +163,57 @@ class CreditCard: Identifiable {
         self.rewardType = rewardType
         self.pointProgram = pointProgram
         self.cardImageData = cardImageData // 👈 赋值
+        self.secondaryRegion = secondaryRegion
+        self.dualCurrencyMode = dualCurrencyMode
+        self.secondaryRate = secondaryRate
+    }
+
+    // MARK: - 双币卡解析 (所有费率/上限/入账币种判定的统一入口)
+
+    /// 该消费地点对应的入账币种地区
+    func billingRegion(for location: Region) -> Region {
+        guard let secondary = secondaryRegion, secondary != issueRegion else {
+            return issueRegion
+        }
+        switch dualCurrencyMode {
+        case .secondaryAsLocal:
+            return location == secondary ? secondary : issueRegion
+        case .secondaryAsForeign:
+            return location == issueRegion ? issueRegion : secondary
+        }
+    }
+
+    /// 该消费地点走本币轨道还是外币轨道 (决定基础费率与基础上限)
+    func rewardTrack(for location: Region) -> RewardTrack {
+        guard let secondary = secondaryRegion, secondary != issueRegion else {
+            // 单币卡：与旧逻辑 (location != issueRegion 即外币) 完全一致
+            return location == issueRegion ? .local : .foreign
+        }
+        switch dualCurrencyMode {
+        case .secondaryAsLocal:
+            // 港式：副币地区消费并入本币轨道，上限按 1:1 合并
+            return (location == issueRegion || location == secondary) ? .local : .foreign
+        case .secondaryAsForeign:
+            return location == issueRegion ? .local : .foreign
+        }
+    }
+
+    /// 该消费地点适用的基础费率 (含 secondaryRate 覆盖)
+    func baseRate(forLocation location: Region) -> Double {
+        if isDualCurrency,
+           billingRegion(for: location) == secondaryRegion,
+           let sr = secondaryRate, sr > 0 {
+            return sr
+        }
+        switch rewardTrack(for: location) {
+        case .local:
+            return defaultRate
+        case .foreign:
+            if let fr = foreignCurrencyRate, fr > 0 {
+                return fr
+            }
+            return defaultRate
+        }
     }
     
     func getRate(for category: Category, location: Region, payment: PaymentMethod) -> Double {
@@ -134,38 +221,29 @@ class CreditCard: Identifiable {
         // 使用 ?? 0.0 避免字典里没有该类别时发生崩溃
         let categoryBonus = specialRates[category] ?? 0.0
         let paymentBonus = paymentMethodRates[payment] ?? 0.0
-        
-        // 2. 确定基础费率 (Base Rate)
-        var baseRate = defaultRate
-        
-        // 如果消费地 != 发卡地，且设置了境外费率，则使用境外费率作为基础
-        // (假设你的逻辑是：境外费率取代基础费率，然后再叠加类别)
-        if location != issueRegion, let foreignRate = foreignCurrencyRate, foreignRate > 0 {
-            baseRate = foreignRate
-        }
-        
+
+        // 2. 基础费率按轨道解析 (单币卡行为不变，双币卡含 secondaryRate 覆盖)
+        let currentBaseRate = baseRate(forLocation: location)
+
         // 3. 核心修改：将基础费率与类别加成相加
-        return baseRate + categoryBonus + paymentBonus
+        return currentBaseRate + categoryBonus + paymentBonus
     }
     func calculateCappedCashback(amount: Double, category: Category, location: Region, date: Date, paymentMethod: PaymentMethod, transactionToExclude: Transaction? = nil) -> Double {
             
-        let isForeign = (location != issueRegion)
-        
+        let track = rewardTrack(for: location)
+
         // --- 第一步：准备费率和当笔理论值 ---
-        var baseRate = defaultRate
-        if isForeign, let fr = foreignCurrencyRate, fr > 0 {
-            baseRate = fr
-        }
-        let potentialBaseReward = amount * baseRate
-        
+        let currentBaseRate = baseRate(forLocation: location)
+        let potentialBaseReward = amount * currentBaseRate
+
         let categoryBonusRate = specialRates[category] ?? 0.0
         let paymentBonusRate  = paymentMethodRates[paymentMethod] ?? 0.0 // 确保 CreditCard 有这个字典
 
         let potentialCategoryReward = amount * categoryBonusRate
         let potentialPaymentReward  = amount * paymentBonusRate
-            
+
         // --- 第二步：准备上限阈值 ---
-        let baseCapLimit = isForeign ? foreignBaseCap : localBaseCap
+        let baseCapLimit = (track == .foreign) ? foreignBaseCap : localBaseCap
         let categoryCapLimit = categoryCaps[category] ?? 0.0
         let paymentCapLimit = paymentCaps[paymentMethod] ?? 0.0 // ⚠️ 确保 CreditCard 类里定义了 paymentCaps
             
@@ -192,15 +270,12 @@ class CreditCard: Identifiable {
         }
             
         // A. 计算已用基础返现 (估算值)
+        // 注意：这里假设历史费率未变。港式双币卡的副币账单金额直接累加，即按 1:1 计入本币上限
         var usedBase: Double = 0
         if baseCapLimit > 0 {
             usedBase = periodTransactions
-                .filter { ($0.location != self.issueRegion) == isForeign }
-                .reduce(0) { sum, t in
-                    // 注意：这里假设历史费率未变
-                    let tBaseRate = ((t.location != self.issueRegion) && (foreignCurrencyRate ?? 0) > 0) ? (foreignCurrencyRate ?? 0) : defaultRate
-                    return sum + (t.billingAmount * tBaseRate)
-                }
+                .filter { rewardTrack(for: $0.location) == track }
+                .reduce(0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
         }
             
         // B. 计算已用类别加成返现 (Category Used)
@@ -267,21 +342,18 @@ class CreditCard: Identifiable {
             return (points: 0, value: 0)
         }
         
-        let isForeign = (location != issueRegion)
-        
-        var baseRate = defaultRate
-        if isForeign, let fr = foreignCurrencyRate, fr > 0 {
-            baseRate = fr
-        }
-        
-        let potentialBasePoints = (amount * baseRate)
+        let track = rewardTrack(for: location)
+
+        let currentBaseRate = baseRate(forLocation: location)
+
+        let potentialBasePoints = (amount * currentBaseRate)
         let categoryBonusRate = specialRates[category] ?? 0.0
         let paymentBonusRate = paymentMethodRates[paymentMethod] ?? 0.0
-        
+
         let potentialCategoryPoints = (amount * categoryBonusRate)
         let potentialPaymentPoints = (amount * paymentBonusRate)
-        
-        let baseCapLimit = isForeign ? foreignBaseCap : localBaseCap
+
+        let baseCapLimit = (track == .foreign) ? foreignBaseCap : localBaseCap
         let categoryCapLimit = categoryCaps[category] ?? 0.0
         let paymentCapLimit = paymentCaps[paymentMethod] ?? 0.0
         
@@ -308,11 +380,8 @@ class CreditCard: Identifiable {
         var usedBasePoints: Double = 0
         if baseCapLimit > 0 {
             usedBasePoints = periodTransactions
-                .filter { ($0.location != self.issueRegion) == isForeign }
-                .reduce(0) { sum, t in
-                    let tBaseRate = ((t.location != self.issueRegion) && (foreignCurrencyRate ?? 0) > 0) ? (foreignCurrencyRate ?? 0) : defaultRate
-                    return sum + (t.billingAmount * tBaseRate)
-                }
+                .filter { rewardTrack(for: $0.location) == track }
+                .reduce(0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
         }
         
         var usedCategoryPoints: Double = 0

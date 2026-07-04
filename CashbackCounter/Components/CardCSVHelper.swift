@@ -4,8 +4,8 @@ import SwiftData
 
 struct CardCSVHelper {
     
-    // 👇 1. 修改表头：末尾增加两列
-    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限,上限周期(monthly/yearly),还款日,支付方式加成(代码:rate),支付方式上限(代码:cap),奖励类型,积分名称,积分银行,备注"
+    // 👇 1. 修改表头：末尾增加双币卡三列
+    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限,上限周期(monthly/yearly),还款日,支付方式加成(代码:rate),支付方式上限(代码:cap),奖励类型,积分名称,积分银行,备注,副币种地区,双币模式,副币费率(%)"
     
     // MARK: - 导出逻辑 (生成字符串)
     static func generateCSV(from cards: [CreditCard]) -> String {
@@ -68,8 +68,13 @@ struct CardCSVHelper {
 
             // 👇 新增：备注
             let memoStr = card.memo.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: ",", with: "，")
-            
-            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap),\(capPeriodStr),\(rDay),\(pmRatesStr),\(pmCapsStr),\(rewardTypeStr),\(pointName),\(pointBank),\(memoStr)\n"
+
+            // 双币卡字段
+            let secRegionStr = card.secondaryRegion?.rawValue ?? ""
+            let dualModeStr = card.secondaryRegion != nil ? card.dualCurrencyMode.rawValue : ""
+            let secRateStr = card.secondaryRate != nil ? String(format: "%.2f", card.secondaryRate! * 100) : ""
+
+            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap),\(capPeriodStr),\(rDay),\(pmRatesStr),\(pmCapsStr),\(rewardTypeStr),\(pointName),\(pointBank),\(memoStr),\(secRegionStr),\(dualModeStr),\(secRateStr)\n"
             csvString.append(row)
         }
         return csvString
@@ -88,6 +93,13 @@ struct CardCSVHelper {
 
         let headerRow = rows.first ?? ""
         let hasMemoColumn = headerRow.contains("备注")
+
+        // 双币卡列按表头定位 (旧版 CSV 没有这些列)
+        let headerColumns = headerRow.replacingOccurrences(of: "\u{FEFF}", with: "").components(separatedBy: ",")
+        let secRegionIdx = headerColumns.firstIndex { $0.contains("副币种地区") }
+        let dualModeIdx = headerColumns.firstIndex { $0.contains("双币模式") }
+        let secRateIdx = headerColumns.firstIndex { $0.contains("副币费率") }
+        let hasDualColumns = secRegionIdx != nil
 
 
         for (index, row) in rows.enumerated() {
@@ -175,7 +187,28 @@ struct CardCSVHelper {
                 }
             }
             
-            if rewardType == .points, columns.count >= 29 {
+            // 双币卡字段
+            var secondaryRegion: Region? = nil
+            var dualMode: DualCurrencyMode = .secondaryAsLocal
+            var secondaryRate: Double? = nil
+            if let i = secRegionIdx, columns.count > i {
+                let raw = columns[i].trimmingCharacters(in: .whitespacesAndNewlines)
+                secondaryRegion = Region.allCases.first { $0.rawValue == raw }
+            }
+            if let i = dualModeIdx, columns.count > i {
+                let raw = columns[i].trimmingCharacters(in: .whitespacesAndNewlines)
+                if let mode = DualCurrencyMode(rawValue: raw) {
+                    dualMode = mode
+                } else if raw.lowercased().contains("foreign") {
+                    dualMode = .secondaryAsForeign
+                }
+            }
+            if let i = secRateIdx, columns.count > i, let r = Double(columns[i]), r > 0 {
+                secondaryRate = r / 100.0
+            }
+
+            // 旧版无双币列的 CSV 才走这段积分解析：新版 CSV 的 28+ 列是双币字段，会被误读成积分数据
+            if rewardType == .points, !hasDualColumns, columns.count >= 29 {
                 let pointName = columns[25].trimmingCharacters(in: .whitespacesAndNewlines)
                 let pointBank = columns[26].trimmingCharacters(in: .whitespacesAndNewlines)
                 let pointValue = Double(columns[27]) ?? 0
@@ -216,7 +249,10 @@ struct CardCSVHelper {
                 paymentMethodRates: pmRates,
                 paymentCaps: pmCaps,
                 rewardType: rewardType,
-                pointProgram: pointProgram
+                pointProgram: pointProgram,
+                secondaryRegion: secondaryRegion,
+                dualCurrencyMode: dualMode,
+                secondaryRate: secondaryRate
             )
 
             // 如果有模板，应用模板规则 (注意：这可能会覆盖 CSV 里的费率设定，取决于你的设计)

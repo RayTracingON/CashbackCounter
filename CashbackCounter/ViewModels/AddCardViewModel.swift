@@ -21,6 +21,12 @@ final class AddCardViewModel {
     var foreignRateStr: String
     var cardImageData: Data?
 
+    // 双币卡
+    var isDualCurrency: Bool = false
+    var secondaryRegion: Region = .cn
+    var dualCurrencyMode: DualCurrencyMode = .secondaryAsLocal
+    var secondaryRateStr: String = ""
+
     // 类别加成费率
     var diningRateStr: String = ""
     var groceryRateStr: String = ""
@@ -119,6 +125,15 @@ final class AddCardViewModel {
                 foreignRateStr = ""
             }
 
+            if let secondary = card.secondaryRegion, secondary != card.issueRegion {
+                isDualCurrency = true
+                secondaryRegion = secondary
+                dualCurrencyMode = card.dualCurrencyMode
+                if let sr = card.secondaryRate {
+                    secondaryRateStr = String(sr * 100)
+                }
+            }
+
             if let rate = card.specialRates[.dining] { diningRateStr = String(rate * 100) }
             if let rate = card.specialRates[.grocery] { groceryRateStr = String(rate * 100) }
             if let rate = card.specialRates[.travel] { travelRateStr = String(rate * 100) }
@@ -179,6 +194,15 @@ final class AddCardViewModel {
                 foreignRateStr = frStr.replacingOccurrences(of: ".0", with: "")
             } else {
                 foreignRateStr = ""
+            }
+
+            if let secondary = template.secondaryRegion, secondary != template.region {
+                isDualCurrency = true
+                secondaryRegion = secondary
+                dualCurrencyMode = template.dualCurrencyMode ?? .secondaryAsLocal
+                if let sr = template.secondaryRate {
+                    secondaryRateStr = String(format: "%.1f", sr).replacingOccurrences(of: ".0", with: "")
+                }
             }
 
             if let dining = template.specialRate[.dining] {
@@ -285,6 +309,13 @@ final class AddCardViewModel {
         let selectedPoint = points.first { $0.id == selectedPointID }
         let resolvedPointProgram = rewardType == .points ? selectedPoint : nil
 
+        // 副币种与主币种相同视为单币卡，避免无意义状态
+        let resolvedSecondaryRegion: Region? = (isDualCurrency && secondaryRegion != region) ? secondaryRegion : nil
+        var resolvedSecondaryRate: Double? = nil
+        if resolvedSecondaryRegion != nil, let r = Double(secondaryRateStr), r > 0 {
+            resolvedSecondaryRate = r / 100.0
+        }
+
         if let existingCard = cardToEdit {
             // 通知 identifier 由 bankName/type/endNum 生成，必须在改字段前用旧值取消旧通知
             NotificationManager.shared.cancelNotification(for: existingCard)
@@ -297,6 +328,9 @@ final class AddCardViewModel {
             existingCard.defaultRate = defaultRate
             existingCard.issueRegion = region
             existingCard.foreignCurrencyRate = foreignRate
+            existingCard.secondaryRegion = resolvedSecondaryRegion
+            existingCard.dualCurrencyMode = dualCurrencyMode
+            existingCard.secondaryRate = resolvedSecondaryRate
             existingCard.capPeriod = capPeriod
             existingCard.specialRates = specialRates
 
@@ -335,7 +369,10 @@ final class AddCardViewModel {
                 paymentCaps: finalPaymentCaps,
                 rewardType: rewardType,
                 pointProgram: resolvedPointProgram,
-                cardImageData: cardImageData
+                cardImageData: cardImageData,
+                secondaryRegion: resolvedSecondaryRegion,
+                dualCurrencyMode: dualCurrencyMode,
+                secondaryRate: resolvedSecondaryRate
             )
             context.insert(newCard)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

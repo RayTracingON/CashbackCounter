@@ -131,7 +131,7 @@ struct TransactionDetailView: View {
                             Label("入账金额", systemImage: "banknote")
                             Spacer()
                             VStack(alignment: .trailing) {
-                                Text(String(format: "%.2f %@", transaction.billingAmount, transaction.card?.issueRegion.currencyCode ?? "CNY"))
+                                Text(String(format: "%.2f %@", transaction.billingAmount, transaction.card != nil ? transaction.resolvedBillingCurrencyCode : "CNY"))
                                 let rate = transaction.billingAmount / transaction.amount
                                 Text("汇率约 \(String(format: "%.4f", rate))")
                                     .font(.caption2)
@@ -144,7 +144,7 @@ struct TransactionDetailView: View {
                 // MARK: - 4. 返现分析
                 Section("返现分析") {
                     let isPoints = transaction.card?.rewardType == .points
-                    let rewardCurrency = transaction.card?.issueRegion.currencyCode ?? "CNY"
+                    let rewardCurrency = transaction.card != nil ? transaction.resolvedBillingCurrencyCode : "CNY"
                     
                     HStack {
                         Label {

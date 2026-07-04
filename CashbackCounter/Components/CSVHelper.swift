@@ -140,6 +140,13 @@ struct CSVHelper {
             if columns.count > 10 {
                 pointsEarned = Int(columns[10].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
             }
+
+            // 入账币种 (第12列，索引11)；旧版 CSV 没有该列
+            var billingCurrencyCode: String? = nil
+            if columns.count > 11 {
+                let code = columns[11].trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                if !code.isEmpty { billingCurrencyCode = code }
+            }
             
             let date = dateStr.toDate()
             let category = categoryMap[categoryName] ?? .other
@@ -181,9 +188,15 @@ struct CSVHelper {
                 billingAmount: billing,
                 cashbackAmount: cashback,
                 pointsEarned: pointsEarned,
-                paymentMethod: paymentMethod // 👈 写入数据库
+                paymentMethod: paymentMethod, // 👈 写入数据库
+                billingCurrencyCode: billingCurrencyCode
             )
-            
+            // 旧版 CSV 无入账币种列：保持 nil，读取时走 resolvedBillingCurrencyCode 启发式
+            // (init 会按卡片规则自动填充，但对未换汇的旧数据会填错，必须显式清掉)
+            if billingCurrencyCode == nil {
+                newTransaction.billingCurrencyCode = nil
+            }
+
             context.insert(newTransaction)
             createdTransactions.append(newTransaction)
             existingTxMap[dedupKey] = newTransaction // 防止 CSV 内部重复
@@ -297,14 +310,14 @@ struct CSVHelper {
 extension Array where Element == Transaction {
     
     func generateCSV() -> String {
-        // 👇 修改表头：末尾增加 "支付方式"
-        var csvString = "交易时间,商户名称,消费类别,消费金额(原币),入账金额(本币),返现金额(本币),支付卡片,卡片尾号,消费地区,支付方式,积分数\n"
-        
+        // 入账/返现金额随入账币种计价 (双币卡可能是副币种)，末尾的 "入账币种" 列记录实际币种
+        var csvString = "交易时间,商户名称,消费类别,消费金额(原币),入账金额,返现金额,支付卡片,卡片尾号,消费地区,支付方式,积分数,入账币种\n"
+
         for t in self {
             let date = t.dateString
             let safeMerchant = t.merchant.replacingOccurrences(of: "\"", with: "\"\"")
             let merchant = "\"\(safeMerchant)\""
-            
+
             let category = t.category.displayName
             let amount = String(format: "%.2f", t.amount)
             let billing = String(format: "%.2f", t.billingAmount)
@@ -312,13 +325,13 @@ extension Array where Element == Transaction {
             let cardNumber = t.card?.endNum ?? "无卡"
             let cardName = t.card != nil ? "\"\(t.card!.bankName) \(t.card!.type)\"" : "已删除卡片"
             let region = t.location.rawValue
-            
-            // 👇 新增：获取支付方式的 rawValue (如 "applePay")
+
             let paymentMethod = t.paymentMethod.rawValue
             let pointsEarned = String(t.pointsEarned)
-            
-            // 👇 拼接到最后
-            let row = "\(date),\(merchant),\(category),\(amount),\(billing),\(cashback),\(cardName),\(cardNumber),\(region),\(paymentMethod),\(pointsEarned)\n"
+            // 用 resolved 值导出，旧数据 (nil) 也能写出启发式推断的正确币种
+            let billingCurrency = t.resolvedBillingCurrencyCode
+
+            let row = "\(date),\(merchant),\(category),\(amount),\(billing),\(cashback),\(cardName),\(cardNumber),\(region),\(paymentMethod),\(pointsEarned),\(billingCurrency)\n"
             csvString.append(row)
         }
         return csvString

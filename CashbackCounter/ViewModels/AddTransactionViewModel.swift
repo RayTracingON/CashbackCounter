@@ -19,6 +19,8 @@ final class AddTransactionViewModel {
     var receiptImage: UIImage?
     var paymentMethod: PaymentMethod = .offline
     var rewardPreview: RewardPreview?
+    // 双币卡：手动覆盖入账币种 (nil = 按卡片规则自动判定)
+    var billingRegionOverride: Region? = nil
 
     // AI 分析状态
     var isAnalyzing: Bool = false
@@ -75,6 +77,14 @@ final class AddTransactionViewModel {
                 receiptImage = UIImage(data: data)
                 originalReceiptImage = receiptImage
             }
+
+            // 已存入账币种与卡片自动判定不一致时，还原为手动覆盖
+            if let code = t.billingCurrencyCode,
+               let region = Region.from(currencyCode: code),
+               let card = t.card,
+               region != card.billingRegion(for: t.location) {
+                billingRegionOverride = region
+            }
         } else {
             receiptImage = image
 
@@ -102,9 +112,16 @@ final class AddTransactionViewModel {
 
     // MARK: - Computed
 
+    /// 本笔交易的入账币种地区：手动覆盖优先，否则按卡片规则自动判定
+    func resolvedBillingRegion(cards: [CreditCard]) -> Region {
+        if let override = billingRegionOverride { return override }
+        guard cards.indices.contains(selectedCardIndex) else { return location }
+        return cards[selectedCardIndex].billingRegion(for: location)
+    }
+
     func currentCurrencySymbol(cards: [CreditCard]) -> String {
         if cards.indices.contains(selectedCardIndex) {
-            return cards[selectedCardIndex].issueRegion.currencySymbol
+            return resolvedBillingRegion(cards: cards).currencySymbol
         }
         return "¥"
     }
@@ -231,6 +248,7 @@ final class AddTransactionViewModel {
         }
     }
 
+    // v1 近似：积分价值统一折算到卡主币种，副币种入账的交易也按主币种估值 (待后续跟进)
     private func resolvePointValueInCardCurrency(for card: CreditCard) async -> Double {
         guard let pointProgram = card.pointProgram else { return 0 }
         let pointRegion = pointProgram.valueCurrencyCode
@@ -254,8 +272,7 @@ final class AddTransactionViewModel {
             return
         }
         let sourceCurrency = location.currencyCode
-        let card = cards[selectedCardIndex]
-        let targetCurrency = card.issueRegion.currencyCode
+        let targetCurrency = resolvedBillingRegion(cards: cards).currencyCode
 
         if sourceCurrency == targetCurrency {
             billingAmountStr = String(format: "%.2f", amountDouble)
@@ -328,6 +345,7 @@ final class AddTransactionViewModel {
             }
 
             let nominalRate = card.getRate(for: selectedCategory, location: location, payment: paymentMethod)
+            let billingCode = resolvedBillingRegion(cards: cards).currencyCode
 
             if let t = transactionToEdit {
                 // --- 编辑模式 ---
@@ -338,7 +356,8 @@ final class AddTransactionViewModel {
                     t.paymentMethod != paymentMethod ||
                     t.date != date ||
                     t.cashbackamount != finalCashback ||
-                    t.pointsEarned != pointsEarned
+                    t.pointsEarned != pointsEarned ||
+                    t.billingCurrencyCode != billingCode
 
                 t.merchant = merchant
                 t.amount = amountDouble
@@ -350,6 +369,7 @@ final class AddTransactionViewModel {
                     t.billingAmount = billingDouble
                     t.category = selectedCategory
                     t.paymentMethod = paymentMethod
+                    t.billingCurrencyCode = billingCode
 
                     t.rate = nominalRate
                     t.cashbackamount = finalCashback
@@ -373,7 +393,8 @@ final class AddTransactionViewModel {
                     billingAmount: billingDouble,
                     cashbackAmount: finalCashback,
                     pointsEarned: pointsEarned,
-                    paymentMethod: paymentMethod
+                    paymentMethod: paymentMethod,
+                    billingCurrencyCode: billingCode
                 )
                 context.insert(newTransaction)
 

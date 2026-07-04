@@ -20,6 +20,8 @@ struct CashbackCapProgress: Identifiable {
     let used: Double
     /// 该周期的上限（<= 0 表示无上限）
     let limit: Double
+    /// 该计划的计价货币符号；nil = 用卡片主币种（陆式双币卡的外币轨道以副币种计价）
+    var currencySymbolOverride: String? = nil
 
     /// 是否无上限
     var isUnlimited: Bool { limit <= 0 }
@@ -59,10 +61,11 @@ extension CreditCard {
         var results: [CashbackCapProgress] = []
 
         // A. 本币基础返现计划（有基础费率或设置了上限则显示）
+        // 港式双币卡：副币入账消费也在本币轨道，账单金额按 1:1 计入
         if defaultRate > 0 || localBaseCap > 0 {
             let used = periodTransactions
-                .filter { $0.location == issueRegion }
-                .reduce(0.0) { $0 + ($1.billingAmount * defaultRate) }
+                .filter { rewardTrack(for: $0.location) == .local }
+                .reduce(0.0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
             results.append(CashbackCapProgress(
                 id: "base_local",
                 title: "本地基础\(rewardUnitLabel)",
@@ -74,19 +77,23 @@ extension CreditCard {
         }
 
         // B. 外币基础返现计划（有境外费率或设置了上限则显示）
+        // 陆式双币卡：境外消费一律入账副币种，上限与用量均以副币种计价，符号随之切换
         let foreignRate = foreignCurrencyRate ?? 0
         if foreignRate > 0 || foreignBaseCap > 0 {
-            let baseRate = foreignRate > 0 ? foreignRate : defaultRate
+            let foreignTrackSymbol: String? = (isDualCurrency && dualCurrencyMode == .secondaryAsForeign)
+                ? secondaryRegion?.currencySymbol
+                : nil
             let used = periodTransactions
-                .filter { $0.location != issueRegion }
-                .reduce(0.0) { $0 + ($1.billingAmount * baseRate) }
+                .filter { rewardTrack(for: $0.location) == .foreign }
+                .reduce(0.0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
             results.append(CashbackCapProgress(
                 id: "base_foreign",
                 title: "境外基础\(rewardUnitLabel)",
                 iconName: "airplane",
                 color: .teal,
                 used: used,
-                limit: foreignBaseCap
+                limit: foreignBaseCap,
+                currencySymbolOverride: foreignTrackSymbol
             ))
         }
 
@@ -240,7 +247,7 @@ struct CashbackProgressSection: View {
                     CashbackProgressRow(
                         item: item,
                         isPoints: card.rewardType == .points,
-                        currencySymbol: card.issueRegion.currencySymbol
+                        currencySymbol: item.currencySymbolOverride ?? card.issueRegion.currencySymbol
                     )
                 }
             }

@@ -103,17 +103,7 @@ final class BillHomeViewModel {
     }
 
     func billingCurrencyCode(for transaction: Transaction) -> String {
-        guard let card = transaction.card else {
-            return transaction.location.currencyCode
-        }
-
-        // Legacy import: billingAmount was saved in transaction currency (no FX conversion).
-        if transaction.location != card.issueRegion,
-           abs(transaction.billingAmount - transaction.amount) < 0.0001 {
-            return transaction.location.currencyCode
-        }
-
-        return card.issueRegion.currencyCode
+        transaction.resolvedBillingCurrencyCode
     }
 
     func expenseInMainCurrency(for transaction: Transaction, mainCurrencyCode: String) -> (amount: Double, currencyCode: String) {
@@ -144,7 +134,8 @@ final class BillHomeViewModel {
         if exchangeRates.isEmpty { return 0.0 }
         return transactions.reduce(0) { total, t in
             let cb = CashbackService.calculateCashback(for: t)
-            let code = t.card?.issueRegion.currencyCode ?? mainCurrencyCode
+            // 返现随入账币种计价 (双币卡副币入账的返现也是副币)
+            let code = t.card != nil ? t.resolvedBillingCurrencyCode : mainCurrencyCode
             let rate = exchangeRate(for: code, mainCurrencyCode: mainCurrencyCode)
             return total + (cb / rate)
         }

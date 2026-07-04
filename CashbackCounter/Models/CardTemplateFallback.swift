@@ -57,7 +57,9 @@ let defaultCardTemplatesJSON = """
     ],
     "rewardType" : "points",
     "pointProgramKey" : "hsbc hk|rc|hkd",
-    "region" : "中国大陆",
+    "region" : "香港",
+    "secondaryRegion" : "中国大陆",
+    "dualCurrencyMode" : "secondaryAsLocal",
     "paymentCaps" : [
       "pulse",
       1600
@@ -808,7 +810,9 @@ let defaultCardTemplatesJSON = """
       "qrCode",
       200
     ],
-    "region" : "中国大陆",
+    "region" : "香港",
+    "secondaryRegion" : "中国大陆",
+    "dualCurrencyMode" : "secondaryAsLocal",
     "colors" : [
       "0F0F0F",
       "C0C0C0"
@@ -841,7 +845,9 @@ let defaultCardTemplatesJSON = """
     ],
     "rewardType" : "points",
     "pointProgramKey" : "bea hk|point|hkd",
-    "region" : "中国大陆",
+    "region" : "香港",
+    "secondaryRegion" : "中国大陆",
+    "dualCurrencyMode" : "secondaryAsLocal",
     "paymentCaps" : [
       "pulse",
       100000,
@@ -983,7 +989,9 @@ let defaultCardTemplatesJSON = """
       "gba",
       250
     ],
-    "region" : "中国大陆",
+    "region" : "香港",
+    "secondaryRegion" : "中国大陆",
+    "dualCurrencyMode" : "secondaryAsLocal",
     "colors" : [
       "8A8F99",
       "E3DEE9"

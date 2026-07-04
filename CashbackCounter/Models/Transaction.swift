@@ -9,6 +9,8 @@ class Transaction: Identifiable {
     
     var amount: Double = 0.0        // 原币金额
     var billingAmount: Double = 0.0 // 入账金额
+    // 入账币种代码 (如 "CNY"/"HKD")；nil = 旧数据，读取时走 resolvedBillingCurrencyCode 启发式
+    var billingCurrencyCode: String? = nil
     
     var date: Date = Date()
     var cashbackamount: Double = 0.0
@@ -37,7 +39,8 @@ class Transaction: Identifiable {
          cashbackAmount: Double? = nil,
          pointsEarned: Int = 0,
          // 新增参数：设置默认值 .offline，这样旧代码不需要改动即可编译
-         paymentMethod: PaymentMethod = .offline
+         paymentMethod: PaymentMethod = .offline,
+         billingCurrencyCode: String? = nil
     ) {
         self.merchant = merchant
         self.category = category
@@ -47,7 +50,10 @@ class Transaction: Identifiable {
         self.card = card
         self.receiptData = receiptData
         self.billingAmount = billingAmount ?? amount
-        
+        self.billingCurrencyCode = billingCurrencyCode
+            ?? card?.billingRegion(for: location).currencyCode
+            ?? location.currencyCode
+
         // 赋值
         self.paymentMethod = paymentMethod
         
@@ -80,5 +86,21 @@ class Transaction: Identifiable {
 
     var dateString: String {
         Self._dateFormatter.string(from: date)
+    }
+}
+
+extension Transaction {
+    /// 交易入账币种；旧数据 (nil) 走启发式推断
+    var resolvedBillingCurrencyCode: String {
+        if let code = billingCurrencyCode, !code.isEmpty {
+            return code
+        }
+        guard let card else { return location.currencyCode }
+        // 旧数据导入：billingAmount 未换汇时按消费地币种入账
+        if location != card.issueRegion, abs(billingAmount - amount) < 0.0001 {
+            return location.currencyCode
+        }
+        // 用 billingRegion(for:) 而非 issueRegion，这样卡片后来升级为双币卡时旧交易也能正确归类
+        return card.billingRegion(for: location).currencyCode
     }
 }
