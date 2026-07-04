@@ -48,10 +48,11 @@ final class CardTemplateManager {
             }
         } catch {
             print("⚠️ 无法从远端获取配置，尝试读取本地缓存... (\(error.localizedDescription))")
-            // 远端获取失败，从本地字符串常量读取 fallback
-            guard let data = defaultCardTemplatesJSON.data(using: .utf8) else {
-                throw NSError(domain: "CardTemplateManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "无法解析本地 fallback JSON"])
+            // 远端获取失败，读取打包在 App 内的 CardTemplates.json 作为 fallback
+            guard let url = Bundle.main.url(forResource: "CardTemplates", withExtension: "json") else {
+                throw NSError(domain: "CardTemplateManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "Bundle 中未找到 CardTemplates.json"])
             }
+            let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
             rawTemplates = try decoder.decode([CardTemplate].self, from: data)
         }

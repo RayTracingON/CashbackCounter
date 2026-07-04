@@ -37,12 +37,11 @@
   {
     "capPeriod" : {
       "yearly" : {
-
       }
     },
     "specialRate" : [
       "dining",
-      5
+      3
     ],
     "pictureURL" : "hsbchkpulse",
     "type" : "Pulse銀聯信用卡 ",
@@ -50,7 +49,7 @@
     "localBaseCap" : 2400,
     "categoryCaps" : [
       "dining",
-      980
+      480
     ],
     "rewardType" : "points",
     "pointProgramKey" : "hsbc hk|rc|hkd",
@@ -71,7 +70,7 @@
       2
     ],
     "bankName" : "滙豐香港",
-    "defaultRate" : 2.4
+    "defaultRate" : 0.4
   },
   {
     "capPeriod" : {
@@ -798,11 +797,11 @@
     ],
     "pictureURL" : "icbcasiavs",
     "type" : "Visa Signature",
-    "foreignBaseCap" : 1.5,
+    "foreignBaseCap" : 0,
     "categoryCaps" : [
 
     ],
-    "localBaseCap" : 1.5,
+    "localBaseCap" : 0,
     "rewardType" : "cashback",
     "paymentCaps" : [
 
@@ -840,7 +839,7 @@
     "rewardType" : "cashback",
     "paymentCaps" : [
       "offline",
-      200,
+      500,
       "qrCode",
       200
     ],
@@ -872,7 +871,7 @@
     ],
     "pictureURL" : "",
     "type" : "UDC银联信用卡",
-    "foreignBaseCap" : 0,
+    "foreignBaseCap" : 100000,
     "localBaseCap" : 0,
     "categoryCaps" : [
 
@@ -883,21 +882,15 @@
     "secondaryRegion" : "中国大陆",
     "dualCurrencyMode" : "secondaryAsLocal",
     "paymentCaps" : [
-      "pulse",
-      100000,
-      "online",
-      100000
     ],
     "colors" : [
       "0F0F0F",
       "C0C0C0"
     ],
-    "foreignCurrencyRate" : 100,
+    "foreignCurrencyRate" : 1200,
     "paymentMethodRates" : [
       "pulse",
-      1200,
-      "online",
-      1100
+      100
     ],
     "bankName" : "東亞銀行",
     "defaultRate" : 100
@@ -1030,13 +1023,13 @@
       "8A8F99",
       "E3DEE9"
     ],
-    "foreignCurrencyRate" : 0.4,
+    "foreignCurrencyRate" : 4,
     "paymentMethodRates" : [
       "gba",
       6
     ],
     "bankName" : "信銀國際",
-    "defaultRate" : 4
+    "defaultRate" : 0.4
   },
   {
     "capPeriod" : {
@@ -1114,7 +1107,7 @@
     ],
     "pictureURL" : "abcvisa",
     "type" : "Visa尊然白金信用卡",
-    "foreignBaseCap" : 70,
+    "foreignBaseCap" : 30,
     "categoryCaps" : [
 
     ],
@@ -1124,6 +1117,8 @@
 
     ],
     "region" : "中国大陆",
+    "secondaryRegion" : "美国",
+    "dualCurrencyMode" : "secondaryAsForeign",
     "colors" : [
       "1A1A1A",
       "C4C6C8"
