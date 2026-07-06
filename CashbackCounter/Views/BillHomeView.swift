@@ -93,7 +93,7 @@ struct BillHomeContentView: View {
                         }
                     } label: {
                         FilterChip(
-                            title: viewModel.selectedCategory?.displayName ?? "全部种类",
+                            title: viewModel.selectedCategory?.displayName ?? String(localized: "全部种类"),
                             icon: viewModel.selectedCategory?.iconName ?? "line.3.horizontal.decrease.circle",
                             isSelected: viewModel.selectedCategory != nil
                         )
@@ -102,7 +102,7 @@ struct BillHomeContentView: View {
                     // B. 收入筛选
                     Button(action: { viewModel.showIncomeOnly.toggle() }) {
                         FilterChip(
-                            title: "收入单",
+                            title: String(localized: "收入单"),
                             icon: "tray.and.arrow.down.fill",
                             isSelected: viewModel.showIncomeOnly
                         )

@@ -68,7 +68,9 @@ extension CreditCard {
                 .reduce(0.0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
             results.append(CashbackCapProgress(
                 id: "base_local",
-                title: "本地基础\(rewardUnitLabel)",
+                title: rewardType == .points
+                    ? String(localized: "本地基础积分")
+                    : String(localized: "本地基础返现"),
                 iconName: "creditcard.fill",
                 color: .blue,
                 used: used,
@@ -88,7 +90,9 @@ extension CreditCard {
                 .reduce(0.0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
             results.append(CashbackCapProgress(
                 id: "base_foreign",
-                title: "境外基础\(rewardUnitLabel)",
+                title: rewardType == .points
+                    ? String(localized: "境外基础积分")
+                    : String(localized: "境外基础返现"),
                 iconName: "airplane",
                 color: .teal,
                 used: used,
@@ -135,11 +139,6 @@ extension CreditCard {
 
         return results
     }
-
-    /// 奖励单位标签（返现 / 积分）
-    fileprivate var rewardUnitLabel: String {
-        rewardType == .points ? "积分" : "返现"
-    }
 }
 
 // MARK: - 进度条视图
@@ -153,7 +152,7 @@ struct CashbackProgressRow: View {
 
     private func formatted(_ value: Double) -> String {
         let rounded = String(format: "%.0f", value)
-        return isPoints ? "\(rounded)分" : "\(currencySymbol)\(rounded)"
+        return isPoints ? String(localized: "\(rounded)分") : "\(currencySymbol)\(rounded)"
     }
 
     var body: some View {
@@ -226,9 +225,12 @@ struct CashbackProgressSection: View {
     }
 
     private var headerTitle: String {
-        let period = card.capPeriod == .monthly ? "本月" : "本年"
-        let reward = card.rewardType == .points ? "积分" : "返现"
-        return "\(period)\(reward)进度"
+        switch (card.capPeriod, card.rewardType) {
+        case (.monthly, .points):   return String(localized: "本月积分进度")
+        case (.monthly, .cashback): return String(localized: "本月返现进度")
+        case (.yearly, .points):    return String(localized: "本年积分进度")
+        case (.yearly, .cashback):  return String(localized: "本年返现进度")
+        }
     }
 
     var body: some View {

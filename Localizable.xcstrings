@@ -104,7 +104,20 @@
       }
     },
     "%@ · 无上限" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · No limit"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · 無上限"
+          }
+        }
+      }
     },
     "%@ (%@)" : {
       "localizations" : {
@@ -445,9 +458,7 @@
         }
       }
     },
-    "+12%" : {
-
-    },
+    "+12%" : {},
     "✅ 已添加：%@ – %@%@" : {
       "localizations" : {
         "en" : {
@@ -1139,12 +1150,8 @@
         }
       }
     },
-    "一切就绪" : {
-
-    },
-    "上传卡面" : {
-
-    },
+    "一切就绪" : {},
+    "上传卡面" : {},
     "上传收据图片" : {
       "localizations" : {
         "en" : {
@@ -1231,12 +1238,8 @@
         }
       }
     },
-    "上限模式" : {
-
-    },
-    "下一步" : {
-
-    },
+    "上限模式" : {},
+    "下一步" : {},
     "下载截屏记账快捷指令" : {
       "localizations" : {
         "en" : {
@@ -1339,9 +1342,7 @@
         }
       }
     },
-    "交易识别" : {
-
-    },
+    "交易识别" : {},
     "交易详情" : {
       "localizations" : {
         "en" : {
@@ -1482,9 +1483,7 @@
         }
       }
     },
-    "你的智能返现计算助手" : {
-
-    },
+    "你的智能返现计算助手" : {},
     "例如：兑换机票" : {
       "localizations" : {
         "en" : {
@@ -1571,9 +1570,7 @@
         }
       }
     },
-    "入账币种" : {
-
-    },
+    "入账币种" : {},
     "入账日期" : {
       "localizations" : {
         "en" : {
@@ -1905,9 +1902,7 @@
         }
       }
     },
-    "副币种费率 (%)" : {
-
-    },
+    "副币种费率 (%)" : {},
     "加成:" : {
       "localizations" : {
         "en" : {
@@ -2044,9 +2039,7 @@
         }
       }
     },
-    "双币卡" : {
-
-    },
+    "双币卡" : {},
     "发行地区" : {
       "localizations" : {
         "en" : {
@@ -2221,9 +2214,7 @@
         }
       }
     },
-    "备注 (可选)" : {
-
-    },
+    "备注 (可选)" : {},
     "备注（可选）" : {
       "localizations" : {
         "en" : {
@@ -2610,12 +2601,8 @@
         }
       }
     },
-    "已识别" : {
-
-    },
-    "已配置" : {
-
-    },
+    "已识别" : {},
+    "已配置" : {},
     "币种" : {
       "localizations" : {
         "en" : {
@@ -2654,12 +2641,8 @@
         }
       }
     },
-    "并入本币上限：仅第二币种地区消费入账副币，金额按 1:1 计入本币上限（如港币+人民币卡）。\n独立外币上限：所有境外消费入账副币种，使用外币费率与外币上限（如人民币+美元卡）。" : {
-
-    },
-    "建议在更新版本前，提前在设置页将全部数据导出并保存" : {
-
-    },
+    "并入本币上限：仅第二币种地区消费入账副币，金额按 1:1 计入本币上限（如港币+人民币卡）。\n独立外币上限：所有境外消费入账副币种，使用外币费率与外币上限（如人民币+美元卡）。" : {},
+    "建议在更新版本前，提前在设置页将全部数据导出并保存" : {},
     "开发者" : {
       "localizations" : {
         "en" : {
@@ -2730,9 +2713,7 @@
         }
       }
     },
-    "开始管理你的消费与返现吧" : {
-
-    },
+    "开始管理你的消费与返现吧" : {},
     "当前版本：v%@" : {
       "localizations" : {
         "en" : {
@@ -3168,9 +3149,7 @@
         }
       }
     },
-    "支出趋势" : {
-
-    },
+    "支出趋势" : {},
     "收入信息" : {
       "localizations" : {
         "en" : {
@@ -4555,9 +4534,7 @@
         }
       }
     },
-    "第二币种地区" : {
-
-    },
+    "第二币种地区" : {},
     "简体中文" : {
       "localizations" : {
         "en" : {
@@ -5956,6 +5933,358 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預設記帳卡片"
+          }
+        }
+      }
+    },
+    "收入单" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Income"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收入單"
+          }
+        }
+      }
+    },
+    "我的卡包" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Wallet"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的卡包"
+          }
+        }
+      }
+    },
+    "餐饮美食" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dining"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "餐飲美食"
+          }
+        }
+      }
+    },
+    "超市便利" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grocery"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "超市便利"
+          }
+        }
+      }
+    },
+    "交通出行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travel"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交通出行"
+          }
+        }
+      }
+    },
+    "数码产品" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digital"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "數碼產品"
+          }
+        }
+      }
+    },
+    "二次元" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anime"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "二次元"
+          }
+        }
+      }
+    },
+    "订阅" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscriptions"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "訂閱"
+          }
+        }
+      }
+    },
+    "其他消费" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他消費"
+          }
+        }
+      }
+    },
+    "线下消费" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In-store"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "線下消費"
+          }
+        }
+      }
+    },
+    "线上消费" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "線上消費"
+          }
+        }
+      }
+    },
+    "Pulse信用卡的合资格消费" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulse Card Eligible Spending"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulse信用卡的合資格消費"
+          }
+        }
+      }
+    },
+    "信银gba信用卡的合资格消费" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CNCBI GBA Card Eligible Spending"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信銀GBA信用卡的合資格消費"
+          }
+        }
+      }
+    },
+    "本地基础返现" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local Base Cashback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地基礎返現"
+          }
+        }
+      }
+    },
+    "境外基础返现" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foreign Base Cashback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "境外基礎返現"
+          }
+        }
+      }
+    },
+    "本地基础积分" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local Base Points"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地基礎積分"
+          }
+        }
+      }
+    },
+    "境外基础积分" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foreign Base Points"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "境外基礎積分"
+          }
+        }
+      }
+    },
+    "本月返现进度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly Cashback Progress"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月返現進度"
+          }
+        }
+      }
+    },
+    "本年返现进度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yearly Cashback Progress"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本年返現進度"
+          }
+        }
+      }
+    },
+    "本月积分进度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly Points Progress"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月積分進度"
+          }
+        }
+      }
+    },
+    "本年积分进度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yearly Points Progress"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本年積分進度"
+          }
+        }
+      }
+    },
+    "%@分" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ pts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@分"
           }
         }
       }

@@ -122,7 +122,7 @@ struct CardListView: View {
             .navigationTitle(
                 viewModel.selectedCardID != nil
                 ? (cards.first(where: {$0.id == viewModel.selectedCardID})?.bankName ?? "")
-                : "我的卡包"
+                : String(localized: "我的卡包")
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
