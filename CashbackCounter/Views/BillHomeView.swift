@@ -76,51 +76,45 @@ struct BillHomeContentView: View {
     @ViewBuilder
     private var filterBar: some View {
         if !isSearchFieldActive {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    // 左侧留白
-                    Spacer().frame(width: 16)
-                    
-                    // A. 类别筛选
-                    Menu {
-                        Button(action: { viewModel.selectedCategory = nil }) {
-                            Label("全部种类", systemImage: "checkmark.circle")
+            // 固定三等分布局，不再左右滑动
+            HStack(spacing: 10) {
+                // A. 类别筛选
+                Menu {
+                    Button(action: { viewModel.selectedCategory = nil }) {
+                        Label("全部种类", systemImage: "checkmark.circle")
+                    }
+                    ForEach(Category.allCases, id: \.self) { category in
+                        Button(action: { viewModel.selectedCategory = category }) {
+                            Label(category.displayName, systemImage: category.iconName)
                         }
-                        ForEach(Category.allCases, id: \.self) { category in
-                            Button(action: { viewModel.selectedCategory = category }) {
-                                Label(category.displayName, systemImage: category.iconName)
-                            }
-                        }
-                    } label: {
-                        FilterChip(
-                            title: viewModel.selectedCategory?.displayName ?? String(localized: "全部种类"),
-                            icon: viewModel.selectedCategory?.iconName ?? "line.3.horizontal.decrease.circle",
-                            isSelected: viewModel.selectedCategory != nil
-                        )
                     }
+                } label: {
+                    FilterChip(
+                        title: viewModel.selectedCategory?.displayName ?? String(localized: "全部种类"),
+                        icon: viewModel.selectedCategory?.iconName ?? "line.3.horizontal.decrease.circle",
+                        isSelected: viewModel.selectedCategory != nil
+                    )
+                }
 
-                    // B. 收入筛选
-                    Button(action: { viewModel.showIncomeOnly.toggle() }) {
-                        FilterChip(
-                            title: String(localized: "收入单"),
-                            icon: "tray.and.arrow.down.fill",
-                            isSelected: viewModel.showIncomeOnly
-                        )
-                    }
+                // B. 收入筛选
+                Button(action: { viewModel.showIncomeOnly.toggle() }) {
+                    FilterChip(
+                        title: String(localized: "收入单"),
+                        icon: "tray.and.arrow.down.fill",
+                        isSelected: viewModel.showIncomeOnly
+                    )
+                }
 
-                    // C. 日期筛选
-                    Button(action: { viewModel.showDatePicker = true }) {
-                        FilterChip(
-                            title: viewModel.dateButtonText,
-                            icon: "calendar",
-                            isSelected: !viewModel.showAll
-                        )
-                    }
-                    
-                    // 右侧留白
-                    Spacer().frame(width: 16)
+                // C. 日期筛选
+                Button(action: { viewModel.showDatePicker = true }) {
+                    FilterChip(
+                        title: viewModel.dateButtonText,
+                        icon: "calendar",
+                        isSelected: !viewModel.showAll
+                    )
                 }
             }
+            .padding(.horizontal, 16)
         }
     }
 
@@ -340,9 +334,13 @@ struct FilterChip: View {
         HStack(spacing: 4) {
             Image(systemName: icon)
             Text(title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .font(.subheadline)
         .padding(.horizontal, DesignConstants.Spacing.chipSpacing).padding(.vertical, 5)
+        // 撑满可用宽度：filterBar 三个按钮固定均分一行
+        .frame(maxWidth: .infinity)
         .background(isSelected ? Color.blue : Color.clear)
         .foregroundColor(isSelected ? .white : .blue)
         .cornerRadius(DesignConstants.CornerRadius.medium)

@@ -263,6 +263,7 @@ struct CardCSVHelper {
                 template.applyRules(to: newCard, pointMap: templatePointMap)
             }
 
+            newCard.sortIndex = CreditCard.nextSortIndex(in: context)
             context.insert(newCard)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 NotificationManager.shared.scheduleNotification(for: newCard)

@@ -47,6 +47,24 @@ final class CardListViewModel {
         }
     }
     
+    /// 长按拖动排序：把指定卡移动到目标显示位置，然后按新顺序回写所有卡的 sortIndex
+    func moveCard(
+        id: PersistentIdentifier,
+        toDisplayIndex target: Int,
+        cards: [CreditCard]
+    ) {
+        guard let moving = cards.first(where: { $0.id == id }) else { return }
+
+        var ordered = cards.filter { $0.id != id }
+        ordered.insert(moving, at: min(max(target, 0), ordered.count))
+
+        for (index, card) in ordered.enumerated() where card.sortIndex != index {
+            card.sortIndex = index
+        }
+        // 不显式 save：这里跑在落位动画的事务里，同步落盘 + CloudKit 导出调度会造成掉帧，
+        // 交给主上下文的 autosave 稍后批量落盘（与删卡/导入等其他写操作一致）
+    }
+
     func deleteSelectedCard(from cards: [CreditCard], context: ModelContext) {
         guard let selectedID = selectedCardID,
               let selectedCard = cards.first(where: { $0.id == selectedID }) else { return }

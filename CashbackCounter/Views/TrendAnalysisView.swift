@@ -192,6 +192,15 @@ struct TrendAnalysisView: View {
     }
 
     private func formattedCurrencyInteger(_ amount: Double) -> String {
+        // 大数字用紧凑记数（¥39万 / $390K），三等分的统计卡片放不下完整金额，
+        // 否则会被截断成 "3900..."；与图表 Y 轴的 compactName 风格保持一致
+        if abs(amount) >= 100_000 {
+            return amount.formatted(
+                .currency(code: mainCurrencyCode)
+                .notation(.compactName)
+                .precision(.fractionLength(0...1))
+            )
+        }
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = mainCurrencyCode
@@ -485,7 +494,7 @@ struct TrendAnalysisView: View {
                 .fontWeight(.bold)
                 .foregroundColor(highlightColor ?? .primary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.5)
             
             if let subtitle {
                 Text(subtitle)

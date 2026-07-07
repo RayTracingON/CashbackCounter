@@ -92,6 +92,9 @@ class CreditCard: Identifiable {
 
     // 记录该卡是否来源于某个模板，便于模板更新时同步规则
     var templateKey: String?
+
+    // 卡包内的用户自定义顺序（长按拖动排序），越小越靠前
+    var sortIndex: Int = 0
     
     // 👇👇👇 1. 修改上限属性
         
@@ -428,7 +431,19 @@ class CreditCard: Identifiable {
         
         return (points: pointsEarned, value: value)
     }
-    
+
+    // MARK: - 排序
+
+    /// 新卡插入时分配的排序号：当前最大 sortIndex + 1，保证排在末尾
+    static func nextSortIndex(in context: ModelContext) -> Int {
+        var descriptor = FetchDescriptor<CreditCard>(
+            sortBy: [SortDescriptor(\.sortIndex, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        let maxIndex = (try? context.fetch(descriptor))?.first?.sortIndex ?? -1
+        return maxIndex + 1
+    }
+
 }
 
 
