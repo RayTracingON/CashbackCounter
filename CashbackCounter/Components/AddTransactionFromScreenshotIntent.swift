@@ -49,6 +49,9 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
         }
 
             // 2. OCR 文字提取（Vision）
+            // 先预热 AI 模型：权重加载与 OCR 并行，省掉后面 AI 调用的冷启动
+            let parser = ReceiptParser()
+            parser.prewarm()
             print("[AddTransactionFromScreenshotIntent] 🔍 开始 OCR 文字提取")
             let broadLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
             let rawText = await OCRService.recognizeTextInRows(from: image, languages: broadLanguages)
@@ -65,7 +68,6 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
 
             // 3. AI 解析（独立 ReceiptParser，使用 try await 暴露错误）
             print("[AddTransactionFromScreenshotIntent] 🤖 开始 AI 解析")
-            let parser = ReceiptParser()
             let metadata = try await parser.parseScreenshot(text: rawText)
             print("[AddTransactionFromScreenshotIntent] 🤖 AI 解析完成: \(metadata)")
 

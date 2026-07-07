@@ -26,6 +26,8 @@ struct SettingsView: View {
     @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
     @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled: Bool = true
     @AppStorage("defaultCardID") private var defaultCardID: String = ""
+    // key 与 ReceiptParser.cloudModelDefaultsKey 保持一致
+    @AppStorage("useCloudAIModel") private var useCloudAIModel: Bool = false
     @State private var showSyncChangeAlert = false
     
     @Environment(\.modelContext) var context
@@ -122,7 +124,42 @@ struct SettingsView: View {
                         Label("通知提醒", systemImage: "bell")
                     }
                 }
-                
+
+                // AI Model Section
+                Section {
+                    if #available(iOS 27.0, *) {
+                        Toggle(isOn: $useCloudAIModel) {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("使用云端模型")
+                                    Text("识别能力更强，需要网络连接")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            } icon: {
+                                Image(systemName: "cloud.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    } else {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("本地模型")
+                                Text("云端模型需要升级到 iOS 27")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "iphone")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                } header: {
+                    Text("AI 智能识别")
+                } footer: {
+                    Text("云端解析通过 Apple Private Cloud Compute 完成：数据端到端加密，Apple 与开发者均无法读取。云端不可用时会自动回退到本地模型。")
+                }
+
                 // Shortcuts Section
                 Section(header: Text("自动化与快捷指令")) {
                     Link(destination: URL(string: "https://www.icloud.com/shortcuts/aceb7bb680d74a99aaee23f2c9005089")!) {

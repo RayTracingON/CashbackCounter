@@ -17,9 +17,9 @@ struct ReceiptMetadata {
     @Guide(description: "The total amount paid (not contain deduction).")
     var totalAmount: Double? // ✅ 加上问号
     
-    @Guide(description: "The currency code (choice from those, CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR).")
+    @Guide(description: "The ISO currency code.", .anyOf(["CNY", "USD", "HKD", "JPY", "NZD", "TWD", "GBP", "MOP", "EUR"]))
     var currency: String?    // ✅ 加上问号
-    
+
     @Guide(description: "The date of transaction in YYYY-MM-DD format.")
     var dateString: String?  // ✅ 加上问号
     
@@ -59,7 +59,7 @@ struct StatementCardMetadata {
 
 @Generable
 struct StatementTransactionMetadata {
-    @Guide(description: "Region: cn, hk, us, jp, nz, tw, eu, mo, uk.")
+    @Guide(description: "Transaction region, inferred from currency and merchant. Use 'other' for EU/Europe.")
     var region: Region?
 
     @Guide(description: "Payment: applePay, qrCode, offline, online, pulse, gba.")

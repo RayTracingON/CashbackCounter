@@ -32,30 +32,57 @@ struct OCRService {
     // MARK: - 🚀 总入口：智能双重分析 (节省一次 AI 调用版)
     @MainActor
     static func analyzeImage(_ image: UIImage, region: Region? = nil) async -> ReceiptMetadata? {
-        
+
+        // ⏱️ 预热模型：趁 OCR 跑的时候把模型权重加载进内存，缩短首次 AI 调用延迟
+        aiParser.prewarm()
+
         // 🟢 情况 A：用户已经在界面上选好了地区 (比如手动选了日本)
         // 直接用该地区的优化语言进行一次精准识别，省流且快。
         if let userRegion = region {
             print("🎯 用户已指定地区: \(userRegion.rawValue)，直接进行精准识别")
+            let ocrStart = Date()
             let rawText = await recognizeTextInRows(from: image, languages: getLanguages(for: userRegion))
-            return try? await aiParser.parse(text: rawText)
+            print("⏱️ OCR 耗时: \(String(format: "%.2f", Date().timeIntervalSince(ocrStart)))s")
+            return await parseWithLogging(rawText)
         }
-        
+
         // 🟠 情况 B：用户没选地区 (默认模式) -> 启动“本地推断 + 单次高精度扫描”策略
         print("🔍 未指定地区，启动通用探索模式...")
-        
+
         // 1. OCR：使用通用语言列表
         let broadLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
+        let ocrStart = Date()
         let rawText = await recognizeTextInRows(from: image, languages: broadLanguages)
+        print("⏱️ OCR 耗时: \(String(format: "%.2f", Date().timeIntervalSince(ocrStart)))s")
         print(rawText)
-        
+
         // 2. ⚡️ 本地快速推断 (辅助诊断信息，已移除多余的第二轮 OCR)
         let detectedRegion = simpleInferRegion(from: rawText)
         print("⚡️ 本地推断地区: \(detectedRegion?.rawValue ?? "未知")")
-        
+
         // 3. 最终只调用一次 AI
         print("🤖以此文本请求 AI 分析...")
-        return try? await aiParser.parse(text: rawText)
+        return await parseWithLogging(rawText)
+    }
+
+    // AI 解析失败时保留原因（模型不可用 / 超出上下文 / 安全拦截），不再被 try? 吞掉
+    @MainActor
+    private static func parseWithLogging(_ rawText: String) async -> ReceiptMetadata? {
+        do {
+            let aiStart = Date()
+            let result = try await aiParser.parse(text: rawText)
+            print("⏱️ AI 解析耗时: \(String(format: "%.2f", Date().timeIntervalSince(aiStart)))s")
+            return result
+        } catch {
+            print("❌ AI 解析失败: \(error)")
+            return nil
+        }
+    }
+
+    /// 供 UI 在进入记账界面时提前调用：用户挑选照片期间即可完成模型加载
+    @MainActor
+    static func prewarmAI() {
+        aiParser.prewarm()
     }
     
     // MARK: - 🕵️‍♂️ 本地侦探：根据文字猜地区
@@ -143,12 +170,14 @@ struct OCRService {
     }
 
     static func recognizeObservations(from image: UIImage, languages: [String]) async -> [VNRecognizedTextObservation] {
-        guard let cgImage = image.cgImage else { return [] }
+        guard let originalImage = image.cgImage else { return [] }
         let orientation = cgImageOrientation(from: image.imageOrientation)
-        
-        
+
+
         return await withCheckedContinuation { continuation in
                 Task.detached {
+                    // 📐 相机原图动辄 4000px+，先缩到 2500px 以内：OCR 速度可提升数倍，精度几乎无损
+                    let cgImage = downscaledCGImage(originalImage, maxDimension: 2500)
                     let requestHandler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation)
                     let request = VNRecognizeTextRequest { request, error in
                         guard let observations = request.results as? [VNRecognizedTextObservation], error == nil else {
@@ -217,6 +246,25 @@ struct OCRService {
         return splitRowsIfNeeded(rows, baselineHeight: medianHeight)
     }
     
+    /// 超过 maxDimension 的图片等比缩小；小图原样返回。
+    /// 只缩像素不动方向信息，调用方传入的 orientation 依然有效。
+    static func downscaledCGImage(_ cgImage: CGImage, maxDimension: CGFloat) -> CGImage {
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
+        let maxSide = max(width, height)
+        guard maxSide > maxDimension else { return cgImage }
+
+        let scale = maxDimension / maxSide
+        let targetSize = CGSize(width: (width * scale).rounded(), height: (height * scale).rounded())
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+        let resized = renderer.image { _ in
+            UIImage(cgImage: cgImage).draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+        return resized.cgImage ?? cgImage
+    }
+
     static func cgImageOrientation(from uiOrientation: UIImage.Orientation) -> CGImagePropertyOrientation {
         switch uiOrientation {
         case .up: return .up

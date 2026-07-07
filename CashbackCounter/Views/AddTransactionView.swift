@@ -221,6 +221,9 @@ struct AddTransactionView: View {
                    let index = cards.firstIndex(of: card) {
                     viewModel.selectedCardIndex = index
                 } else {
+                    // ⏱️ 提前预热 AI 模型：用户挑照片的几秒钟足够完成权重加载，
+                    // 等真正调用解析时省掉冷启动延迟
+                    OCRService.prewarmAI()
                     viewModel.applyPrefillCardSelection(cards: cards)
                     if viewModel.receiptImage != nil && viewModel.amount.isEmpty {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

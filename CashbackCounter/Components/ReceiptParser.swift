@@ -14,95 +14,41 @@ import Foundation
 final class ReceiptParser {
     
     // 1. 这里的 session 定义和苹果一模一样
+    // ⚡️ 指令刻意保持精简：端侧模型 prefill 速度有限，指令 token 数直接决定响应延迟
     private let instructions = Instructions{
-        "You are an expert receipt data extractor."
-        
-        "Your job is to analyze the OCR text and extract key details into a structure."
-        "The text is aligned row by row. Items on the same row are usually related."
-        "CRITICAL RULES FOR MERCHANT NAME extraction:"
-        "- You can use Chinese, Japanese, English to get the MERCHANT NAME"
-        "- The MERCHANT NAME is usually at the top left corner."
-        
-        "CRITICAL RULES FOR AMOUNT extraction:"
-        // 1. 告诉它找“实付”
-        "- You must extract the FINAL PAID amount (实付金额/合计/Total)."
-        // 2. 明确告诉它不要自己做加法，也不要拿原价
-        "- If there are discounts (立减/优惠/Discount), DO NOT use the subtotal (原价/小计). Use the final amount AFTER discount."
-        "- DO NOT add the discount to the total. DO NOT sum up numbers yourself."
-        "- Usually is the biggest one"
-        "- IMPORTANT for JPY: JPY has no decimal places. If you see a dot in a number (e.g., '74.405' or '1.100'), treat it as a comma/thousands separator (74405, 1100). DO NOT treat it as a decimal."
-        // 3. 给出关键词提示
-        "- Look for keywords like:"
-        "  - English: 'Total', 'Grand Total', 'Amount Due'"
-        "  - Chinese: '实付', '已支付', '合计'"
-        "  - Japanese: '合計', '合　計', 'お支払い', '請求金額', '税込'"
-                
-        "CRITICAL RULES FOR CATEGORIZATION:"
-        "- Analyze the merchant name and items purchased."
-        "- 'dining': Restaurants, Cafes, Starbucks, Izakaya (居酒屋), Ramen (ラーメン)." // 👈 新增：居酒屋/拉面
-        "- 'grocery': Supermarkets, 7-Eleven, Lawson, FamilyMart, Daily necessities." // 👈 新增：日本常见便利店
-        "- 'travel': Uber, Taxi, Flights, Hotels, Suica, Pasmo, Shinkansen (新幹線)." // 👈 新增：西瓜卡/新干线
-        "- 'digital': Electronics, Apple Store, Yodobashi, Bic Camera." // 👈 新增：友都八喜/Bic Camera
-        "- 'other': Anything that doesn't fit above."
-        
-        "Rules:"
-        "- Extract exact values for merchant, amount, card ending number, merchant category, and date."
-        "- Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)." // 👈 提示它根据东京推断日元
-        "- If a value is missing, leave it nil."
+        "You are an expert receipt data extractor. Extract exact values from the OCR text into the structure."
+        "The text is aligned row by row; items on the same row are related."
+        "MERCHANT: usually near the top; may be Chinese, Japanese, or English."
+        "AMOUNT: extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/税込/Total/Grand Total/Amount Due."
+        "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum or add numbers yourself."
+        "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405, '1.100' -> 1100)."
+        "CATEGORY (from merchant and items): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+        "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
+        "If a value is missing, leave it nil."
     }
 
+    // ⚡️ 精简版；"Today is..." 已移到 parseScreenshot 的 prompt 里按调用时刻生成，
+    // 避免长驻单例（OCRService.aiParser）持有过期日期
     private let screenshotInstructions = Instructions{
-        let today = Date().formatted(date: .abbreviated, time: .omitted)
-        "Today is \(today). If you didn't find date details, use Today."
-        "You are an expert receipt data extractor for screen captures."
-        "Your job is to analyze the OCR text and extract key details into a structure."
-        "The text is aligned row by row. Items on the same row are usually related."
-        "CRITICAL RULES FOR MERCHANT NAME extraction:"
-        "- You can use Chinese, Japanese, English to get the MERCHANT NAME"
-        "- The MERCHANT NAME is usually at the top left corner."
-        
-        "CRITICAL RULES FOR AMOUNT extraction:"
-        "- You must extract one THE FIRST AMOUNT shown on the screen as amount."
-        "- IGNORE any discounts (立减/优惠/碰一下立减/Discount) below it or the Total(without discount) amount ."
-        "- DO NOT subtract discounts from the first amount. The first amount is the total billing amount."
-        "- IMPORTANT for JPY: JPY has no decimal places. If you see a dot in a number (e.g., '74.405' or '1.100'), treat it as a comma/thousands separator (74405, 1100). DO NOT treat it as a decimal."
-                
-        "CRITICAL RULES FOR CATEGORIZATION:"
-        "- Analyze the merchant name and items purchased."
-        "- 'dining': Restaurants, Cafes, Starbucks, Izakaya (居酒屋), Ramen (ラーメン)."
-        "- 'grocery': Supermarkets, 7-Eleven, Lawson, FamilyMart, Daily necessities."
-        "- 'travel': Uber, Taxi, Flights, Hotels, Suica, Pasmo, Shinkansen (新幹線)."
-        "- 'digital': Electronics, Apple Store, Yodobashi, Bic Camera."
-        "- 'streaming': Spotify, Disney+, Apple TV+, NBC, Amazon Prime."
-        "- 'other': Anything that doesn't fit above."
-        
-        "Rules:"
-        "- Extract exact values for merchant, amount, card ending number, merchant category, and date."
-        "- Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-        "- If a value is missing, leave it nil."
+        "You are an expert receipt data extractor for payment screen captures. Extract exact values from the OCR text into the structure."
+        "The text is aligned row by row; items on the same row are related."
+        "MERCHANT: may be Chinese, Japanese, or English."
+        "AMOUNT: use the FIRST amount shown on the screen — it is the total billing amount."
+        "- IGNORE discounts (立减/优惠/碰一下立减/Discount) below it and any total-without-discount. DO NOT subtract discounts."
+        "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405, '1.100' -> 1100)."
+        "CATEGORY (from merchant and items): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+        "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
+        "If a value is missing, leave it nil."
     }
 
+    // ⚡️ 精简版：短信文本很短，指令是 prefill 的大头
     private let SMSinstructions = Instructions{
-        "You are an expert receipt data extractor."
-        
-        "Your job is to analyze the OCR text and extract key details into a structure."
-        "If you are not sure about the result, return nil for the missing field."
-        
-        "CRITICAL RULES FOR MERCHANT NAME extraction:"
-        "- You can use Chinese, Japanese, English to get the MERCHANT NAME"
-        
-        "CRITICAL RULES FOR AMOUNT extraction:"
-        // 1. 告诉它找“实付”
-        "- You must extract the FINAL PAID amount (实付金额/合计/Total)."
-        "- IMPORTANT for JPY: JPY has no decimal places. If you see a dot in a number (e.g., '74.405' or '1.100'), treat it as a comma/thousands separator (74405, 1100). DO NOT treat it as a decimal."
-        
-        "CRITICAL RULES FOR CATEGORIZATION:"
-        "- Analyze the merchant name and items purchased."
-        "- 'dining': Restaurants, Cafes, Starbucks, Izakaya (居酒屋), Ramen (ラーメン)." // 👈 新增：居酒屋/拉面
-        "- 'grocery': Supermarkets, 7-Eleven, Lawson, FamilyMart, Daily necessities." // 👈 新增：日本常见便利店
-        "- 'travel': Uber, Taxi, Flights, Hotels, Suica, Pasmo, Shinkansen (新幹線)." // 👈 新增：西瓜卡/新干线
-        "- 'digital': Electronics, Apple Store, Yodobashi, Bic Camera." // 👈 新增：友都八喜/Bic Camera
-        "- 'other': Anything that doesn't fit above."
+        "You are an expert transaction extractor for bank SMS notifications. Extract exact values into the structure."
+        "MERCHANT: may be Chinese, Japanese, or English."
+        "AMOUNT: the FINAL PAID amount (实付金额/合计/Total)."
+        "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('1.100' -> 1100)."
+        "CATEGORY (from merchant): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+        "If you are not sure about a value, leave it nil."
     }
 
     private let statementCardInstructions = Instructions{
@@ -124,6 +70,8 @@ final class ReceiptParser {
         "- 'grocery': Supermarkets, 7-Eleven, Lawson, FamilyMart, Daily necessities."
         "- 'travel': Uber, Taxi, Flights, Hotels, Suica, Pasmo, Shinkansen (新幹線)."
         "- 'digital': Electronics, Apple Store, Yodobashi, Bic Camera."
+        "- 'anime': Anime, manga, game goods (Animate, Melonbooks, Comiket)."
+        "- 'streaming': Spotify, Netflix, Disney+, Apple TV+, subscriptions."
         "- 'other': Anything that doesn't fit above."
         "Use payment hints such as Apple Pay, online, QR, tap, NFC, or card present/online words."
         "CRITICAL RULES FOR foreignAmount:"
@@ -158,6 +106,77 @@ final class ReceiptParser {
     
     init() {}
 
+    // 预热用 session：持有引用避免 prewarm 后立即释放
+    private var warmupSession: LanguageModelSession?
+
+    // MARK: - 模型选择（本地 / 云端 Private Cloud Compute）
+
+    /// SettingsView 中"云端模型"开关使用同一个 key
+    nonisolated static let cloudModelDefaultsKey = "useCloudAIModel"
+
+    nonisolated private static var isCloudModelEnabled: Bool {
+        UserDefaults.standard.bool(forKey: cloudModelDefaultsKey)
+    }
+
+    /// 按用户设置创建 session：开启云端且 PCC 可用时走云端，否则回退本地模型。
+    /// 云端需要 iOS 27+ 及 com.apple.developer.private-cloud-compute 受管权限。
+    private func makeSession(instructions: Instructions) -> LanguageModelSession {
+        if #available(iOS 27.0, *), Self.isCloudModelEnabled {
+            let cloudModel = PrivateCloudComputeLanguageModel()
+            if cloudModel.isAvailable {
+                print("☁️ 使用云端模型 (Private Cloud Compute)")
+                return LanguageModelSession(model: cloudModel, instructions: instructions)
+            }
+            print("⚠️ 云端模型不可用（未授权/无网络/系统未就绪），回退本地模型")
+        }
+        return LanguageModelSession(instructions: instructions)
+    }
+
+    /// 检查 Apple Intelligence 是否可用；不可用时抛出带用户可读原因的错误。
+    /// 所有 parse 方法调用模型前统一走这里，避免在不支持的设备上静默失败。
+    nonisolated static func ensureModelAvailable() throws {
+        // 云端模式且 PCC 可用时直接放行（makeSession 会选择云端模型）；
+        // 否则继续检查本地模型作为兜底路径
+        if #available(iOS 27.0, *), isCloudModelEnabled,
+           PrivateCloudComputeLanguageModel().isAvailable {
+            return
+        }
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            return
+        case .unavailable(let reason):
+            let message: String
+            switch reason {
+            case .deviceNotEligible:
+                message = String(localized: "此设备不支持 Apple Intelligence")
+            case .appleIntelligenceNotEnabled:
+                message = String(localized: "请在系统设置中开启 Apple Intelligence")
+            case .modelNotReady:
+                message = String(localized: "Apple Intelligence 模型尚未就绪，请稍后再试")
+            @unknown default:
+                message = String(localized: "Apple Intelligence 暂不可用")
+            }
+            throw NSError(
+                domain: "ReceiptParser",
+                code: 10,
+                userInfo: [NSLocalizedDescriptionKey: message]
+            )
+        }
+    }
+
+    /// 预热模型：在 OCR 进行的同时把模型权重加载进内存，缩短首次 respond 的延迟。
+    /// 云端模式下无本地权重可加载，直接跳过。
+    func prewarm() {
+        if #available(iOS 27.0, *), Self.isCloudModelEnabled,
+           PrivateCloudComputeLanguageModel().isAvailable {
+            return
+        }
+        guard case .available = SystemLanguageModel.default.availability else { return }
+        let session = LanguageModelSession(instructions: instructions)
+        session.prewarm()
+        warmupSession = session
+    }
+
     /// Extract the last 4 digits from a card number string.
     /// Exposed as internal static for testability.
     nonisolated static func normalizedCardLast4(_ value: String?) -> String? {
@@ -168,13 +187,15 @@ final class ReceiptParser {
     
     // 3. 解析方法
     func parse(text: String) async throws -> ReceiptMetadata {
-            
+            try Self.ensureModelAvailable()
+
             // 👇👇👇 核心修改：每次调用 parse 时，创建一个全新的 session！
             // 这样每次都是“第一次”，没有历史包袱
-            let session = LanguageModelSession(instructions: instructions)
+            let session = makeSession(instructions: instructions)
             
             let response = try await session.respond(
-                generating: ReceiptMetadata.self
+                generating: ReceiptMetadata.self,
+                options: GenerationOptions(sampling: .greedy) // 抽取任务用贪心采样：结果稳定，无随机性
             ) {
                 "Please analyze the following receipt text carefully. It may contain non-English characters such as Chinese or Japanese, but you must process it as part of this English prompt:"
                 "=== START OF RECEIPT DATA ==="
@@ -189,11 +210,15 @@ final class ReceiptParser {
     }
 
     func parseScreenshot(text: String) async throws -> ReceiptMetadata {
-        let session = LanguageModelSession(instructions: screenshotInstructions)
-        
+        try Self.ensureModelAvailable()
+        let session = makeSession(instructions: screenshotInstructions)
+        let today = Date().formatted(date: .abbreviated, time: .omitted)
+
         let response = try await session.respond(
-            generating: ReceiptMetadata.self
+            generating: ReceiptMetadata.self,
+            options: GenerationOptions(sampling: .greedy)
         ) {
+            "Today is \(today). If no date is found in the text, use today."
             "Please analyze the following screenshot text carefully. It may contain non-English characters such as Chinese or Japanese, but you must process it as part of this English prompt:"
             "=== START OF SCREENSHOT DATA ==="
             text
@@ -207,13 +232,15 @@ final class ReceiptParser {
     }
 
     func SMSparse(text: String) async throws -> ReceiptMetadata {
-            
+            try Self.ensureModelAvailable()
+
             // 👇👇👇 核心修改：每次调用 parse 时，创建一个全新的 session！
             // 这样每次都是“第一次”，没有历史包袱
-            let session = LanguageModelSession(instructions: SMSinstructions)
+            let session = makeSession(instructions: SMSinstructions)
             
             let response = try await session.respond(
-                generating: ReceiptMetadata.self
+                generating: ReceiptMetadata.self,
+                options: GenerationOptions(sampling: .greedy)
             ) {
                 "Please analyze the following SMS text carefully. It may contain non-English characters such as Chinese or Japanese, but you must process it as part of this English prompt:"
                 "=== START OF SMS DATA ==="
@@ -228,7 +255,8 @@ final class ReceiptParser {
         }
 
     func parseStatementCard(text: String) async throws -> StatementCardMetadata {
-        let session = LanguageModelSession(instructions: statementCardInstructions)
+        try Self.ensureModelAvailable()
+        let session = makeSession(instructions: statementCardInstructions)
         let response = try await session.respond(
             generating: StatementCardMetadata.self
         ) {
@@ -243,7 +271,8 @@ final class ReceiptParser {
     }
 
     func parseStatementTransaction(text: String) async throws -> StatementTransactionMetadata {
-        let session = LanguageModelSession(instructions: statementTransactionInstructions)
+        try Self.ensureModelAvailable()
+        let session = makeSession(instructions: statementTransactionInstructions)
         let response = try await session.respond(
             generating: StatementTransactionMetadata.self
         ) {
@@ -259,7 +288,8 @@ final class ReceiptParser {
     }
     
     func parseStatementTransactionBlock(text: String) async throws -> StatementRowTransaction {
-        let session = LanguageModelSession(instructions: statementRowInstructions)
+        try Self.ensureModelAvailable()
+        let session = makeSession(instructions: statementRowInstructions)
         let response = try await session.respond(
             generating: StatementRowTransaction.self
         ) {
@@ -271,7 +301,8 @@ final class ReceiptParser {
     }
 
     func parseStatementTransactionsBatch(text: String) async throws -> StatementRowTransactionList {
-        let session = LanguageModelSession(instructions: statementTransactionsBulkInstructions)
+        try Self.ensureModelAvailable()
+        let session = makeSession(instructions: statementTransactionsBulkInstructions)
         let response = try await session.respond(
             generating: StatementRowTransactionList.self
         ) {
