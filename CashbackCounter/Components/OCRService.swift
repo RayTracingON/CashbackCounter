@@ -33,6 +33,19 @@ struct OCRService {
     @MainActor
     static func analyzeImage(_ image: UIImage, region: Region? = nil) async -> ReceiptMetadata? {
 
+        // ☁️🖼️ 多模态优先：云端 PCC 就绪时把原图直传模型，跳过本地 OCR。
+        // 本地模型跑图片输入过慢，刻意不做本地多模态；云端失败则回退下方 OCR 文本管线。
+        if #available(iOS 27.0, *), ReceiptParser.isMultimodalAvailable {
+            do {
+                let start = Date()
+                let result = try await aiParser.parseReceiptImage(image)
+                print("⏱️ 云端多模态解析耗时: \(String(format: "%.2f", Date().timeIntervalSince(start)))s")
+                return result
+            } catch {
+                print("❌ 云端多模态解析失败，回退 OCR 文本管线: \(error)")
+            }
+        }
+
         // ⏱️ 预热模型：趁 OCR 跑的时候把模型权重加载进内存，缩短首次 AI 调用延迟
         aiParser.prewarm()
 

@@ -48,27 +48,45 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
             )
         }
 
-            // 2. OCR 文字提取（Vision）
-            // 先预热 AI 模型：权重加载与 OCR 并行，省掉后面 AI 调用的冷启动
+            // 2+3. 解析：云端 PCC 就绪时原图直传（多模态），否则 OCR + 文本解析
             let parser = ReceiptParser()
-            parser.prewarm()
-            print("[AddTransactionFromScreenshotIntent] 🔍 开始 OCR 文字提取")
-            let broadLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
-            let rawText = await OCRService.recognizeTextInRows(from: image, languages: broadLanguages)
-            print("[AddTransactionFromScreenshotIntent] 🔍 OCR 结果:\n\(rawText)")
+            var rawText = ""
+            var multimodalResult: ReceiptMetadata? = nil
 
-            guard !rawText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                print("[AddTransactionFromScreenshotIntent] ❌ 截图中未识别到文字内容")
-                throw NSError(
-                domain: "AddTransactionFromScreenshotIntent",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "截图中未识别到文字内容"]
-            )
-        }
+            if #available(iOS 27.0, *), ReceiptParser.isMultimodalAvailable {
+                print("[AddTransactionFromScreenshotIntent] ☁️🖼️ 云端多模态解析截图")
+                do {
+                    multimodalResult = try await parser.parseScreenshotImage(image)
+                } catch {
+                    print("[AddTransactionFromScreenshotIntent] ❌ 多模态解析失败，回退 OCR 文本管线: \(error)")
+                }
+            }
 
-            // 3. AI 解析（独立 ReceiptParser，使用 try await 暴露错误）
-            print("[AddTransactionFromScreenshotIntent] 🤖 开始 AI 解析")
-            let metadata = try await parser.parseScreenshot(text: rawText)
+            let metadata: ReceiptMetadata
+            if let multimodalResult {
+                metadata = multimodalResult
+            } else {
+                // OCR 文字提取（Vision）
+                // 先预热 AI 模型：权重加载与 OCR 并行，省掉后面 AI 调用的冷启动
+                parser.prewarm()
+                print("[AddTransactionFromScreenshotIntent] 🔍 开始 OCR 文字提取")
+                let broadLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
+                rawText = await OCRService.recognizeTextInRows(from: image, languages: broadLanguages)
+                print("[AddTransactionFromScreenshotIntent] 🔍 OCR 结果:\n\(rawText)")
+
+                guard !rawText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    print("[AddTransactionFromScreenshotIntent] ❌ 截图中未识别到文字内容")
+                    throw NSError(
+                        domain: "AddTransactionFromScreenshotIntent",
+                        code: 1,
+                        userInfo: [NSLocalizedDescriptionKey: "截图中未识别到文字内容"]
+                    )
+                }
+
+                // AI 解析（独立 ReceiptParser，使用 try await 暴露错误）
+                print("[AddTransactionFromScreenshotIntent] 🤖 开始 AI 解析")
+                metadata = try await parser.parseScreenshot(text: rawText)
+            }
             print("[AddTransactionFromScreenshotIntent] 🤖 AI 解析完成: \(metadata)")
 
             // 4. 核心字段检查

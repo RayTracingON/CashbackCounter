@@ -1361,6 +1361,22 @@
         }
       }
     },
+    "云端模型不可用，无法使用图像解析" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud model unavailable. Image parsing is not available."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "雲端模型不可用，無法使用圖像解析"
+          }
+        }
+      }
+    },
     "云端模型需要升级到 iOS 27" : {
 
     },
@@ -3053,6 +3069,7 @@
       }
     },
     "截屏智能记账" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3580,6 +3597,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無收據圖片"
+          }
+        }
+      }
+    },
+    "无法读取图片数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to read image data"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法讀取圖片資料"
           }
         }
       }
@@ -5354,6 +5387,7 @@
       }
     },
     "解析信用卡短信" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
