@@ -3069,7 +3069,6 @@
       }
     },
     "截屏智能记账" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3601,22 +3600,6 @@
         }
       }
     },
-    "无法读取图片数据" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unable to read image data"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法讀取圖片資料"
-          }
-        }
-      }
-    },
     "无法访问相机" : {
       "localizations" : {
         "en" : {
@@ -3629,6 +3612,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法存取相機"
+          }
+        }
+      }
+    },
+    "无法读取图片数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to read image data"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法讀取圖片資料"
           }
         }
       }
@@ -3938,6 +3937,9 @@
           }
         }
       }
+    },
+    "未知商户" : {
+
     },
     "未设置还款日" : {
       "localizations" : {
@@ -5387,7 +5389,6 @@
       }
     },
     "解析信用卡短信" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

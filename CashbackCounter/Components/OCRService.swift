@@ -85,11 +85,90 @@ struct OCRService {
             let aiStart = Date()
             let result = try await aiParser.parse(text: rawText)
             print("⏱️ AI 解析耗时: \(String(format: "%.2f", Date().timeIntervalSince(aiStart)))s")
-            return result
+            // 小票路径禁用"首个货币符号金额"兜底：那通常是第一件商品的单价
+            return backfill(result, rawText: rawText, allowSymbolFallback: false)
         } catch {
             print("❌ AI 解析失败: \(error)")
             return nil
         }
+    }
+
+    // MARK: - 🧰 确定性兜底：模型漏抽字段时用规则补齐
+    /// 本地小模型偶发漏抽（返回 nil）；金额和币种可以用纯规则可靠找回。
+    /// merchant 不做兜底：OCR 首行常是乱码，宁缺勿错，留给用户手动填。
+    static func backfill(_ metadata: ReceiptMetadata, rawText: String, allowSymbolFallback: Bool = true) -> ReceiptMetadata {
+        var result = metadata
+        if result.totalAmount == nil, let amount = fallbackAmount(from: rawText, allowSymbolFallback: allowSymbolFallback) {
+            print("🧰 金额兜底命中: \(amount)")
+            result.totalAmount = amount
+        }
+        if result.currency == nil, let region = simpleInferRegion(from: rawText) {
+            print("🧰 币种兜底命中: \(region.currencyCode)")
+            result.currency = region.currencyCode
+        }
+        if result.merchant == nil, let merchant = fallbackMerchant(from: rawText) {
+            print("🧰 商户兜底命中: \(merchant)")
+            result.merchant = merchant
+        }
+        return result
+    }
+
+    /// 商户兜底：只认带明确标签的行（收款方/商户名称/Merchant 等），取标签后面的文本。
+    /// 刻意不做"取首行"式猜测——OCR 首行常是状态栏乱码，宁缺勿错。
+    static func fallbackMerchant(from text: String) -> String? {
+        let labels = ["收款方", "收款商户", "商户名称", "商户全称", "商戶名稱", "店名", "Merchant"]
+        for line in text.components(separatedBy: .newlines) {
+            for label in labels {
+                guard let range = line.range(of: label, options: .caseInsensitive) else { continue }
+                let candidate = line[range.upperBound...]
+                    .trimmingCharacters(in: .whitespaces)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: ":：|·"))
+                    .trimmingCharacters(in: .whitespaces)
+                if candidate.count >= 2 { return String(candidate) }
+            }
+        }
+        return nil
+    }
+
+    /// 按关键词优先级从文本行里找实付金额。
+    /// allowSymbolFallback：关键词都没命中时，是否退而取第一个紧跟货币符号的金额——
+    /// 支付截图适用（首个大字金额即实付）；小票不适用（首个 ¥ 金额通常是单品价），传 false。
+    static func fallbackAmount(from text: String, allowSymbolFallback: Bool = true) -> Double? {
+        let keywords = ["实付", "實付", "已支付", "支付金额", "合計", "合计",
+                        "お支払い", "請求金額", "Grand Total", "Amount Due", "Total"]
+        let lines = text.components(separatedBy: .newlines)
+
+        for keyword in keywords {
+            for line in lines {
+                guard line.range(of: keyword, options: .caseInsensitive) != nil else { continue }
+                let lower = line.lowercased()
+                // 排除小计行（折扣前金额）与数量行（"合計点数 20点"里的 20 不是金额）
+                if lower.contains("subtotal") || line.contains("小計") || line.contains("小计") { continue }
+                if line.contains("点数") || line.contains("點數") || line.contains("件数") || line.contains("人数") { continue }
+                if let amount = firstAmount(in: line) { return amount }
+            }
+        }
+
+        guard allowSymbolFallback else { return nil }
+        // 次选：第一个紧跟货币符号的金额（支付截图的大字金额通常没有关键词前缀）
+        for line in lines {
+            if let amount = firstAmount(in: line, requireCurrencySymbol: true) { return amount }
+        }
+        return nil
+    }
+
+    private static func firstAmount(in line: String, requireCurrencySymbol: Bool = false) -> Double? {
+        let pattern = requireCurrencySymbol
+            ? "[¥￥$€£]\\s*([0-9][0-9,，]*(?:\\.[0-9]{1,2})?)"
+            : "([0-9][0-9,，]*(?:\\.[0-9]{1,2})?)"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(line.startIndex..<line.endIndex, in: line)
+        guard let match = regex.firstMatch(in: line, range: range),
+              let matchRange = Range(match.range(at: 1), in: line) else { return nil }
+        let cleaned = line[matchRange]
+            .replacingOccurrences(of: ",", with: "")
+            .replacingOccurrences(of: "，", with: "")
+        return Double(cleaned)
     }
 
     /// 供 UI 在进入记账界面时提前调用：用户挑选照片期间即可完成模型加载

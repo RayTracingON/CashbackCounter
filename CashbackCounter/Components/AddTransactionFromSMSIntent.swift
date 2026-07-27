@@ -33,9 +33,12 @@ struct AddTransactionFromSMSIntent: AppIntent {
                 guard !textToParse.isEmpty else {
                     throw NSError(domain: "AddTransactionFromSMSIntent", code: 0, userInfo: [NSLocalizedDescriptionKey: "请提供短信文本"])
                 }
-        // 在主线程上创建解析器并调用 parse()
+        // 在主线程上创建解析器并调用 parse()；模型漏抽金额/币种时用规则兜底
         let parser = ReceiptParser()
-        let metadata = try await parser.SMSparse(text: textToParse)
+        let metadata = OCRService.backfill(
+            try await parser.SMSparse(text: textToParse),
+            rawText: textToParse
+        )
 
         // 核心字段检查
         guard let merchant = metadata.merchant,

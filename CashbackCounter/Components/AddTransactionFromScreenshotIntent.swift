@@ -85,20 +85,25 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
 
                 // AI 解析（独立 ReceiptParser，使用 try await 暴露错误）
                 print("[AddTransactionFromScreenshotIntent] 🤖 开始 AI 解析")
-                metadata = try await parser.parseScreenshot(text: rawText)
+                // 模型漏抽金额/币种时用规则兜底，避免整条快捷指令因一个 nil 字段失败
+                metadata = OCRService.backfill(
+                    try await parser.parseScreenshot(text: rawText),
+                    rawText: rawText
+                )
             }
             print("[AddTransactionFromScreenshotIntent] 🤖 AI 解析完成: \(metadata)")
 
-            // 4. 核心字段检查
-            guard let merchant = metadata.merchant,
-                  let amount = metadata.totalAmount else {
-                print("[AddTransactionFromScreenshotIntent] ❌ 未能从截图中识别出商户名或金额")
+            // 4. 核心字段检查：只有金额是硬性要求；
+            // 商户名识别失败用占位符继续走确认弹窗，用户可在弹窗里取消
+            guard let amount = metadata.totalAmount else {
+                print("[AddTransactionFromScreenshotIntent] ❌ 未能从截图中识别出金额")
                 throw NSError(
                 domain: "AddTransactionFromScreenshotIntent",
                 code: 2,
-                userInfo: [NSLocalizedDescriptionKey: "未能从截图中识别出商户名或金额"]
+                userInfo: [NSLocalizedDescriptionKey: "未能从截图中识别出金额"]
             )
         }
+        let merchant = metadata.merchant ?? String(localized: "未知商户")
 
         let category = metadata.category ?? .other
 

@@ -9,25 +9,30 @@ import Foundation
 import FoundationModels
 
 // 1. 定义收据结构 (对应 Apple 的 Itinerary)
+// ⚠️ 字段顺序是刻意的（照抄型字段在前、判断型字段在后），经真机四探针诊断验证：
+// iOS 27 beta 端侧模型按"merchant 打头 + 英文前导语"的旧组合生成时，
+// 判断型字段（merchant/totalAmount/currency）会连环 nil；倒序 + 无前导语则全字段正常。
+// 同时不要给任何字段加 .anyOf 等约束（旧 beta 端侧约束解码有污染 bug）。
+// 详见 Components/LocalModelDiagnostics.swift。
 @Generable
 struct ReceiptMetadata {
-    @Guide(description: "The name of the store or merchant.")
-    var merchant: String?  // ✅ 加上问号
-    
-    @Guide(description: "The total amount paid (not contain deduction).")
-    var totalAmount: Double? // ✅ 加上问号
-    
-    @Guide(description: "The ISO currency code.", .anyOf(["CNY", "USD", "HKD", "JPY", "NZD", "TWD", "GBP", "MOP", "EUR"]))
-    var currency: String?    // ✅ 加上问号
+    @Guide(description: "Classify the receipt into one of the categories based on the merchant and items")
+    var category: Category?
+
+    @Guide(description: "The last 4 digits of the credit card used.")
+    var cardLast4: String?   // ✅ 加上问号
 
     @Guide(description: "The date of transaction in YYYY-MM-DD format.")
     var dateString: String?  // ✅ 加上问号
-    
-    @Guide(description: "The last 4 digits of the credit card used.")
-    var cardLast4: String?   // ✅ 加上问号
-    
-    @Guide(description: "Classify the receipt into one of the categories based on the merchant and items")
-    var category: Category?
+
+    @Guide(description: "The currency code, one of: CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR.")
+    var currency: String?    // ✅ 加上问号
+
+    @Guide(description: "The final paid amount.")
+    var totalAmount: Double? // ✅ 加上问号
+
+    @Guide(description: "The name of the store or merchant.")
+    var merchant: String?  // ✅ 加上问号
 }
 
 @Generable

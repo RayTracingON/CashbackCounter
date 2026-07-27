@@ -91,62 +91,75 @@ enum ReceiptParseMode {
     var instructions: Instructions {
         switch self {
         case .receipt:
+            // ⚠️ 本地 3B 模型对过度压缩的指令敏感：字段清单和金额规则必须逐条列出，
+            // 否则会连环漏抽字段（实测：merchant/amount/currency 连环 nil）
             return Instructions {
-                "You are an expert receipt data extractor. Extract exact values from the OCR text into the structure."
+                "You are an expert receipt data extractor."
+                "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the OCR text."
                 "The text is aligned row by row; items on the same row are related."
                 "MERCHANT: usually near the top; may be Chinese, Japanese, or English."
-                "AMOUNT: extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/税込/Total/Grand Total/Amount Due."
-                "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum or add numbers yourself."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405, '1.100' -> 1100)."
-                "CATEGORY (from merchant and items): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+                "AMOUNT rules:"
+                "- Extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/Total/Grand Total/Amount Due."
+                "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum numbers yourself."
+                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
+                "CARD: extract last-4 digits ONLY from an explicit card number (卡号/カードNo/**** masked). Register, table, or receipt numbers are NOT card numbers; if no card number, return nil."
+                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
                 "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "If a value is missing, leave it nil."
+                "Prefer extracting a value that is present in the text; only return nil when the field truly does not appear."
             }
         case .receiptImage:
             return Instructions {
-                "You are an expert receipt data extractor. Extract exact values from the receipt image into the structure."
+                "You are an expert receipt data extractor."
+                "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the receipt image."
                 "MERCHANT: usually near the top; may be Chinese, Japanese, or English."
-                "AMOUNT: extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/税込/Total/Grand Total/Amount Due."
-                "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum or add numbers yourself."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405, '1.100' -> 1100)."
-                "CATEGORY (from merchant and items): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+                "AMOUNT rules:"
+                "- Extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/Total/Grand Total/Amount Due."
+                "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum numbers yourself."
+                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
+                "CARD: extract last-4 digits ONLY from an explicit card number (卡号/カードNo/**** masked). Register, table, or receipt numbers are NOT card numbers; if no card number, return nil."
+                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
                 "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "If a value is missing, leave it nil."
+                "Prefer extracting a value that is present in the image; only return nil when the field truly does not appear."
             }
         // ⚡️ 精简版；"Today is..." 在 prompt 里按调用时刻生成，
         // 避免长驻单例（OCRService.aiParser）持有过期日期
         case .screenshot:
             return Instructions {
-                "You are an expert receipt data extractor for payment screen captures. Extract exact values from the OCR text into the structure."
+                "You are an expert receipt data extractor for payment screen captures."
+                "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the OCR text."
                 "The text is aligned row by row; items on the same row are related."
                 "MERCHANT: may be Chinese, Japanese, or English."
-                "AMOUNT: use the FIRST amount shown on the screen — it is the total billing amount."
+                "AMOUNT rules:"
+                "- Use the FIRST amount shown on the screen — it is the total billing amount."
                 "- IGNORE discounts (立减/优惠/碰一下立减/Discount) below it and any total-without-discount. DO NOT subtract discounts."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405, '1.100' -> 1100)."
-                "CATEGORY (from merchant and items): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
+                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
                 "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "If a value is missing, leave it nil."
+                "Prefer extracting a value that is present in the text; only return nil when the field truly does not appear."
             }
         case .screenshotImage:
             return Instructions {
-                "You are an expert receipt data extractor for payment screen captures. Extract exact values from the screenshot image into the structure."
+                "You are an expert receipt data extractor for payment screen captures."
+                "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the screenshot image."
                 "MERCHANT: may be Chinese, Japanese, or English."
-                "AMOUNT: use the FIRST amount shown on the screen — it is the total billing amount."
+                "AMOUNT rules:"
+                "- Use the FIRST amount shown on the screen — it is the total billing amount."
                 "- IGNORE discounts (立减/优惠/碰一下立减/Discount) below it and any total-without-discount. DO NOT subtract discounts."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405, '1.100' -> 1100)."
-                "CATEGORY (from merchant and items): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
+                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
                 "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "If a value is missing, leave it nil."
+                "Prefer extracting a value that is present in the image; only return nil when the field truly does not appear."
             }
         // ⚡️ 精简版：短信文本很短，指令是 prefill 的大头
         case .sms:
             return Instructions {
-                "You are an expert transaction extractor for bank SMS notifications. Extract exact values into the structure."
+                "You are an expert transaction extractor for bank SMS notifications."
+                "Extract exact values for: merchant, total amount, currency, card last-4 digits, and category from the SMS text."
                 "MERCHANT: may be Chinese, Japanese, or English."
                 "AMOUNT: the FINAL PAID amount (实付金额/合计/Total)."
                 "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('1.100' -> 1100)."
-                "CATEGORY (from merchant): dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart; travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
-                "If you are not sure about a value, leave it nil."
+                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+                "Prefer extracting a value that is present in the text; only return nil when the field truly does not appear."
             }
         case .statementCard:
             return Instructions {
@@ -295,13 +308,17 @@ final class ReceiptParser {
                       ? "☁️ 使用云端模型 (Private Cloud Compute)"
                       : "⚠️ 云端模型不可用（未授权/无网络/系统未就绪），回退本地模型")
             }
-            if FoundationModelsRuntime.dynamicProfileAvailable {
-                return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, cloudModel: cloud))
-            }
             if let cloud {
+                // Dynamic Profile 只用于云端：它的增量价值只有 reasoningLevel 档位
+                if FoundationModelsRuntime.dynamicProfileAvailable {
+                    return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, cloudModel: cloud))
+                }
                 return LanguageModelSession(model: cloud, instructions: mode.instructions)
             }
         }
+        // ⚠️ 本地一律走经典 instructions 构造，不走 Dynamic Profile：
+        // profile 路由在本地没有任何增量功能，且属于"本地字段连环 nil"故障的
+        // 排查变量之一（beta 端侧 profile 会话的指令注入行为未经验证）
         return LanguageModelSession(instructions: mode.instructions)
     }
 
@@ -381,14 +398,14 @@ final class ReceiptParser {
             // 这样每次都是“第一次”，没有历史包袱
             let session = makeSession(mode: .receipt)
 
+            // ⚠️ prompt 只放小票文本本身，不加英文前导语和分隔标记：
+            // 真机诊断证实旧前导语（"process it as part of this English prompt"）
+            // 会让 iOS 27 beta 本地模型对判断型字段连环输出 nil；
+            // 同理不用贪心采样，默认采样是验证过的行为
             let response = try await session.respond(
-                generating: ReceiptMetadata.self,
-                options: GenerationOptions(samplingMode: .greedy) // 抽取任务用贪心采样：结果稳定，无随机性
+                generating: ReceiptMetadata.self
             ) {
-                "Please analyze the following receipt text carefully. It may contain non-English characters such as Chinese or Japanese, but you must process it as part of this English prompt:"
-                "=== START OF RECEIPT DATA ==="
                 text
-                "=== END OF RECEIPT DATA ==="
             }
 
         let metadata = response.content
@@ -401,15 +418,12 @@ final class ReceiptParser {
         let session = makeSession(mode: .screenshot)
         let today = Date().formatted(date: .abbreviated, time: .omitted)
 
+        // 同 parse()：不加前导语/分隔标记，只保留日期提示一句
         let response = try await session.respond(
-            generating: ReceiptMetadata.self,
-            options: GenerationOptions(samplingMode: .greedy)
+            generating: ReceiptMetadata.self
         ) {
             "Today is \(today). If no date is found in the text, use today."
-            "Please analyze the following screenshot text carefully. It may contain non-English characters such as Chinese or Japanese, but you must process it as part of this English prompt:"
-            "=== START OF SCREENSHOT DATA ==="
             text
-            "=== END OF SCREENSHOT DATA ==="
         }
 
         let metadata = response.content
@@ -424,14 +438,11 @@ final class ReceiptParser {
             // 这样每次都是“第一次”，没有历史包袱
             let session = makeSession(mode: .sms)
 
+            // 同 parse()：不加前导语/分隔标记
             let response = try await session.respond(
-                generating: ReceiptMetadata.self,
-                options: GenerationOptions(samplingMode: .greedy)
+                generating: ReceiptMetadata.self
             ) {
-                "Please analyze the following SMS text carefully. It may contain non-English characters such as Chinese or Japanese, but you must process it as part of this English prompt:"
-                "=== START OF SMS DATA ==="
                 text
-                "=== END OF SMS DATA ==="
             }
 
         let metadata = response.content
