@@ -700,8 +700,8 @@
     ],
     "pictureURL" : "chaseihgpremier",
     "type" : "IHG Premier",
-    "foreignBaseCap" : 300,
-    "localBaseCap" : 300,
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
     "categoryCaps" : [
     ],
     "rewardType" : "points",
@@ -714,12 +714,12 @@
       "24133F",
       "D92344"
     ],
-    "foreignCurrencyRate" : 100,
+    "foreignCurrencyRate" : 300,
     "paymentMethodRates" : [
 
     ],
     "bankName" : "Chase",
-    "defaultRate" : 100
+    "defaultRate" : 300
   },
   {
     "capPeriod" : {

@@ -116,7 +116,18 @@ class CreditCard: Identifiable {
     // 当你删卡时，关联的交易怎么办？.nullify 意思是把交易里的卡变成空，保留交易记录
     @Relationship(deleteRule: .nullify, inverse: \Transaction.card)
     var transactions: [Transaction]?
-    
+
+    // 👇 银行同步：这张卡关联了哪些 Plaid 账户。同样 .nullify —— 删卡不该删掉绑定记录。
+    //
+    // ⚠️ 这个 inverse **不是可选的装饰**：CloudKit 要求每一个关系都必须有 inverse，
+    // 少了它整个 schema 会在 ModelContainer 初始化时抛
+    // "CloudKit integration requires that all relationships have an inverse"，
+    // 而 SharedModelContainer 的兜底逻辑会因此**删掉本地数据库**。
+    // 也就是说：漏写 inverse 的后果是用户的卡包和账单全部消失。
+    @Relationship(deleteRule: .nullify, inverse: \LinkedBankAccount.card)
+    var linkedBankAccounts: [LinkedBankAccount]?
+
+
     init(bankName: String,
         type: String,
         endNum: String,

@@ -19,7 +19,8 @@ enum SharedModelContainer {
 
     private static func makeContainer() -> ModelContainer {
         let schema = Schema([
-            Transaction.self, CreditCard.self, Income.self, Point.self, PointAdjustment.self
+            Transaction.self, CreditCard.self, Income.self, Point.self, PointAdjustment.self,
+            LinkedBankAccount.self
         ])
         let isSyncEnabled = UserDefaults.standard.object(forKey: "iCloudSyncEnabled") as? Bool ?? true
 
@@ -27,8 +28,10 @@ enum SharedModelContainer {
         // 在模拟器中，如果未登录 iCloud 或 CloudKit 容器未配置好，频繁的同步重试会导致控制台无限输出 Zone Not Found 错误，从而引发主线程严重卡顿。
         // 故在模拟器环境下默认不启用 CloudKit 同步，保证开发调试时的流畅度。
         let cloudKitDB: ModelConfiguration.CloudKitDatabase = .none
+        let usesCloudKit = false
         #else
         let cloudKitDB: ModelConfiguration.CloudKitDatabase = isSyncEnabled ? .automatic : .none
+        let usesCloudKit = isSyncEnabled
         #endif
 
         // 第一次尝试正常创建
@@ -36,7 +39,35 @@ enum SharedModelContainer {
             let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: cloudKitDB)
             return try ModelContainer(for: schema, configurations: [config])
         } catch {
-            // Schema 迁移失败（常见于 CloudKit 同步后字段变更），尝试删除本地数据库后重建
+            // ⚠️ 在删任何东西之前，先关掉 CloudKit 再试一次。
+            //
+            // 这一步是用一次真实的数据丢失换来的：给模型加了一个**没有 inverse 的关系**，
+            // CloudKit 的 schema 校验直接拒绝整个 schema
+            // （"CloudKit integration requires that all relationships have an inverse"）。
+            // 这类错误和本地数据库里存了什么**毫无关系** —— 删库一百次也修不好它，
+            // 但下面那段删库逻辑照删不误，于是用户的卡包和账单就没了。
+            //
+            // 先降级成本地模式：能开起来就说明数据库本身是好的，问题出在 CloudKit 约束上。
+            // 代价是这次启动不同步 iCloud，但数据一条不少 —— 这个取舍不需要犹豫。
+            // 用单独的 Bool 判断：CloudKitDatabase 不是 Equatable，没法直接和 .none 比
+            if usesCloudKit {
+                do {
+                    let localOnly = ModelConfiguration(
+                        schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .none)
+                    let container = try ModelContainer(for: schema, configurations: [localOnly])
+                    print("""
+                        ⚠️ CloudKit 配置下无法初始化，已降级为**仅本地**模式（数据完好，本次不同步 iCloud）。
+                        错误: \(error)
+                        这通常是 schema 不满足 CloudKit 约束：所有属性要有默认值、
+                        所有关系要可空**且必须有 inverse**、不能用 @Attribute(.unique)。
+                        """)
+                    return container
+                } catch {
+                    print("⚠️ 仅本地模式也失败，说明数据库本身有问题: \(error)")
+                }
+            }
+
+            // 走到这里才是真正的存储损坏 / 迁移失败，删库重建是唯一出路
             print("⚠️ ModelContainer 初始化失败，尝试删除本地数据库并重建... 错误: \(error)")
 
             // 删除本地 SwiftData 存储文件

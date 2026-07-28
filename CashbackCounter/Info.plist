@@ -2,9 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- 出口合规声明。本 App 只用 HTTPS 和系统自带的加密（Keychain、CryptoKit），
+	     属于豁免范围。不声明的话，每次上传 TestFlight 都会卡住等你在网页上回答
+	     "是否使用加密"，构建要多等一轮。 -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<!-- 本地联调用：ATS 默认禁止一切明文 HTTP，而本地后端跑在 http://localhost:8080。
+	     NSAllowsLocalNetworking 只放开「非限定域名和 .local 域名」，
+	     不影响任何公网地址 —— 线上后端仍然强制 HTTPS。
+	     真机调试请用 http://你的Mac名.local:8080（真机访问不到 localhost），
+	     纯 IP 地址不在这条豁免范围内。 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

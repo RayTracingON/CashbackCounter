@@ -14,5 +14,13 @@
 	</array>
 	<key>com.apple.developer.private-cloud-compute</key>
 	<true/>
+	<!-- Sign in with Apple。"Default" 是标准值（另一个可选值 "MigrateFromRealUserStatus"
+	     只在从旧的 Real User Status 迁移时用）。
+	     ⚠️ 光加这一条不够：还要在 Apple Developer 后台给这个 App ID 勾上
+	     Sign in with Apple 能力，否则真机授权会直接失败。 -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
 </dict>
 </plist>

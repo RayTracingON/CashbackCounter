@@ -47,7 +47,12 @@ struct SettingsView: View {
 
     // MARK: - Body
     var body: some View {
-        NavigationView {
+        // ⚠️ 别改回 NavigationView：它在现代 iOS 上会被解释成**多列分栏**容器
+        // （运行时能看到 SidebarStyleContext / NavigationSearchColumnModifier）。
+        // 分栏里发起的 present 会被路由到 TabView 根部的 hosting controller，
+        // 而不是当前这一列，于是很容易撞上"already presenting"。
+        // 这个 Tab 从来就只有一列，NavigationStack 才是它本来的语义。
+        NavigationStack {
             List {
                 // Header Section
                 Section {
@@ -83,7 +88,11 @@ struct SettingsView: View {
                     .padding(.vertical, 10)
                 }
                 .listRowBackground(Color.clear)
-                
+
+                // Account Section —— 登录、退出、删除账号。
+                // 只服务于银行同步；不登录不影响其余任何功能。
+                AccountSection()
+
                 // Appearance Section
                 Section(header: Text("外观与语言")) {
                     Picker(selection: $userTheme, label: Label("主题模式", systemImage: "paintpalette")) {

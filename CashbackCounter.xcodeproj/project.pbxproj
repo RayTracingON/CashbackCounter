@@ -10,6 +10,7 @@
 		F842143B2EDC9BE7007B75D5 /* CashbackShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842143A2EDC9BE7007B75D5 /* CashbackShortcutsProvider.swift */; };
 		F8B31CD62EEC750E00F1FB86 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F8B31CD52EEC750E00F1FB86 /* ZIPFoundation */; };
 		F8E14D652EDA0AE3007C22B0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F8E14D642EDA0AE3007C22B0 /* Localizable.xcstrings */; };
+		FADD0000000000000000AA03 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = FADD0000000000000000AA02 /* LinkKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -23,6 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F80BD9543017BA820038224F /* CashbackCounter.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = CashbackCounter.xcodeproj; sourceTree = SOURCE_ROOT; };
 		F842143A2EDC9BE7007B75D5 /* CashbackShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashbackShortcutsProvider.swift; sourceTree = "<group>"; };
 		F8B569D62ED2E4A400CCC7D6 /* CashbackCounter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CashbackCounter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8E14D642EDA0AE3007C22B0 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -61,6 +63,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F8B31CD62EEC750E00F1FB86 /* ZIPFoundation in Frameworks */,
+				FADD0000000000000000AA03 /* LinkKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,9 +77,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F80BD9553017BA820038224F /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
 		F8B569CD2ED2E4A400CCC7D6 = {
 			isa = PBXGroup;
 			children = (
+				F80BD9543017BA820038224F /* CashbackCounter.xcodeproj */,
 				F842143A2EDC9BE7007B75D5 /* CashbackShortcutsProvider.swift */,
 				F8E14D642EDA0AE3007C22B0 /* Localizable.xcstrings */,
 				F8B569D82ED2E4A400CCC7D6 /* CashbackCounter */,
@@ -115,6 +124,7 @@
 			name = CashbackCounter;
 			packageProductDependencies = (
 				F8B31CD52EEC750E00F1FB86 /* ZIPFoundation */,
+				FADD0000000000000000AA02 /* LinkKit */,
 			);
 			productName = CashbackCounter;
 			productReference = F8B569D62ED2E4A400CCC7D6 /* CashbackCounter.app */;
@@ -173,10 +183,17 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F8B31CD42EEC750E00F1FB86 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				FADD0000000000000000AA01 /* XCRemoteSwiftPackageReference "plaid-link-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F8B569D72ED2E4A400CCC7D6 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = F80BD9553017BA820038224F /* Products */;
+					ProjectRef = F80BD9543017BA820038224F /* CashbackCounter.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				F8B569D52ED2E4A400CCC7D6 /* CashbackCounter */,
@@ -524,6 +541,14 @@
 				minimumVersion = 0.9.20;
 			};
 		};
+		FADD0000000000000000AA01 /* XCRemoteSwiftPackageReference "plaid-link-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/plaid/plaid-link-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.4;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -531,6 +556,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F8B31CD42EEC750E00F1FB86 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
+		};
+		FADD0000000000000000AA02 /* LinkKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FADD0000000000000000AA01 /* XCRemoteSwiftPackageReference "plaid-link-ios" */;
+			productName = LinkKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

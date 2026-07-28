@@ -63,6 +63,12 @@
             ReferencedContainer = "container:CashbackCounter.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-debug_backend_base_url &quot;https://ascidean-plaid-api-ckbtf4ebfghaf5e0.australiacentral-01.azurewebsites.net&quot; "
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
