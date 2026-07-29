@@ -11,6 +11,33 @@
 
 import Foundation
 
+extension CreditCard {
+
+    /// 一点积分折算成**发卡币种**的价值。
+    ///
+    /// 积分计划的估值币种和卡的发卡地可以不同（比如 Amex HK 的积分按 HKD 估值，
+    /// 但卡是美国发的），这时要按汇率换算一次，否则算出来的返现价值差一个汇率倍数。
+    ///
+    /// ⚠️ 同样的逻辑在 AddTransactionViewModel 和 AddTransactionFromScreenshotIntent
+    /// 里各有一份拷贝。这里没有去动那两处（它们在正常工作，改动有风险），
+    /// 但三份实现必须保持一致 —— 将来重构时应该都收敛到这个方法。
+    func pointValueInCardCurrency() async -> Double {
+        guard let pointProgram else { return 0 }
+
+        let pointRegion = pointProgram.valueCurrencyCode
+        if pointRegion == issueRegion {
+            return pointProgram.pointValue
+        }
+
+        let rates = await CurrencyService.getRates(base: pointRegion.currencyCode)
+        if let rate = rates[issueRegion.currencyCode], rate > 0 {
+            return pointProgram.pointValue * rate
+        }
+        // 拿不到汇率时退回未换算的值：偏差好过算出 0
+        return pointProgram.pointValue
+    }
+}
+
 enum PlaidCategoryMapping {
 
     /// Plaid 的 PFC 是两级：primary（16 个大类）+ detailed（100 多个细类）。

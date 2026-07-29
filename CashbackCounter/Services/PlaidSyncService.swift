@@ -140,7 +140,12 @@ final class PlaidSyncService {
         PlaidSyncDebugLogger.dumpFetched(transactions, itemId: itemId)
 
         statusMessage = "正在处理 \(transactions.count) 笔交易…"
-        let summary = process(transactions, accounts: accounts, context: context)
+
+        // 积分估值可能要查汇率（网络），所以**每张卡只解析一次**、在进入管线之前做完。
+        // 放进循环里会变成每笔交易一次网络往返。
+        let pointValues = await resolvePointValues(for: accounts)
+
+        let summary = process(transactions, accounts: accounts, pointValues: pointValues, context: context)
 
         let now = Date()
         for account in accounts {
@@ -237,8 +242,24 @@ final class PlaidSyncService {
     ///
     /// ⑤ 必须在 ④ 之后：同一批里既有消费又有它的退款时，
     /// 先入库才能被随后的退款正确抵销掉。
+    /// 每张积分卡的「一点积分值多少发卡币种」。只解析一次，避免每笔交易查一次汇率。
+    private func resolvePointValues(
+        for accounts: [LinkedBankAccount]
+    ) async -> [PersistentIdentifier: Double] {
+
+        var result: [PersistentIdentifier: Double] = [:]
+        for account in accounts {
+            guard let card = account.card, card.rewardType == .points else { continue }
+            let id = card.persistentModelID
+            guard result[id] == nil else { continue }
+            result[id] = await card.pointValueInCardCurrency()
+        }
+        return result
+    }
+
     private func process(_ transactions: [PlaidTransactionDTO],
                          accounts: [LinkedBankAccount],
+                         pointValues: [PersistentIdentifier: Double],
                          context: ModelContext) -> SyncSummary {
 
         var summary = SyncSummary()
@@ -303,7 +324,7 @@ final class PlaidSyncService {
         }
 
         // ④
-        let insertResult = insertWithCountAlignment(purchases, context: context)
+        let insertResult = insertWithCountAlignment(purchases, pointValues: pointValues, context: context)
         summary.inserted = insertResult.inserted
         summary.duplicatesSkipped = insertResult.skipped
 
@@ -331,6 +352,7 @@ final class PlaidSyncService {
     /// 想删同步来的交易应该去关掉那张卡的同步 —— 设置页里写明了这个行为。
     private func insertWithCountAlignment(
         _ purchases: [(dto: PlaidTransactionDTO, card: CreditCard)],
+        pointValues: [PersistentIdentifier: Double],
         context: ModelContext
     ) -> (inserted: Int, skipped: Int) {
 
@@ -363,8 +385,8 @@ final class PlaidSyncService {
             grouped[key, default: []].append(item)
         }
 
-        var inserted = 0
         var skipped = 0
+        var toInsert: [(dto: PlaidTransactionDTO, card: CreditCard)] = []
 
         for (key, items) in grouped {
             let alreadyHave = localCounts[key] ?? 0
@@ -373,18 +395,7 @@ final class PlaidSyncService {
 
             for (index, item) in items.enumerated() {
                 if index < missing {
-                    let transaction = makeTransaction(from: item.dto, card: item.card)
-                    context.insert(transaction)
-                    inserted += 1
-                    PlaidSyncDebugLogger.decision(
-                        item.dto,
-                        verdict: "入库",
-                        detail: "\(item.card.bankName) \(item.card.endNum)"
-                            + " / \(transaction.category.displayName)"
-                            + " / \(transaction.paymentMethod.displayName)"
-                            + " / 费率 \(String(format: "%.2f%%", transaction.rate * 100))"
-                            + " / 返现 \(String(format: "%.2f", transaction.cashbackamount))"
-                            + (transaction.pointsEarned > 0 ? " / 积分 \(transaction.pointsEarned)" : ""))
+                    toInsert.append(item)
                 } else {
                     PlaidSyncDebugLogger.decision(
                         item.dto,
@@ -392,6 +403,46 @@ final class PlaidSyncService {
                         detail: "同卡同日同金额本地已有 \(alreadyHave) 笔，服务端 \(items.count) 笔")
                 }
             }
+        }
+
+        // ⚠️ 必须按日期升序插入。
+        //
+        // 上限（月/年额度）是**按时间顺序消耗**的：第一笔先吃额度，吃满之后
+        // 后面的只能拿基础费率。而 Dictionary 的遍历顺序在 Swift 里是不确定的 ——
+        // 不排序的话，同样一批数据两次同步可能把额度分给不同的交易，
+        // 算出两个不同的返现总额。
+        toInsert.sort { ($0.dto.parsedDate ?? .distantPast) < ($1.dto.parsedDate ?? .distantPast) }
+
+        var inserted = 0
+        for item in toInsert {
+            let transaction = makeTransaction(from: item.dto, card: item.card, pointValues: pointValues)
+            context.insert(transaction)
+
+            // ⚠️ 必须挂到卡上。上限用量是从 `card.transactions` 统计出来的
+            // （见 CreditCard.calculateCappedCashback 的"第三步：统计历史用量"），
+            // 只 insert 不挂关系的话，同一批里后面的交易看不到前面的，
+            // 每一笔都以为额度还是满的 —— 返现会被重复授予。
+            // 手动记账那条路径也是这么做的。
+            if item.card.transactions == nil {
+                item.card.transactions = [transaction]
+            } else {
+                item.card.transactions?.append(transaction)
+            }
+
+            inserted += 1
+
+            // 分段拼接：整条写成一个表达式会让 Swift 的类型检查器超时
+            let cardLabel = "\(item.card.bankName) \(item.card.endNum)"
+            let ratePart = String(format: "%.2f%%", transaction.rate * 100)
+            let cashbackPart = String(format: "%.2f", transaction.cashbackamount)
+            var detail = "\(cardLabel) / \(transaction.category.displayName)"
+            detail += " / \(transaction.paymentMethod.displayName)"
+            detail += " / 费率 \(ratePart) / 返现 \(cashbackPart)"
+            if transaction.pointsEarned > 0 {
+                detail += " / 积分 \(transaction.pointsEarned)"
+            }
+
+            PlaidSyncDebugLogger.decision(item.dto, verdict: "入库", detail: detail)
         }
 
         return (inserted, skipped)
@@ -484,22 +535,66 @@ final class PlaidSyncService {
 
     // MARK: - 建模型
 
-    /// 走现有构造器，费率、返现、积分、上限全部由费率引擎算 —— 这里一个数字都不自己算。
-    private func makeTransaction(from dto: PlaidTransactionDTO, card: CreditCard) -> Transaction {
+    /// 用**和手动记账完全相同**的方式算奖励，再交给构造器。
+    ///
+    /// ⚠️ 不能只把 card 传给 `Transaction.init` 就指望它算对。
+    /// 那个构造器在 `cashbackAmount` 为 nil 时走的是
+    /// `cashbackamount = billingAmount * nominalRate` 这条**朴素兜底**路径，它：
+    ///
+    ///   · **完全不认识积分卡** —— 积分卡的"费率"是每元多少积分（Amex 可能是 300），
+    ///     直接乘上去就变成一笔天文数字的"返现"
+    ///   · **完全不考虑上限** —— 月/年额度、类别额度、支付方式额度全部失效
+    ///
+    /// 真正的奖励引擎是 `CreditCard.calculateCappedPoints` / `calculateCappedCashback`，
+    /// 手动记账走的就是它们。这里必须一致，否则同一笔消费手动记和自动同步会得出两个数。
+    // internal（而非 private）是为了让测试能直接验证奖励计算 —— 这是最容易
+    // 算错、而且算错了用户也看不出来的一段
+    func makeTransaction(from dto: PlaidTransactionDTO,
+                         card: CreditCard,
+                         pointValues: [PersistentIdentifier: Double]) -> Transaction {
+
         let amount = abs(dto.amount)
+        let category = PlaidCategoryMapping.category(primary: dto.category, detailed: dto.categoryDetailed)
+        let paymentMethod = PlaidCategoryMapping.paymentMethod(from: dto.paymentChannel)
+        let date = dto.parsedDate ?? Date()
+
+        var finalCashback: Double = 0
+        var pointsEarned: Int = 0
+
+        if card.rewardType == .points {
+            let result = card.calculateCappedPoints(
+                amount: amount,
+                category: category,
+                // Plaid 只支持美国，交易地固定 .us
+                location: .us,
+                date: date,
+                paymentMethod: paymentMethod,
+                pointValueInCardCurrency: pointValues[card.persistentModelID] ?? 0)
+            pointsEarned = result.points
+            // 积分卡的 cashbackamount 存的是积分折算出的**价值**，和手动记账一致
+            finalCashback = result.value
+        } else {
+            finalCashback = card.calculateCappedCashback(
+                amount: amount,
+                category: category,
+                location: .us,
+                date: date,
+                paymentMethod: paymentMethod)
+        }
 
         return Transaction(
             merchant: dto.resolvedMerchant,
-            category: PlaidCategoryMapping.category(primary: dto.category, detailed: dto.categoryDetailed),
-            // Plaid 只支持美国，交易地固定 .us
+            category: category,
             location: .us,
             // Plaid 给的是**结算后**金额，没有原始外币金额这个字段，
             // 所以 amount 和 billingAmount 是同一个数
             amount: amount,
-            date: dto.parsedDate ?? Date(),
+            date: date,
             card: card,
             billingAmount: amount,
-            paymentMethod: PlaidCategoryMapping.paymentMethod(from: dto.paymentChannel),
+            cashbackAmount: finalCashback,
+            pointsEarned: pointsEarned,
+            paymentMethod: paymentMethod,
             billingCurrencyCode: dto.currency ?? "USD",
             source: .plaid)
     }
