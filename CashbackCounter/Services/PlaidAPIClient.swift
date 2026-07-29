@@ -22,20 +22,26 @@ enum PlaidAPIError: LocalizedError {
     case transport(Error)
     case decoding(Error)
 
+    /// ⚠️ 这些是**会显示给用户**的文案，必须走 String(localized:) ——
+    /// 它们不在 SwiftUI 的 Text 里，不会被自动提取和本地化。
+    ///
+    /// 注意 `.plaid` 和 `.server` 优先用后端给的 message：那是服务端按具体情况
+    /// 生成的（"银行数据正在准备中"/"银行连接已失效"），比这里的兜底文案有用得多。
+    /// 后端的多语言是另一个话题，目前只有中文。
     var errorDescription: String? {
         switch self {
         case .notSignedIn:
-            return "尚未登录，请先用 Apple ID 登录"
+            return String(localized: "尚未登录，请先用 Apple ID 登录")
         case .unauthorized:
-            return "登录已过期，请重新登录"
+            return String(localized: "登录已过期，请重新登录")
         case .plaid(_, let message):
-            return message ?? "银行数据接口暂时不可用，请稍后重试"
+            return message ?? String(localized: "银行数据接口暂时不可用，请稍后重试")
         case .server(let status, let message):
-            return message ?? "服务器响应异常（状态码：\(status)）"
+            return message ?? String(localized: "服务器响应异常（状态码：\(status)）")
         case .transport(let error):
-            return "网络请求失败：\(error.localizedDescription)"
+            return String(localized: "网络请求失败：\(error.localizedDescription)")
         case .decoding(let error):
-            return "数据解析失败：\(error.localizedDescription)"
+            return String(localized: "数据解析失败：\(error.localizedDescription)")
         }
     }
 

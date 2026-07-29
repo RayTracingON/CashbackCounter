@@ -93,7 +93,7 @@ final class PlaidLinkService {
                 itemId: exchange.itemId,
                 accountId: dto.accountId,
                 institutionName: institutionName,
-                accountName: dto.name ?? dto.officialName ?? "信用卡",
+                accountName: dto.name ?? dto.officialName ?? String(localized: "信用卡"),
                 mask: dto.mask ?? "")
 
             context.insert(account)
@@ -156,14 +156,47 @@ final class PlaidLinkService {
     /// **已导入的交易一律保留** —— 历史账目不该因为解绑而消失，
     /// 那些消费是真实发生过的，用户的返现统计也建立在它们之上。
     func unlink(itemId: String, context: ModelContext) async throws {
-        let _: UnlinkResponse = try await api.post(
-            "/api/plaid/unlink",
-            query: [URLQueryItem(name: "itemId", value: itemId)])
+        do {
+            let _: UnlinkResponse = try await api.post(
+                "/api/plaid/unlink",
+                query: [URLQueryItem(name: "itemId", value: itemId)])
 
+        } catch PlaidAPIError.server(let status, _) where status == 404 {
+            // 后端不认识这个 item。两种情况都意味着**它已经不在了**：
+            //   · 之前删过账号 / 解绑过，后端记录早没了，只有本地这份镜像还留着
+            //   · 当前登录的是另一个账号，这条记录属于上一个账号
+            //
+            // 归属校验做在查询条件里，所以"别人的 item"和"不存在的 item"
+            // 在后端是同一个 404 —— 两者本地都该清理掉。
+            //
+            // 把它当失败弹给用户是错的：那会留下一条**永远删不掉**的僵尸记录，
+            // 因为再点多少次后端都只会回 404。
+            print("ℹ️ 后端已无此绑定（404），清理本地记录: itemId=\(itemId)")
+        }
+
+        // 只有确认后端侧已经没有它了（成功解绑 或 本来就不存在）才删本地。
+        // 其它错误（401 / 网络 / 502）会从上面抛出去，本地记录保留 ——
+        // 那是下次重试的依据，不能因为一次网络抖动就丢掉。
         for account in accounts(itemId: itemId, context: context) {
             context.delete(account)
         }
         try context.save()
+    }
+
+    /// 清空本地全部绑定记录。
+    ///
+    /// 只在**账号已被删除**之后调用 —— 那时后端的 linked_item 已经连同用户一起没了，
+    /// 本地这份镜像再留着就是一堆指向不存在 item 的僵尸记录，
+    /// 用户点解绑只会一直收到 404。
+    ///
+    /// **不删交易记录**：那些消费真实发生过，用户的返现统计也建立在它们之上。
+    func clearAllLocalBindings(context: ModelContext) {
+        let all = (try? context.fetch(FetchDescriptor<LinkedBankAccount>())) ?? []
+        for account in all {
+            context.delete(account)
+        }
+        try? context.save()
+        print("ℹ️ 账号已删除，清理了 \(all.count) 条本地绑定记录（交易记录保留）")
     }
 
     // MARK: - 查询

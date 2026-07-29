@@ -22,6 +22,9 @@ struct CashbackCounterApp: App { // 2. 这个结构体必须遵守 App 协议
 
     init() {
         NotificationManager.shared.requestAuthorization()
+        // 要在任何 await 之前挂上 Transaction.updates 的监听：
+        // 续订、退款、别的设备上的购买都只从那个流里来，晚挂就会漏。
+        SubscriptionManager.shared.start()
     }
     
     @Environment(\.scenePhase) private var scenePhase

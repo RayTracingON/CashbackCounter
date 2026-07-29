@@ -24,6 +24,8 @@ struct BankSyncView: View {
     @State private var auth = AuthService.shared
     @State private var linkService = PlaidLinkService.shared
     @State private var syncService = PlaidSyncService.shared
+    @State private var subscriptions = SubscriptionManager.shared
+    @State private var showPaywall = false
 
     @State private var linkToken: String?
     @State private var isPresentingLink = false
@@ -109,6 +111,9 @@ struct BankSyncView: View {
                 startLinkAfterSignIn = false
                 Task { await startLink() }
             }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView { Task { await startLink() } }
         }
         .sheet(item: $pendingMatch) { pending in
             CardPickerSheet(
@@ -288,7 +293,7 @@ struct BankSyncView: View {
                 isPresentingLink = false
                 // 用户主动退出不是错误，只有真的报错才提示
                 if let errorMessage {
-                    banner = Banner(title: "绑定未完成", message: errorMessage)
+                    banner = Banner(title: String(localized: "绑定未完成"), message: errorMessage)
                 }
             }
         }
@@ -302,6 +307,14 @@ struct BankSyncView: View {
         guard auth.isSignedIn else {
             startLinkAfterSignIn = true
             showSignIn = true
+            return
+        }
+
+        // 付费墙拦在**发起动作处**，不是藏入口。
+        // 后端那边 link-token / exchange 也会各自校验一次订阅 ——
+        // 这里挡住只是为了给用户一个体面的界面，真正的闸门在服务端。
+        guard subscriptions.isPremium else {
+            showPaywall = true
             return
         }
 
@@ -330,7 +343,7 @@ struct BankSyncView: View {
             linkToken = try await linkService.createLinkToken()
             isPresentingLink = true
         } catch {
-            banner = Banner(title: "无法开始绑定", message: error.localizedDescription)
+            banner = Banner(title: String(localized: "无法开始绑定"), message: error.localizedDescription)
         }
     }
 
@@ -361,8 +374,8 @@ struct BankSyncView: View {
                     return nil
                 }.joined(separator: "、")
                 banner = Banner(
-                    title: "有账户未匹配到卡片",
-                    message: "卡包里没有尾号 \(masks) 的卡。可以先去「卡包」建卡，再回来点「指定卡片」。未关联卡片的账户不会同步。")
+                    title: String(localized: "有账户未匹配到卡片"),
+                    message: String(localized: "卡包里没有尾号 \(masks) 的卡。可以先去「卡包」建卡，再回来点「指定卡片」。未关联卡片的账户不会同步。"))
             }
 
             // 首次全量。刚绑完 Plaid 还在向银行拉数据，
@@ -371,7 +384,7 @@ struct BankSyncView: View {
                 itemId: result.itemId, context: context)
 
         } catch {
-            banner = Banner(title: "绑定后处理失败", message: error.localizedDescription)
+            banner = Banner(title: String(localized: "绑定后处理失败"), message: error.localizedDescription)
         }
     }
 
@@ -380,7 +393,7 @@ struct BankSyncView: View {
 
         let result = await syncService.syncAll(context: context)
         if !result.errors.isEmpty {
-            banner = Banner(title: "同步未完全成功",
+            banner = Banner(title: String(localized: "同步未完全成功"),
                             message: result.errors.joined(separator: "\n"))
         }
     }
@@ -389,7 +402,7 @@ struct BankSyncView: View {
         do {
             try await linkService.unlink(itemId: itemId, context: context)
         } catch {
-            banner = Banner(title: "解绑失败", message: error.localizedDescription)
+            banner = Banner(title: String(localized: "解绑失败"), message: error.localizedDescription)
         }
     }
 }

@@ -9,6 +9,7 @@
 //
 
 import AuthenticationServices
+import SwiftData
 import SwiftUI
 
 // MARK: - 登录页
@@ -108,7 +109,10 @@ struct SignInView: View {
         }
     }
 
-    private func privacyRow(icon: String, text: String) -> some View {
+    /// text 用 LocalizedStringKey 而不是 String：`Text(String)` **不会**本地化，
+    /// 只有 `Text(LocalizedStringKey)` 才走字符串目录，也才会被 Xcode 自动提取。
+    /// 这个区别很容易漏 —— 两种写法编译都通过，只是其中一种永远显示源语言。
+    private func privacyRow(icon: String, text: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
                 .foregroundStyle(.blue)
@@ -164,11 +168,20 @@ struct AccountSection: View {
         let message: String
     }
 
+    @Environment(\.modelContext) private var context
+
     @State private var auth = AuthService.shared
+    @State private var subscriptions = SubscriptionManager.shared
 
     @State private var showSignIn = false
+    @State private var showPaywall = false
     @State private var confirmation: Confirmation?
     @State private var outcome: Outcome?
+
+    private var subscriptionExpiryText: String {
+        guard let expiresAt = subscriptions.expiresAt else { return String(localized: "已订阅") }
+        return String(localized: "续期于 \(expiresAt.formatted(date: .abbreviated, time: .omitted))")
+    }
 
     var body: some View {
         Section {
@@ -184,6 +197,9 @@ struct AccountSection: View {
             primaryRow
                 .sheet(isPresented: $showSignIn) {
                     SignInView()
+                }
+                .sheet(isPresented: $showPaywall) {
+                    PaywallView()
                 }
                 .confirmationDialog(
                     confirmation == .deleteAccount ? "删除账号？" : "退出登录？",
@@ -224,6 +240,33 @@ struct AccountSection: View {
                 BankSyncView()
             } label: {
                 Label("银行同步", systemImage: "building.columns")
+            }
+
+            if subscriptions.isPremium {
+                HStack {
+                    Label("订阅", systemImage: "star.circle")
+                    Spacer()
+                    Text(subscriptionExpiryText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                // 管理和取消一律跳系统页 —— App 内不该、也无法代改订阅
+                Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                    Label("管理订阅", systemImage: "arrow.up.forward.app")
+                }
+            } else {
+                Button {
+                    showPaywall = true
+                } label: {
+                    Label("订阅以启用银行同步", systemImage: "star.circle")
+                }
+
+                // 恢复购买必须在没订阅时也能点到 —— 换机重装的用户走的就是这条路
+                Button {
+                    Task { await subscriptions.restore() }
+                } label: {
+                    Label("恢复购买", systemImage: "arrow.clockwise")
+                }
             }
 
             if auth.isSignedIn {
@@ -273,22 +316,27 @@ struct AccountSection: View {
         do {
             let result = try await auth.deleteAccount()
 
+            // 后端已经把 linked_item 连同用户一起删了，本地这份镜像必须跟着清 ——
+            // 留着的话它们会变成指向不存在 item 的僵尸记录，
+            // 用户点解绑永远只会收到 404。
+            PlaidLinkService.shared.clearAllLocalBindings(context: context)
+
             var message = result.unlinkedItems > 0
-                ? "已解绑 \(result.unlinkedItems) 家银行，账号记录已删除。"
-                : "账号记录已删除。"
+                ? String(localized: "已解绑 \(result.unlinkedItems) 家银行，账号记录已删除。")
+                : String(localized: "账号记录已删除。")
 
             if !result.appleAuthorizationRevoked {
                 // 诚实地告诉用户还剩一步 —— 否则他们会在系统设置里
                 // 看到本 App 还挂在那儿，以为没删干净。
-                message += "\n\n未能自动移除 Apple ID 的授权记录，如需彻底清理，请到「设置 → Apple 账户 → 使用 Apple ID 的 App」中手动移除。"
+                message += String(localized: "\n\n未能自动移除 Apple ID 的授权记录，如需彻底清理，请到「设置 → Apple 账户 → 使用 Apple ID 的 App」中手动移除。")
             }
 
-            outcome = Outcome(title: "账号已删除", message: message)
+            outcome = Outcome(title: String(localized: "账号已删除"), message: message)
 
         } catch {
             // 失败时标题不能还写"账号已删除" —— 后端整体中止的情况下
             // 服务器上什么都没删，说反了会让用户以为数据没了。
-            outcome = Outcome(title: "删除失败", message: error.localizedDescription)
+            outcome = Outcome(title: String(localized: "删除失败"), message: error.localizedDescription)
         }
     }
 }

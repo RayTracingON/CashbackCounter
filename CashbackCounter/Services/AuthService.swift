@@ -91,6 +91,14 @@ final class AuthService: PlaidAPISessionDelegate {
         // 令牌可能在登录之前就从 APNs 到了，那时上报会因为没有会话而失败。
         // 登录成功是重试的最佳时机。
         await PushNotificationService.shared.uploadIfNeeded()
+
+        // 订阅同理：用户可能先订阅再登录（付费墙不要求先登录），
+        // 那次上报会因为没有会话而失败，登录后必须补一次，
+        // 否则后端永远不知道这个人已经付过钱了。
+        await SubscriptionManager.shared.refreshEntitlements()
+        // 反向也要拉一次：订阅可能是后端侧开通的（兑换码、手工开通），
+        // 本地 StoreKit 一无所知
+        await SubscriptionManager.shared.refreshBackendStatus()
     }
 
     // MARK: - 退出与注销

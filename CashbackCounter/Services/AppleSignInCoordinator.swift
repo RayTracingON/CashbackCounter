@@ -41,11 +41,11 @@ enum AppleSignInError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .canceled:
-            return "已取消 Apple 登录"
+            return String(localized: "已取消 Apple 登录")
         case .missingIdentityToken:
-            return "Apple 未返回身份凭据，请重试"
+            return String(localized: "Apple 未返回身份凭据，请重试")
         case .failed(let error):
-            return "Apple 登录失败：\(error.localizedDescription)"
+            return String(localized: "Apple 登录失败：\(error.localizedDescription)")
         }
     }
 }

@@ -1056,13 +1056,13 @@
       "8A8F99",
       "E3DEE9"
     ],
-    "foreignCurrencyRate" : 4,
+    "foreignCurrencyRate" : ,
     "paymentMethodRates" : [
       "gba",
       6
     ],
     "bankName" : "信銀國際",
-    "defaultRate" : 0.4
+    "defaultRate" : 4
   },
   {
     "capPeriod" : {
