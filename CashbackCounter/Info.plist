@@ -11,6 +11,10 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<!-- ⚠️ 缺了这一条，App 在调用 Face ID 时会**直接崩溃**（不是报错，是 crash）。
+	     这段文案会显示在系统的 Face ID 授权弹窗上，用户看得到。 -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>连接银行账户前需要验证你的身份，确保只有你本人能绑定银行。</string>
 	<!-- 本地联调用：ATS 默认禁止一切明文 HTTP，而本地后端跑在 http://localhost:8080。
 	     NSAllowsLocalNetworking 只放开「非限定域名和 .local 域名」，
 	     不影响任何公网地址 —— 线上后端仍然强制 HTTPS。

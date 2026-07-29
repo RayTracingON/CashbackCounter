@@ -91,7 +91,7 @@ struct BankSyncView: View {
                     }
                     .disabled(isPreparingLink || syncService.isSyncing)
                 } footer: {
-                    Text("可以绑定信用卡，也可以绑定活期/储蓄账户（借记卡消费同样会算返现）。\n房贷、证券、定存这类没有日常消费的账户不在范围内。\n\n我们拿不到完整卡号 —— Plaid 的任何产品都不提供。")
+                    Text("绑定前需要用 \(BiometricGate.methodName) 验证身份。\n\n可以绑定信用卡，也可以绑定活期/储蓄账户（借记卡消费同样会算返现）。\n房贷、证券、定存这类没有日常消费的账户不在范围内。\n\n我们拿不到完整卡号 —— Plaid 的任何产品都不提供。")
                 }
             }
         }
@@ -302,6 +302,24 @@ struct BankSyncView: View {
         guard auth.isSignedIn else {
             startLinkAfterSignIn = true
             showSignIn = true
+            return
+        }
+
+        // 唤起 Link 之前的生物识别关卡。
+        //
+        // 放在申请 link_token **之前**：验证没过就不该消耗一个 token，
+        // 也不该让任何请求打到后端。
+        switch await BiometricGate.authenticate(reason: "验证身份后连接银行账户") {
+        case .success:
+            break
+        case .canceled:
+            // 用户主动取消不是错误，安静退出
+            return
+        case .unavailable(let message):
+            banner = Banner(title: "无法验证身份", message: message)
+            return
+        case .failed(let message):
+            banner = Banner(title: "身份验证失败", message: message)
             return
         }
 

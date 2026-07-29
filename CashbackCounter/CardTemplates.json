@@ -261,8 +261,8 @@
 
     ],
     "colors" : [
-      "050505",
-      "050505"
+      "0D0D0F",
+      "3B4149"
     ],
     "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
@@ -299,8 +299,8 @@
 
     ],
     "colors" : [
-      "10213A",
-      "A4B7C6"
+      "12141C",
+      "6E6555"
     ],
     "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
@@ -323,6 +323,8 @@
       "travel",
       100,
       "dining",
+      200,
+      "streaming",
       200
     ],
     "pictureURL" : "CSP",
@@ -339,15 +341,15 @@
 
     ],
     "colors" : [
-      "0B2E58",
-      "3A75B3"
+      "0C1A2E",
+      "1A6FA8"
     ],
-    "foreignCurrencyRate" : 110,
+    "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
 
     ],
     "bankName" : "Chase",
-    "defaultRate" : 110
+    "defaultRate" : 100
   },
   {
     "capPeriod" : {
@@ -357,9 +359,9 @@
     },
     "specialRate" : [
       "dining",
-      300,
+      100,
       "grocery",
-      300,
+      100,
       "other",
       400
     ],
@@ -369,9 +371,9 @@
     "localBaseCap" : 0,
     "categoryCaps" : [
       "grocery",
-      18000,
+      6000,
       "dining",
-      18000
+      6000
     ],
     "rewardType" : "points",
     "pointProgramKey" : "marriott|point|usd",
@@ -380,8 +382,8 @@
 
     ],
     "colors" : [
-      "162130",
-      "31527E"
+      "17304F",
+      "C96A52"
     ],
     "foreignCurrencyRate" : 200,
     "paymentMethodRates" : [
@@ -416,8 +418,8 @@
 
     ],
     "colors" : [
-      "10213A",
-      "A4B7C6"
+      "0A5C88",
+      "2E9FCC"
     ],
     "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
@@ -436,7 +438,7 @@
       "dining",
       150,
       "other",
-      250
+      350
     ],
     "pictureURL" : "ChaseFreedomUnlimite",
     "type" : "Freedom Unlimited",
@@ -452,8 +454,8 @@
 
     ],
     "colors" : [
-      "10213A",
-      "A4B7C6"
+      "0C3A61",
+      "21706E"
     ],
     "foreignCurrencyRate" : 150,
     "paymentMethodRates" : [
@@ -486,8 +488,8 @@
 
     ],
     "colors" : [
-      "D5D8DA",
-      "54585A"
+      "4A4F53",
+      "8C9296"
     ],
     "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
@@ -524,8 +526,8 @@
 
     ],
     "colors" : [
-      "001C3D",
-      "00A9E0"
+      "0B0B0B",
+      "3A3A3C"
     ],
     "foreignCurrencyRate" : 200,
     "paymentMethodRates" : [
@@ -562,8 +564,8 @@
 
     ],
     "colors" : [
-      "001C3D",
-      "00A9E0"
+      "403C39",
+      "8A6257"
     ],
     "foreignCurrencyRate" : 200,
     "paymentMethodRates" : [
@@ -600,8 +602,8 @@
 
     ],
     "colors" : [
-      "161D3A",
-      "5A97D1"
+      "0A0A0C",
+      "2E3138"
     ],
     "foreignCurrencyRate" : 300,
     "paymentMethodRates" : [
@@ -638,8 +640,8 @@
 
     ],
     "colors" : [
-      "161D3A",
-      "5A97D1"
+      "0E2C4E",
+      "2B5480"
     ],
     "foreignCurrencyRate" : 300,
     "paymentMethodRates" : [
@@ -674,8 +676,8 @@
 
     ],
     "colors" : [
-      "24133F",
-      "D92344"
+      "2F224D",
+      "8A2E4C"
     ],
     "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
@@ -696,7 +698,7 @@
         "travel",
         200,
         "other",
-        800
+        700
     ],
     "pictureURL" : "chaseihgpremier",
     "type" : "IHG Premier",
@@ -711,8 +713,8 @@
 
     ],
     "colors" : [
-      "24133F",
-      "D92344"
+      "3E5A68",
+      "6E8996"
     ],
     "foreignCurrencyRate" : 300,
     "paymentMethodRates" : [
@@ -743,8 +745,8 @@
     ],
     "region" : "美国",
     "colors" : [
-      "BD9850",
-      "F2E9D4"
+      "4E5052",
+      "8A8C8F"
     ],
     "foreignCurrencyRate" : 3,
     "paymentMethodRates" : [
@@ -775,8 +777,8 @@
     ],
     "region" : "美国",
     "colors" : [
-      "F5F5F7",
-      "F8D347"
+      "6D3FB5",
+      "C88A2E"
     ],
     "foreignCurrencyRate" : 1,
     "paymentMethodRates" : [
@@ -898,6 +900,37 @@
   {
     "capPeriod" : {
       "monthly" : {
+      }
+    },
+    "specialRate" : [
+    ],
+    "pictureURL" : "beasgworldmaster",
+    "type" : "SG World Mastercard",
+    "foreignBaseCap" : 115000,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "bea hk|point|hkd",
+    "region" : "香港",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "0F0F0F",
+      "C0C0C0"
+    ],
+    "foreignCurrencyRate" : 1150,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "東亞銀行",
+    "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "monthly" : {
 
       }
     },
@@ -905,7 +938,7 @@
 
     ],
     "pictureURL" : "",
-    "type" : "Wold Mastercard",
+    "type" : "World Mastercard",
     "foreignBaseCap" : 115000,
     "localBaseCap" : 0,
     "categoryCaps" : [
