@@ -110,7 +110,35 @@ struct OCRService {
             print("🧰 商户兜底命中: \(merchant)")
             result.merchant = merchant
         }
+        if result.dateString == nil, let date = fallbackDate(from: rawText) {
+            print("🧰 日期兜底命中: \(date)")
+            result.dateString = date
+        }
         return result
+    }
+
+    /// 日期兜底：从文本里正则找第一个完整日期，统一成 YYYY-MM-DD
+    static func fallbackDate(from text: String) -> String? {
+        let patterns = [
+            "(20\\d{2})-(\\d{1,2})-(\\d{1,2})",
+            "(20\\d{2})年(\\d{1,2})月(\\d{1,2})日",
+            "(20\\d{2})/(\\d{1,2})/(\\d{1,2})",
+            "(20\\d{2})\\.(\\d{1,2})\\.(\\d{1,2})"
+        ]
+        for pattern in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+            let range = NSRange(text.startIndex..<text.endIndex, in: text)
+            guard let match = regex.firstMatch(in: text, range: range) else { continue }
+            func group(_ index: Int) -> String? {
+                Range(match.range(at: index), in: text).map { String(text[$0]) }
+            }
+            if let year = group(1), let monthText = group(2), let dayText = group(3),
+               let month = Int(monthText), let day = Int(dayText),
+               (1...12).contains(month), (1...31).contains(day) {
+                return String(format: "%@-%02d-%02d", year, month, day)
+            }
+        }
+        return nil
     }
 
     /// 商户兜底：只认带明确标签的行（收款方/商户名称/Merchant 等），取标签后面的文本。

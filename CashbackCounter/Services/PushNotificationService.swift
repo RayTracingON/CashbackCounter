@@ -15,6 +15,7 @@
 
 import Foundation
 import Observation
+import SwiftData
 import UIKit
 import UserNotifications
 
@@ -89,6 +90,36 @@ final class PushNotificationService: NSObject {
     /// 退出登录时清掉，下次登录（可能是另一个账号）会重新上报
     func reset() {
         uploadedToken = nil
+    }
+
+    // MARK: - 被推送唤醒后拉取
+
+    /// 收到带 `content-available` 的推送时，后台同步该 item。
+    ///
+    /// **绕过"每天一次"的闸门**：那个闸门是为了避免每次切回前台都打网络，
+    /// 而这里是后端明确告诉我们"这家银行有新交易了"，正是该拉的时候。
+    ///
+    /// 返回值要如实：iOS 靠它决定以后还唤不唤醒这个 App。
+    func syncOnRemoteNotification(userInfo: [AnyHashable: Any]) async -> UIBackgroundFetchResult {
+        guard AuthService.shared.isSignedIn else { return .noData }
+
+        // 后端在 payload 里带了 itemId，只同步这一家银行 ——
+        // 后台执行时间只有约 30 秒，同步全部 item 很可能来不及。
+        guard let itemId = userInfo["itemId"] as? String, !itemId.isEmpty else {
+            print("ℹ️ 推送缺少 itemId，跳过后台同步")
+            return .noData
+        }
+
+        let context = SharedModelContainer.shared.mainContext
+        do {
+            let summary = try await PlaidSyncService.shared.sync(itemId: itemId, context: context)
+            print("✅ 推送唤醒同步完成: item=\(itemId), 新增 \(summary.inserted) 笔")
+            // 只有真的写入了东西才算 newData，否则 iOS 会认为唤醒这个 App 没价值
+            return summary.inserted > 0 || summary.refundsApplied > 0 ? .newData : .noData
+        } catch {
+            print("⚠️ 推送唤醒同步失败: \(error.localizedDescription)")
+            return .failed
+        }
     }
 
     /// APNs 的沙盒和生产是**两套独立网关，令牌互不通用**。

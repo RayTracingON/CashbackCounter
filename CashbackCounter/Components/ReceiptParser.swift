@@ -300,7 +300,9 @@ final class ReceiptParser {
     /// 按场景创建 session：
     /// - iOS 27+ 且运行时具备 Dynamic Profile 符号：声明式选择指令与模型
     /// - 其余（iOS 26 或旧 beta 运行时）：传统构造；云端走泛型 init，本地走 instructions init
-    private func makeSession(mode: ReceiptParseMode) -> LanguageModelSession {
+    /// 返回 session 及其是否为云端：本地与云端各有验证过的 prompt 配方
+    /// （本地裸文本、云端带前导语），调用方据 isCloud 分流。
+    private func makeSession(mode: ReceiptParseMode) -> (session: LanguageModelSession, isCloud: Bool) {
         if #available(iOS 27.0, *) {
             let cloud = Self.activeCloudModel()
             if Self.isCloudModelEnabled {
@@ -311,15 +313,36 @@ final class ReceiptParser {
             if let cloud {
                 // Dynamic Profile 只用于云端：它的增量价值只有 reasoningLevel 档位
                 if FoundationModelsRuntime.dynamicProfileAvailable {
-                    return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, cloudModel: cloud))
+                    return (LanguageModelSession(profile: ReceiptParserProfile(mode: mode, cloudModel: cloud)), true)
                 }
-                return LanguageModelSession(model: cloud, instructions: mode.instructions)
+                return (LanguageModelSession(model: cloud, instructions: mode.instructions), true)
             }
         }
         // ⚠️ 本地一律走经典 instructions 构造，不走 Dynamic Profile：
         // profile 路由在本地没有任何增量功能，且属于"本地字段连环 nil"故障的
         // 排查变量之一（beta 端侧 profile 会话的指令注入行为未经验证）
-        return LanguageModelSession(instructions: mode.instructions)
+        return (LanguageModelSession(instructions: mode.instructions), false)
+    }
+
+    /// 云端沿用历史验证过的前导语（本地模型会被它带偏，云端一直工作良好）
+    nonisolated private static let cloudPreamble = "Please analyze the following text carefully. It may contain non-English characters such as Chinese or Japanese, but you must process it as part of this English prompt:"
+
+    /// 字段值消毒：云端 beta 偶发在 JSON 里输出全角引号，解析后字段尾部
+    /// 会残留 「”, 」 之类的残渣；统一剥掉两端的引号/逗号/空白，空串归 nil。
+    nonisolated static func sanitized(_ metadata: ReceiptMetadata) -> ReceiptMetadata {
+        var result = metadata
+        result.merchant = cleanedString(result.merchant)
+        result.currency = cleanedString(result.currency)?.uppercased()
+        result.dateString = cleanedString(result.dateString)
+        result.cardLast4 = cleanedString(result.cardLast4)
+        return result
+    }
+
+    nonisolated private static func cleanedString(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let junk = CharacterSet(charactersIn: "\"“”„'‘’｢｣「」,，、 \t\n")
+        let cleaned = value.trimmingCharacters(in: junk)
+        return cleaned.isEmpty ? nil : cleaned
     }
 
     /// 多模态 session：仅云端 PCC，云端不可用直接抛错（调用方回退 OCR 文本管线）
@@ -396,39 +419,56 @@ final class ReceiptParser {
 
             // 👇👇👇 核心修改：每次调用 parse 时，创建一个全新的 session！
             // 这样每次都是“第一次”，没有历史包袱
-            let session = makeSession(mode: .receipt)
+            let (session, isCloud) = makeSession(mode: .receipt)
 
-            // ⚠️ prompt 只放小票文本本身，不加英文前导语和分隔标记：
-            // 真机诊断证实旧前导语（"process it as part of this English prompt"）
-            // 会让 iOS 27 beta 本地模型对判断型字段连环输出 nil；
-            // 同理不用贪心采样，默认采样是验证过的行为
-            let response = try await session.respond(
-                generating: ReceiptMetadata.self
-            ) {
-                text
+            // ⚠️ prompt 按模型分流（各用各的真机验证配方）：
+            // - 本地：只放小票文本。旧前导语会让 iOS 27 beta 本地模型
+            //   对判断型字段连环输出 nil（四探针诊断证实）
+            // - 云端：保留前导语+分隔标记，云端一直用它工作良好
+            let metadata: ReceiptMetadata
+            if isCloud {
+                metadata = try await session.respond(generating: CloudReceiptMetadata.self) {
+                    Self.cloudPreamble
+                    "=== START OF RECEIPT DATA ==="
+                    text
+                    "=== END OF RECEIPT DATA ==="
+                }.content.asReceiptMetadata
+            } else {
+                metadata = try await session.respond(generating: ReceiptMetadata.self) {
+                    text
+                }.content
             }
 
-        let metadata = response.content
-        Self.logReceiptFields(metadata, label: "OCR")
-        return metadata
+        let cleaned = Self.sanitized(metadata)
+        Self.logReceiptFields(cleaned, label: "OCR")
+        return cleaned
     }
 
     func parseScreenshot(text: String) async throws -> ReceiptMetadata {
         try Self.ensureModelAvailable()
-        let session = makeSession(mode: .screenshot)
+        let (session, isCloud) = makeSession(mode: .screenshot)
         let today = Date().formatted(date: .abbreviated, time: .omitted)
 
-        // 同 parse()：不加前导语/分隔标记，只保留日期提示一句
-        let response = try await session.respond(
-            generating: ReceiptMetadata.self
-        ) {
-            "Today is \(today). If no date is found in the text, use today."
-            text
+        // 同 parse()：prompt 按模型分流；日期提示两边都保留
+        let metadata: ReceiptMetadata
+        if isCloud {
+            metadata = try await session.respond(generating: CloudReceiptMetadata.self) {
+                "Today is \(today). If no date is found in the text, use today."
+                Self.cloudPreamble
+                "=== START OF SCREENSHOT DATA ==="
+                text
+                "=== END OF SCREENSHOT DATA ==="
+            }.content.asReceiptMetadata
+        } else {
+            metadata = try await session.respond(generating: ReceiptMetadata.self) {
+                "Today is \(today). If no date is found in the text, use today."
+                text
+            }.content
         }
 
-        let metadata = response.content
-        Self.logReceiptFields(metadata, label: "Screenshot OCR")
-        return metadata
+        let cleaned = Self.sanitized(metadata)
+        Self.logReceiptFields(cleaned, label: "Screenshot OCR")
+        return cleaned
     }
 
     func SMSparse(text: String) async throws -> ReceiptMetadata {
@@ -436,18 +476,26 @@ final class ReceiptParser {
 
             // 👇👇👇 核心修改：每次调用 parse 时，创建一个全新的 session！
             // 这样每次都是“第一次”，没有历史包袱
-            let session = makeSession(mode: .sms)
+            let (session, isCloud) = makeSession(mode: .sms)
 
-            // 同 parse()：不加前导语/分隔标记
-            let response = try await session.respond(
-                generating: ReceiptMetadata.self
-            ) {
-                text
+            // 同 parse()：prompt 按模型分流
+            let metadata: ReceiptMetadata
+            if isCloud {
+                metadata = try await session.respond(generating: CloudReceiptMetadata.self) {
+                    Self.cloudPreamble
+                    "=== START OF SMS DATA ==="
+                    text
+                    "=== END OF SMS DATA ==="
+                }.content.asReceiptMetadata
+            } else {
+                metadata = try await session.respond(generating: ReceiptMetadata.self) {
+                    text
+                }.content
             }
 
-        let metadata = response.content
-        Self.logReceiptFields(metadata, label: "SMS")
-        return metadata
+        let cleaned = Self.sanitized(metadata)
+        Self.logReceiptFields(cleaned, label: "SMS")
+        return cleaned
         }
 
     // MARK: - 多模态解析（图片直传，仅云端 PCC）
@@ -473,14 +521,14 @@ final class ReceiptParser {
         let attachment = try Self.makeImageAttachment(image)
 
         let response = try await session.respond(
-            generating: ReceiptMetadata.self,
+            generating: CloudReceiptMetadata.self,
             options: GenerationOptions(samplingMode: .greedy)
         ) {
             "Analyze this receipt image carefully. It may contain Chinese, Japanese, or English text."
             attachment
         }
 
-        let metadata = response.content
+        let metadata = Self.sanitized(response.content.asReceiptMetadata)
         Self.logReceiptFields(metadata, label: "🖼️ Receipt image")
         return metadata
     }
@@ -493,7 +541,7 @@ final class ReceiptParser {
         let today = Date().formatted(date: .abbreviated, time: .omitted)
 
         let response = try await session.respond(
-            generating: ReceiptMetadata.self,
+            generating: CloudReceiptMetadata.self,
             options: GenerationOptions(samplingMode: .greedy)
         ) {
             "Today is \(today). If no date is visible in the screenshot, use today."
@@ -501,7 +549,7 @@ final class ReceiptParser {
             attachment
         }
 
-        let metadata = response.content
+        let metadata = Self.sanitized(response.content.asReceiptMetadata)
         Self.logReceiptFields(metadata, label: "🖼️ Screenshot image")
         return metadata
     }
@@ -515,7 +563,7 @@ final class ReceiptParser {
 
     func parseStatementCard(text: String) async throws -> StatementCardMetadata {
         try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementCard)
+        let session = makeSession(mode: .statementCard).session
         let response = try await session.respond(
             generating: StatementCardMetadata.self
         ) {
@@ -531,7 +579,7 @@ final class ReceiptParser {
 
     func parseStatementTransaction(text: String) async throws -> StatementTransactionMetadata {
         try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementTransaction)
+        let session = makeSession(mode: .statementTransaction).session
         let response = try await session.respond(
             generating: StatementTransactionMetadata.self
         ) {
@@ -548,7 +596,7 @@ final class ReceiptParser {
 
     func parseStatementTransactionBlock(text: String) async throws -> StatementRowTransaction {
         try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementRow)
+        let session = makeSession(mode: .statementRow).session
         let response = try await session.respond(
             generating: StatementRowTransaction.self
         ) {
@@ -561,7 +609,7 @@ final class ReceiptParser {
 
     func parseStatementTransactionsBatch(text: String) async throws -> StatementRowTransactionList {
         try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementBulk)
+        let session = makeSession(mode: .statementBulk).session
         let response = try await session.respond(
             generating: StatementRowTransactionList.self
         ) {

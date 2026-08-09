@@ -35,6 +35,43 @@ struct ReceiptMetadata {
     var merchant: String?  // ✅ 加上问号
 }
 
+/// ☁️ 云端（PCC）专用 schema：字段保持旧顺序（merchant 打头）。
+/// 真机实测这个 beta 的两套解码器口味相反：
+/// - 端侧：旧顺序+前导语 → 判断型字段连环 nil，必须用上面 ReceiptMetadata 的新顺序
+/// - 云端：新顺序 → 只有最后一个字段（merchant）存活，其余全 nil；旧顺序历史工作良好
+/// 字段名与 ReceiptMetadata 完全一致，仅声明顺序不同；respond 后立即经 asReceiptMetadata 转换。
+@Generable
+struct CloudReceiptMetadata {
+    @Guide(description: "The name of the store or merchant.")
+    var merchant: String?
+
+    @Guide(description: "The final paid amount.")
+    var totalAmount: Double?
+
+    @Guide(description: "The currency code, one of: CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR.")
+    var currency: String?
+
+    @Guide(description: "The date of transaction in YYYY-MM-DD format.")
+    var dateString: String?
+
+    @Guide(description: "The last 4 digits of the credit card used.")
+    var cardLast4: String?
+
+    @Guide(description: "Classify the receipt into one of the categories based on the merchant and items")
+    var category: Category?
+
+    var asReceiptMetadata: ReceiptMetadata {
+        var metadata = ReceiptMetadata()
+        metadata.merchant = merchant
+        metadata.totalAmount = totalAmount
+        metadata.currency = currency
+        metadata.dateString = dateString
+        metadata.cardLast4 = cardLast4
+        metadata.category = category
+        return metadata
+    }
+}
+
 @Generable
 struct SMSMetadata {
     @Guide(description: "The name of the store or merchant.")
