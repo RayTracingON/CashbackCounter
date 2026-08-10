@@ -81,6 +81,10 @@ enum AppConfig {
         static let didMigrateReminderIdentifiers = "did_migrate_reminder_identifiers_v1"
         /// 上次执行数据去重时的去重逻辑版本号
         static let lastDeduplicationVersion = "last_deduplication_version"
+        /// 上次执行（较重的）交易去重时的 App 构建号（CFBundleVersion）。
+        /// 构建号变化说明 App 刚更新过 —— 正是 CloudKit 在 schema 迁移后重新导入、
+        /// 制造重复数据的时机，据此再触发一次全量去重。
+        static let lastDeduplicationBuild = "last_deduplication_build"
         /// 数据库被重建（schema 迁移失败）后置为 true，提示下次启动需要去重
         static let needsDataDeduplication = "needs_data_deduplication"
     }

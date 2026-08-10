@@ -63,26 +63,40 @@ final class CardTemplateManager {
         })
     }
     
-    /// 去重逻辑版本号：只有版本号变化（通常伴随 schema 变更发版）、或数据库被重建后，
-    /// 才会重新执行一次全量去重。日常启动/切换 Tab 不再触发全表扫描。
+    /// 去重逻辑版本号：手动 +1 可强制所有用户在下次启动全量去重一次
+    /// （用于去重规则本身改动后的一次性重扫）。
     private static let deduplicationVersion = 1
+
+    /// 当前 App 构建号（CFBundleVersion）。每次发版都会变 —— 用它判断「是不是刚更新过」，
+    /// 因为 CloudKit 正是在 App 更新触发 schema 迁移后重新导入、制造重复数据的。
+    private static var currentBuild: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"
+    }
 
     @MainActor
     func runDeduplicationIfNeeded(in context: ModelContext) {
         let defaults = UserDefaults.standard
-        let lastVersion = defaults.integer(forKey: AppConfig.UserDefaultsKey.lastDeduplicationVersion)
-        let needsDedup = defaults.bool(forKey: AppConfig.UserDefaultsKey.needsDataDeduplication)
 
-        guard lastVersion < Self.deduplicationVersion || needsDedup else { return }
-
-        // 1. 对信用卡去重，防止 CloudKit 同步或多次导入导致卡包重复卡片
+        // ── 卡片去重：每次启动都跑 ──
+        // 卡片数量很少（几十张），全表扫描代价可忽略；而 CloudKit 的重新导入是**异步**的，
+        // 重复卡片可能在本次去重跑完之后才同步下来。每次启动都清一遍，保证
+        // 「重复出现后最迟下次启动就被合并」，这正是修复用户反馈的卡片翻倍问题的关键。
         deduplicateCards(in: context)
 
-        // 2. 对交易去重，防止 CloudKit 同步在 schema 迁移后产生重复交易记录
-        deduplicateTransactions(in: context)
+        // ── 交易去重：较重（可能上千条），只在必要时跑 ──
+        // 触发条件（任一满足）：去重规则版本号提升 / App 刚更新过（构建号变化）/ 数据库被重建。
+        // 「构建号变化」覆盖了每次发版后 CloudKit 重新导入产生重复交易的场景。
+        let lastVersion = defaults.integer(forKey: AppConfig.UserDefaultsKey.lastDeduplicationVersion)
+        let lastBuild = defaults.string(forKey: AppConfig.UserDefaultsKey.lastDeduplicationBuild)
+        let needsDedup = defaults.bool(forKey: AppConfig.UserDefaultsKey.needsDataDeduplication)
+        let buildChanged = lastBuild != Self.currentBuild
 
-        defaults.set(Self.deduplicationVersion, forKey: AppConfig.UserDefaultsKey.lastDeduplicationVersion)
-        defaults.set(false, forKey: AppConfig.UserDefaultsKey.needsDataDeduplication)
+        if lastVersion < Self.deduplicationVersion || buildChanged || needsDedup {
+            deduplicateTransactions(in: context)
+            defaults.set(Self.deduplicationVersion, forKey: AppConfig.UserDefaultsKey.lastDeduplicationVersion)
+            defaults.set(Self.currentBuild, forKey: AppConfig.UserDefaultsKey.lastDeduplicationBuild)
+            defaults.set(false, forKey: AppConfig.UserDefaultsKey.needsDataDeduplication)
+        }
     }
 
     @MainActor
@@ -132,6 +146,9 @@ final class CardTemplateManager {
                 let type = card.type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                 guard !bank.isEmpty, !type.isEmpty else { continue }
                 let endNum = card.endNum.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                // 尾号为空时无法可靠判定是否为同一张卡；因本方法现在每次启动都跑，
+                // 不加此保护会把两张同行同卡种、都没填尾号的**不同**卡片误并，造成数据丢失。
+                guard !endNum.isEmpty else { continue }
                 let key = "\(bank)|\(type)|\(endNum)"
                 grouped[key, default: []].append(card)
             }
