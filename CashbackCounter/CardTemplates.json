@@ -581,6 +581,40 @@
       }
     },
     "specialRate" : [
+      "other",
+      10,
+    ],
+    "pictureURL" : "citicmarriottpl",
+    "type" : "万豪精逸白金卡",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "marriott|point|usd",
+    "region" : "中国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "403C39",
+      "8A6257"
+    ],
+    "foreignCurrencyRate" : 10,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "中信银行",
+    "defaultRate" : 10
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
       "travel",
       400,
       "other",
