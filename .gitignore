@@ -1,0 +1,56 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Xcode — 用户级状态。每个人的断点、窗口布局、scheme 排序都不一样，
+# 提交上来只会制造无意义的冲突。Xcode 会自动重建，删掉没有副作用。
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+
+# Xcode — 构建产物
+build/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Swift Package Manager
+# ⚠️ Package.resolved 要提交（锁依赖版本），所以这里不能写 .swiftpm/
+.build/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+
+# CocoaPods / Carthage（当前没用到，先留着）
+Pods/
+Carthage/Build/
+
+# 凭据与本地配置 —— 公开仓库最现实的泄漏路径就是这些被 `git add .` 顺手带上。
+# *.p8 是 APNs 推送密钥，*.p12 / *.mobileprovision 是签名证书和描述文件，
+# 一旦公开等于把推送和签名能力交出去。
+.env
+.env.*
+*.p8
+*.p12
+*.pem
+*.key
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+secrets.plist
+GoogleService-Info.plist
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# 日志与临时文件
+*.log
+*.tmp
