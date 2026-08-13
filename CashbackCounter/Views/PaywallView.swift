@@ -58,6 +58,9 @@ struct PaywallView: View {
             .task {
                 if subscriptions.products.isEmpty {
                     await subscriptions.loadProducts()
+                } else {
+                    // 产品已经在启动时拉过了，但资格可能在别的设备上被用掉，重新问一次
+                    await subscriptions.refreshIntroOfferEligibility()
                 }
                 selected = selected ?? subscriptions.products.last
             }
@@ -131,6 +134,7 @@ struct PaywallView: View {
 
     private func planRow(_ product: Product) -> some View {
         let isSelected = selected?.id == product.id
+        let trial = subscriptions.freeTrialPeriod(for: product)
 
         return Button {
             selected = product
@@ -139,6 +143,11 @@ struct PaywallView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(product.displayName.isEmpty ? product.id : product.displayName)
                         .font(.body.weight(.medium))
+                    if let trial {
+                        Text("免费试用 \(Self.durationText(trial))")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.green)
+                    }
                     if !product.description.isEmpty {
                         Text(product.description)
                             .font(.caption)
@@ -161,11 +170,15 @@ struct PaywallView: View {
     }
 
     private var subscribeButton: some View {
-        Button {
+        let trial = selected.flatMap { subscriptions.freeTrialPeriod(for: $0) }
+
+        return Button {
             Task { await subscribe() }
         } label: {
             if subscriptions.isPurchasing {
                 ProgressView().frame(maxWidth: .infinity)
+            } else if let trial {
+                Text("开始 \(Self.durationText(trial)) 免费试用").frame(maxWidth: .infinity)
             } else {
                 Text("订阅").frame(maxWidth: .infinity)
             }
@@ -184,11 +197,51 @@ struct PaywallView: View {
             }
             .font(.footnote)
 
-            Text("订阅会自动续期，可随时在系统「设置 → Apple 账户 → 订阅」中取消。取消需在当前周期结束前 24 小时完成。")
+            // App Store 审核硬要求：试用时长、试用结束后的价格、会自动续订，
+            // 这三条必须写在购买按钮附近的可见位置，只写进条款链接里不算。
+            termsText
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+        }
+    }
+
+    @ViewBuilder
+    private var termsText: some View {
+        if let product = selected, let trial = subscriptions.freeTrialPeriod(for: product) {
+            Text("免费试用 \(Self.durationText(trial))，之后按 \(Self.priceText(product)) 自动续订。可随时在系统「设置 → Apple 账户 → 订阅」中取消，取消需在当前周期结束前 24 小时完成。")
+        } else {
+            Text("订阅会自动续期，可随时在系统「设置 → Apple 账户 → 订阅」中取消。取消需在当前周期结束前 24 小时完成。")
+        }
+    }
+
+    // MARK: - 文案格式化
+
+    /// 把订阅周期写成人话。
+    ///
+    /// 周单独折算成天：试用配的是 P1W，但"7 天"比"1 周"更像一句承诺。
+    private static func durationText(_ period: Product.SubscriptionPeriod) -> String {
+        switch period.unit {
+        case .day: String(localized: "\(period.value) 天")
+        case .week: String(localized: "\(period.value * 7) 天")
+        case .month: String(localized: "\(period.value) 个月")
+        case .year: String(localized: "\(period.value) 年")
+        @unknown default: String(localized: "\(period.value) 天")
+        }
+    }
+
+    /// "$1.99/月"。displayPrice 本身不含周期，得自己接上
+    private static func priceText(_ product: Product) -> String {
+        guard let period = product.subscription?.subscriptionPeriod else {
+            return product.displayPrice
+        }
+        return switch period.unit {
+        case .day: String(localized: "\(product.displayPrice)/天")
+        case .week: String(localized: "\(product.displayPrice)/周")
+        case .month: String(localized: "\(product.displayPrice)/月")
+        case .year: String(localized: "\(product.displayPrice)/年")
+        @unknown default: product.displayPrice
         }
     }
 

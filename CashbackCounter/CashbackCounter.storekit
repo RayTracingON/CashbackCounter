@@ -30,7 +30,13 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6472839101",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "displayPrice" : "0.00",
+            "internalID" : "6472839201",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
           "localizations" : [
             {
               "description" : "自动同步银行交易，按你的费率算好返现与积分",
@@ -60,7 +66,13 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6472839102",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "displayPrice" : "0.00",
+            "internalID" : "6472839202",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
           "localizations" : [
             {
               "description" : "自动同步银行交易，年付更划算",

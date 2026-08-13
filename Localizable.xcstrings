@@ -192,6 +192,70 @@
         }
       }
     },
+    "%@/周": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/week"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/週"
+          }
+        }
+      }
+    },
+    "%@/天": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/day"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/天"
+          }
+        }
+      }
+    },
+    "%@/年": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/year"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/年"
+          }
+        }
+      }
+    },
+    "%@/月": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/month"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/月"
+          }
+        }
+      }
+    },
     "%@分": {
       "localizations": {
         "en": {
@@ -240,6 +304,34 @@
         }
       }
     },
+    "%lld 个月": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld month"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld months"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個月"
+          }
+        }
+      }
+    },
     "%lld 个计划": {
       "localizations": {
         "en": {
@@ -252,6 +344,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld 個計劃"
+          }
+        }
+      }
+    },
+    "%lld 天": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 天"
+          }
+        }
+      }
+    },
+    "%lld 年": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld year"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld years"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 年"
           }
         }
       }
@@ -2039,6 +2187,38 @@
         }
       }
     },
+    "免费试用 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ free trial"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免費試用 %@"
+          }
+        }
+      }
+    },
+    "免费试用 %@，之后按 %@ 自动续订。可随时在系统「设置 → Apple 账户 → 订阅」中取消，取消需在当前周期结束前 24 小时完成。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free for %@, then renews automatically at %@. Cancel anytime in Settings → Apple Account → Subscriptions, at least 24 hours before the current period ends."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免費試用 %@，之後按 %@ 自動續訂。可隨時在系統「設定 → Apple 帳戶 → 訂閱」中取消，取消需在目前週期結束前 24 小時完成。"
+          }
+        }
+      }
+    },
     "入账币种": {
       "localizations": {
         "en": {
@@ -3579,6 +3759,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "開啟後，將在每月還款日上午 9:00 推送提醒。"
+          }
+        }
+      }
+    },
+    "开始 %@ 免费试用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start %@ Free Trial"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始 %@ 免費試用"
           }
         }
       }

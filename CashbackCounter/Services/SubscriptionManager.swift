@@ -54,6 +54,11 @@ final class SubscriptionManager {
     private(set) var isLoadingProducts = false
     private(set) var isPurchasing = false
 
+    /// 各产品的介绍性优惠资格，productID -> 是否合格。
+    ///
+    /// 单独缓存是因为 `isEligibleForIntroOffer` 是 async 的，View 的 body 里读不了。
+    private(set) var introOfferEligible: [String: Bool] = [:]
+
     /// 当前订阅的到期时刻，用于设置页展示
     private(set) var expiresAt: Date?
 
@@ -103,6 +108,38 @@ final class SubscriptionManager {
         } catch {
             print("⚠️ 拉取订阅产品失败：\(error.localizedDescription)")
         }
+
+        await refreshIntroOfferEligibility()
+    }
+
+    /// 刷新免费试用资格。
+    ///
+    /// 资格是**按订阅群组**算的，不是按产品：用户在月付上用掉试用之后，
+    /// 年付也一并不再合格。所以这里每个产品都要单独问一次，
+    /// 不能拿一个的结果套到另一个上。
+    ///
+    /// 购买、恢复、退款之后资格都会变，所以 `refreshEntitlements` 末尾也会调它。
+    func refreshIntroOfferEligibility() async {
+        var eligible: [String: Bool] = [:]
+        for product in products {
+            guard let subscription = product.subscription else { continue }
+            eligible[product.id] = await subscription.isEligibleForIntroOffer
+        }
+        introOfferEligible = eligible
+    }
+
+    /// 这个产品现在能不能拿到免费试用。
+    ///
+    /// 三个条件缺一不可：产品配了介绍性优惠、该优惠是**免费**（而不是首期折扣）、
+    /// 且当前 Apple ID 还合格。付费墙的文案只以这个为准 ——
+    /// 承诺了试用却拿不到，是审核里最容易被拒的一类问题。
+    func freeTrialPeriod(for product: Product) -> Product.SubscriptionPeriod? {
+        guard introOfferEligible[product.id] == true,
+              let offer = product.subscription?.introductoryOffer,
+              offer.paymentMode == .freeTrial else {
+            return nil
+        }
+        return offer.period
     }
 
     // MARK: - 购买
@@ -185,6 +222,9 @@ final class SubscriptionManager {
         }
 
         await syncToBackend(signedTransactions)
+
+        // 买过就不再合格了，付费墙上的"免费试用"字样得跟着消失
+        await refreshIntroOfferEligibility()
     }
 
     /// 单独拉一次后端状态。
