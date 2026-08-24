@@ -593,7 +593,7 @@
     ],
     "rewardType" : "points",
     "pointProgramKey" : "marriott|point|usd",
-    "region" : "中国",
+    "region" : "中国大陆",
     "paymentCaps" : [
 
     ],
@@ -1090,7 +1090,7 @@
       "8A8F99",
       "E3DEE9"
     ],
-    "foreignCurrencyRate" : 0,
+    "foreignCurrencyRate" : 0.4,
     "paymentMethodRates" : [
       "gba",
       6
@@ -1181,7 +1181,8 @@
     "localBaseCap" : 0,
     "rewardType" : "cashback",
     "paymentCaps" : [
-
+      "applePay",
+      100
     ],
     "region" : "中国大陆",
     "secondaryRegion" : "美国",
@@ -1192,7 +1193,8 @@
     ],
     "foreignCurrencyRate" : 3,
     "paymentMethodRates" : [
-
+      "applePay",
+      2
     ],
     "bankName" : "农业银行",
     "defaultRate" : 0.1
