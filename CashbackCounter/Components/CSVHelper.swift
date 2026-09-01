@@ -81,21 +81,27 @@ struct CSVHelper {
         let categoryMap: [String: Category] = Dictionary(uniqueKeysWithValues: Category.allCases.map { ($0.displayName, $0) })
         let regionMap: [String: Region] = Dictionary(uniqueKeysWithValues: Region.allCases.map { ($0.rawValue, $0) })
         
-        // 去重：预先构建已有交易的指纹映射，避免重复导入，同时保证返回的数组索引与 CSV 匹配
+        // 去重：按 (商户, 日期, 金额, 入账金额, 卡) 做**数量对齐**，而不是"存在即跳过"。
+        //
+        // 两处修正：
+        //   · 键里必须有卡片 —— 同一天同一家店同样金额刷两张不同的卡是很正常的事，
+        //     不带卡的键会把第二张卡那笔当成重复丢掉。
+        //   · 值必须是队列而不是单个 —— CSV 里有 2 行、库里只有 1 笔时，
+        //     应该补进 1 笔，而不是两行都跳过。这和同步引擎
+        //     `PlaidSyncService.insertWithCountAlignment` 是同一套语义。
         let existingTransactions = (try? context.fetch(FetchDescriptor<Transaction>())) ?? []
-        var existingTxMap: [String: Transaction] = [:]
-        let deduplicationDateFormatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateFormat = "yyyy-MM-dd"
-            f.locale = Locale(identifier: "en_US_POSIX")
-            return f
-        }()
+        var existingTxMap: [String: [Transaction]] = [:]
         for tx in existingTransactions {
-            let merchant = tx.merchant.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            let dayString = deduplicationDateFormatter.string(from: tx.date)
-            let amount = String(format: "%.2f", tx.amount)
-            let billing = String(format: "%.2f", tx.billingAmount)
-            existingTxMap["\(merchant)|\(dayString)|\(amount)|\(billing)"] = tx
+            let dayString = tx.dateString
+            existingTxMap[
+                transactionDedupKey(
+                    merchant: tx.merchant,
+                    dayString: dayString,
+                    amount: tx.amount,
+                    billing: tx.billingAmount,
+                    card: tx.card),
+                default: []
+            ].append(tx)
         }
         
         var skippedCount = 0
@@ -117,9 +123,26 @@ struct CSVHelper {
             let cardEndNum = columns[7]
             let regionName = columns[8]
             
-            // 去重检查：如果数据库中已有相同交易，将已有交易放入数组以保持索引对齐，并跳过插入
-            let dedupKey = "\(merchant.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())|\(dateStr)|\(String(format: "%.2f", amount))|\(String(format: "%.2f", billing))"
-            if let existingTx = existingTxMap[dedupKey] {
+            // 卡片匹配要在去重之前做：去重键里带卡片
+            var matchedCard: CreditCard? = nil
+            if cardEndNum != "无卡" && cardNameRaw != "已删除卡片" {
+                matchedCard = allCards.first { card in
+                    let dbCardName = "\(card.bankName) \(card.type)"
+                    return card.endNum == cardEndNum && dbCardName == cardNameRaw
+                }
+                if matchedCard == nil {
+                    matchedCard = allCards.first { $0.endNum == cardEndNum }
+                }
+            }
+
+            // 去重检查：命中就从队列里**消费掉一笔**，并把已有交易放进数组保持索引对齐。
+            // 队列空了说明 CSV 里的笔数多于库里的，剩下的要真的插进去。
+            let dedupKey = transactionDedupKey(
+                merchant: merchant, dayString: dateStr,
+                amount: amount, billing: billing, card: matchedCard)
+            if var queue = existingTxMap[dedupKey], !queue.isEmpty {
+                let existingTx = queue.removeFirst()
+                existingTxMap[dedupKey] = queue
                 skippedCount += 1
                 createdTransactions.append(existingTx)
                 continue
@@ -164,18 +187,6 @@ struct CSVHelper {
                 }
             }
             
-            // 3. 匹配卡片
-            var matchedCard: CreditCard? = nil
-            if cardEndNum != "无卡" && cardNameRaw != "已删除卡片" {
-                matchedCard = allCards.first { card in
-                    let dbCardName = "\(card.bankName) \(card.type)"
-                    return card.endNum == cardEndNum && dbCardName == cardNameRaw
-                }
-                if matchedCard == nil {
-                    matchedCard = allCards.first { $0.endNum == cardEndNum }
-                }
-            }
-            
             // 4. 创建交易 (传入 paymentMethod)
             let newTransaction = Transaction(
                 merchant: merchant,
@@ -199,7 +210,10 @@ struct CSVHelper {
 
             context.insert(newTransaction)
             createdTransactions.append(newTransaction)
-            existingTxMap[dedupKey] = newTransaction // 防止 CSV 内部重复
+            // ⚠️ 刻意**不**把这笔写回指纹表。
+            // 原来这里写回是为了"防止 CSV 内部重复"，但 CSV 里两行一模一样往往
+            // 就是同一天在同一家店买了两杯一样的咖啡 —— 写回会让第二杯被当成重复吞掉。
+            // 数量对齐已经保证了跨次导入不会翻倍（队列里已有的那些先被消费完）。
         }
         
         if skippedCount > 0 {
@@ -285,6 +299,17 @@ struct CSVHelper {
         return s.replacingOccurrences(of: "\"\"", with: "\"")
     }
     
+    /// 导入去重的指纹键。两侧（库里已有 / CSV 行）必须走同一个函数，
+    /// 否则一边带卡一边不带，去重直接失效。
+    private static func transactionDedupKey(
+        merchant: String, dayString: String,
+        amount: Double, billing: Double, card: CreditCard?
+    ) -> String {
+        let m = merchant.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let cardKey = card.map { "\($0.bankName) \($0.type)|\($0.endNum)".lowercased() } ?? "nocard"
+        return "\(m)|\(dayString)|\(String(format: "%.2f", amount))|\(String(format: "%.2f", billing))|\(cardKey)"
+    }
+
     private static func splitCSVLine(_ line: String) -> [String] {
         var result: [String] = []
         var current = ""

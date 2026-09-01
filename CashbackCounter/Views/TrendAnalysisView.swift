@@ -79,7 +79,7 @@ struct TrendAnalysisView: View {
             currencyCode = t.resolvedBillingCurrencyCode
         } else {
             value = CashbackService.calculateCashback(for: t) // 返现算返现额，随入账币种计价
-            currencyCode = t.card != nil ? t.resolvedBillingCurrencyCode : mainCurrencyCode
+            currencyCode = t.resolvedBillingCurrencyCode
         }
         return value / exchangeRate(for: currencyCode)
     }

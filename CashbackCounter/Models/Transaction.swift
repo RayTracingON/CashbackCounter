@@ -38,6 +38,31 @@ class Transaction: Identifiable {
     /// 因为这个字段出现之前的每一笔都确实是手动记的。
     var source: TransactionSource = TransactionSource.manual
 
+    /// 建档时生成一次的稳定标识。**交易去重只认它，不认内容。**
+    ///
+    /// 按 (商户, 日期, 金额) 这类内容指纹去重是错的：同一天在同一家店买两杯一样的咖啡
+    /// 就是两笔内容完全相同的真实交易，按内容去重会把第二杯永久删掉 ——
+    /// 而且用户看不出来。同步引擎的数量对齐（见 PlaidSyncService.insertWithCountAlignment）
+    /// 早就为这件事绕过路，本地去重不能再踩回去。
+    ///
+    /// CloudKit 重新导入产生的重复记录会**连这个字段一起复制**，所以它们共享同一个值，
+    /// 能被可靠识别；两杯咖啡拿到的是两个不同的 UUID，永远不会被合并。
+    ///
+    /// 默认空串是为了让 SwiftData 走轻量迁移。空串 = 该字段出现之前的旧数据，
+    /// 由 CardTemplateManager 在去重时就地补一个 UUID（见那里的注释）。
+    ///
+    /// ⚠️ **这是新增字段，发版前必须在 CloudKit Dashboard 把 schema 部署到 Production。**
+    /// 加字段是 CloudKit 允许的增量改动（不像改类型/改名），但 Production 环境
+    /// **不会自动建字段** —— 漏了这一步，线上包导出记录时会因为字段不存在而报错，
+    /// 整条 iCloud 同步链路停摆。
+    ///
+    /// 混合版本（部分用户还在旧版）是安全的，靠的是"空串永不参与删除"这条规则：
+    ///   · 旧版建的记录没有这个字段 → 新版读到空串 → 补 UUID → 只形成单元素分组
+    ///   · 旧版编辑记录时可能把这个字段抹掉 → 同样回落到空串
+    /// 两种情况的后果都只是"某次重复没被合并"，而不是"删错了一笔"。
+    /// 这个方向是刻意选的：多一笔用户看得见也能自己删，少一笔看不见也救不回来。
+    var dedupeID: String = ""
+
     @Attribute(.externalStorage) var receiptData: Data?
     
     @Relationship(deleteRule: .cascade, inverse: \Income.transaction)
@@ -75,6 +100,7 @@ class Transaction: Identifiable {
         // 赋值
         self.paymentMethod = paymentMethod
         self.source = source
+        self.dedupeID = UUID().uuidString
 
         let finalBilling = billingAmount ?? amount
         

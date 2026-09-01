@@ -65,7 +65,11 @@ final class CardTemplateManager {
     
     /// 去重逻辑版本号：手动 +1 可强制所有用户在下次启动全量去重一次
     /// （用于去重规则本身改动后的一次性重扫）。
-    private static let deduplicationVersion = 1
+    ///
+    /// v2：交易去重从"内容指纹"改成 `Transaction.dedupeID`。这一版必须跑，
+    /// 因为旧数据的 dedupeID 是空的，要靠这次全量扫描补齐 —— 补齐之前
+    /// 它们不受任何保护。
+    private static let deduplicationVersion = 2
 
     /// 当前 App 构建号（CFBundleVersion）。每次发版都会变 —— 用它判断「是不是刚更新过」，
     /// 因为 CloudKit 正是在 App 更新触发 schema 迁移后重新导入、制造重复数据的。
@@ -181,7 +185,33 @@ final class CardTemplateManager {
                         }
                         print("🔀 Transferred \(txs.count) transactions from duplicate card to master card")
                     }
-                    
+
+                    // ⚠️ 银行绑定同样必须转移，而且理由比交易更隐蔽。
+                    //
+                    // CreditCard.linkedBankAccounts 是 .nullify：删掉副本卡只会把
+                    // LinkedBankAccount.card 置空，记录本身留着。而 isSyncable 要求
+                    // `syncEnabled && card != nil` —— 于是这张卡从此**静默停止同步**，
+                    // 银行同步页只把它显示成"未关联"，没有任何报错。
+                    // 而这个函数每次启动都跑，用户完全无从察觉。
+                    if let accounts = duplicateCard.linkedBankAccounts, !accounts.isEmpty {
+                        let masterAccountIds = Set((masterCard.linkedBankAccounts ?? []).map(\.accountId))
+                        for account in accounts {
+                            if masterAccountIds.contains(account.accountId) {
+                                // master 已经绑着同一个 Plaid 账户，这条是纯冗余指针。
+                                // 留着会在银行同步页显示成一条永远"未关联"的僵尸记录。
+                                context.delete(account)
+                            } else {
+                                account.card = masterCard
+                            }
+                        }
+                        print("🔀 Transferred \(accounts.count) linked bank accounts to master card")
+                    }
+
+                    // 卡面图：master 没有就从副本接过来，别把已下载的图跟着副本一起删掉
+                    if masterCard.cardImageData == nil, let image = duplicateCard.cardImageData {
+                        masterCard.cardImageData = image
+                    }
+
                     context.delete(duplicateCard)
                     hasDeletes = true
                 }
@@ -196,33 +226,45 @@ final class CardTemplateManager {
         }
     }
     
-    /// 自动合并重复交易记录，防止 CloudKit 同步在 schema 迁移后产生的重复交易
-    /// 按 (商户名, 日期, 金额, 入账金额, 关联卡片) 进行分组，保留第一条，删除后续重复记录
+    /// 自动合并 CloudKit 在 schema 迁移后重新导入产生的重复交易。
+    ///
+    /// ⚠️ **只按 `Transaction.dedupeID` 分组，绝不按内容分组。**
+    ///
+    /// 这里曾经用 (商户, 日期, 金额, 入账金额, 卡) 当指纹，那是错的：同一天在同一家店
+    /// 买两杯一样的咖啡，就是两笔内容完全相同的**真实**交易，按内容去重会把第二杯
+    /// 永久删掉 —— 而且这个函数每次 App 更新后都会跑一遍，用户根本不会发现自己的账
+    /// 每次升级都少一笔。同步引擎早就为同一个问题绕过路（见
+    /// `PlaidSyncService.insertWithCountAlignment` 的"为什么不能用存在即跳过"），
+    /// 本地去重不能再踩回去。
+    ///
+    /// dedupeID 由 `Transaction.init` 生成一次。CloudKit 复制记录时会把它一起复制，
+    /// 所以真正的重复共享同一个值；两杯咖啡是两个不同的 UUID。
+    ///
+    /// 旧数据（该字段出现之前建的账）dedupeID 为空，这里就地补一个新 UUID。
+    /// 代价是**此刻已经存在的重复合并不掉** —— 每个副本会拿到各自的 UUID。
+    /// 这个取舍不需要犹豫：多一笔用户看得见也能自己删，凭空少一笔看不见也救不回来。
+    /// 补完之后再发生的 CloudKit 重新导入都能被正确识别。
     @MainActor
     func deduplicateTransactions(in context: ModelContext) {
         do {
             let transactions = try context.fetch(FetchDescriptor<Transaction>())
             guard transactions.count > 1 else { return }
-            
-            // 按 (商户名, 日期(精确到天), 金额, 入账金额, 卡片标识) 分组
+
+            // 第一步：按 dedupeID 分组；顺手给旧数据补标识。
+            // 刚补上的 UUID 天然唯一，只会形成单元素分组，不参与任何删除。
             var grouped: [String: [Transaction]] = [:]
+            var backfilled = 0
             for tx in transactions {
-                let merchant = tx.merchant.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                let dayString = Self.deduplicationDateFormatter.string(from: tx.date)
-                let amount = String(format: "%.2f", tx.amount)
-                let billing = String(format: "%.2f", tx.billingAmount)
-                let cardKey: String
-                if let card = tx.card {
-                    cardKey = "\(card.bankName)|\(card.endNum)".lowercased()
-                } else {
-                    cardKey = "nocard"
+                if tx.dedupeID.isEmpty {
+                    tx.dedupeID = UUID().uuidString
+                    backfilled += 1
+                    continue
                 }
-                let key = "\(merchant)|\(dayString)|\(amount)|\(billing)|\(cardKey)"
-                grouped[key, default: []].append(tx)
+                grouped[tx.dedupeID, default: []].append(tx)
             }
-            
+
             var deleteCount = 0
-            
+
             for (_, txGroup) in grouped where txGroup.count > 1 {
                 // 优先保留有收据图片或有收入记录的交易作为 master
                 let sortedGroup = txGroup.sorted { t1, t2 in
@@ -237,41 +279,35 @@ final class CardTemplateManager {
                     let incomeCount2 = t2.incomes?.count ?? 0
                     return incomeCount1 > incomeCount2
                 }
-                
+
                 let masterTx = sortedGroup[0]
                 let duplicatesToDelete = sortedGroup.dropFirst()
-                
+
                 for dupTx in duplicatesToDelete {
                     // 转移收据数据（如果 master 没有但 duplicate 有）
                     if masterTx.receiptData == nil, let receiptData = dupTx.receiptData {
                         masterTx.receiptData = receiptData
                     }
-                    
+
                     // 转移收入记录到 master 交易
                     if let incomes = dupTx.incomes, !incomes.isEmpty {
                         for income in incomes {
                             income.transaction = masterTx
                         }
                     }
-                    
+
                     context.delete(dupTx)
                     deleteCount += 1
                 }
             }
-            
-            if deleteCount > 0 {
+
+            if deleteCount > 0 || backfilled > 0 {
                 try context.save()
-                print("✅ 交易去重完成：删除了 \(deleteCount) 条重复交易记录")
+                print("✅ 交易去重完成：删除 \(deleteCount) 条重复、补齐 \(backfilled) 条旧数据标识")
             }
         } catch {
             print("❌ 交易去重失败: \(AppError.saveFailed(underlying: error).localizedDescription)")
         }
     }
     
-    private static let deduplicationDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "en_US_POSIX")
-        return f
-    }()
 }

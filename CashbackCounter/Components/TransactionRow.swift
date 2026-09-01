@@ -21,7 +21,7 @@ struct TransactionRow: View {
             !incomes.isEmpty,
             let expense = convertToMainCurrency(
                 amount: transaction.billingAmount,
-                currencyCode: transaction.card != nil ? transaction.resolvedBillingCurrencyCode : mainCurrencyCode
+                currencyCode: transaction.resolvedBillingCurrencyCode
             )
         else { return nil }
 
@@ -35,7 +35,7 @@ struct TransactionRow: View {
     
     // 2. 计算标准返现文本
     private var cashbackText: String {
-        let billingCurrency = transaction.card != nil ? transaction.resolvedBillingCurrencyCode : mainCurrencyCode
+        let billingCurrency = transaction.resolvedBillingCurrencyCode
         // 换不了汇（汇率没传进来 / 缺这个币种）时按入账币种原样显示。
         // 拿原币数字套本币符号是在报一个不存在的金额，比多一个币种符号糟得多。
         guard let amount = convertToMainCurrency(amount: transaction.cashbackamount, currencyCode: billingCurrency) else {

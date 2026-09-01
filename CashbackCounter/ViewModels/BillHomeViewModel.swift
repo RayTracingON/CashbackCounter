@@ -135,7 +135,7 @@ final class BillHomeViewModel {
         return transactions.reduce(0) { total, t in
             let cb = CashbackService.calculateCashback(for: t)
             // 返现随入账币种计价 (双币卡副币入账的返现也是副币)
-            let code = t.card != nil ? t.resolvedBillingCurrencyCode : mainCurrencyCode
+            let code = t.resolvedBillingCurrencyCode
             let rate = exchangeRate(for: code, mainCurrencyCode: mainCurrencyCode)
             return total + (cb / rate)
         }
