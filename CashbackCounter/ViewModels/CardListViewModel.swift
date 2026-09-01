@@ -23,6 +23,11 @@ final class CardListViewModel {
     // MARK: - Card Selection State
     var selectedCardID: PersistentIdentifier? = nil
     var scrollOffset: CGFloat = 0
+
+    // MARK: - Data State
+    /// 以本币为基准的汇率表。卡包里的交易行要靠它把外币入账的返现折算成本币，
+    /// 没有它 TransactionRow 只能按原币数字打上本币符号 —— 数字对不上。
+    var exchangeRates: [String: Double] = [:]
     
     // MARK: - Computed
     
@@ -73,6 +78,13 @@ final class CardListViewModel {
         context.delete(selectedCard)
     }
     
+    func loadExchangeRates(mainCurrencyCode: String) async {
+        let rates = await CurrencyService.getRates(base: mainCurrencyCode)
+        await MainActor.run {
+            self.exchangeRates = rates
+        }
+    }
+
     func handleCardImport(result: Result<[URL], Error>, context: ModelContext) {
         switch result {
         case .success(let urls):

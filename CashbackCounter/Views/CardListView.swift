@@ -89,6 +89,8 @@ struct CardListView: View {
     // ViewModel
     @State private var viewModel = CardListViewModel()
 
+    @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
+
     // 动画参数
     private let springAnimation = Animation.spring(response: 0.5, dampingFraction: 0.75, blendDuration: 0)
 
@@ -231,7 +233,10 @@ struct CardListView: View {
                    let selectedCard = cards.first(where: { $0.id == selectedID }) {
                     
                     ScrollView(showsIndicators: false) {
-                        EmbeddedTransactionListView(card: selectedCard)
+                        EmbeddedTransactionListView(
+                            card: selectedCard,
+                            exchangeRates: viewModel.exchangeRates
+                        )
                     }
                     // 按选中卡设置身份：换卡时整个滚动视图重建，滚动位置回到顶部
                     .id(selectedID)
@@ -285,6 +290,12 @@ struct CardListView: View {
                 }
             }
             // ... (导航栏和 Toolbar 代码) ...
+            .task {
+                await viewModel.loadExchangeRates(mainCurrencyCode: mainCurrencyCode)
+            }
+            .onChange(of: mainCurrencyCode) { _, newCode in
+                Task { await viewModel.loadExchangeRates(mainCurrencyCode: newCode) }
+            }
             .navigationTitle(
                 viewModel.selectedCardID != nil
                 ? (cards.first(where: {$0.id == viewModel.selectedCardID})?.bankName ?? "")
@@ -407,6 +418,8 @@ struct CardListView: View {
 // 交易列表子视图
 struct EmbeddedTransactionListView: View {
     let card: CreditCard
+    /// 以本币为基准的汇率表，交给交易行做外币返现折算
+    var exchangeRates: [String: Double] = [:]
     @State private var selectedTransaction: Transaction? = nil
     @State private var transactionToEdit: Transaction?
     @Environment(\.modelContext) var context
@@ -440,7 +453,7 @@ struct EmbeddedTransactionListView: View {
             } else {
                 LazyVStack(spacing: DesignConstants.Spacing.listItemSpacing) {
                     ForEach(sortedTransactions) { item in
-                        TransactionRow(transaction: item)
+                        TransactionRow(transaction: item, exchangeRates: exchangeRates)
                             .onTapGesture { selectedTransaction = item }
                             .contextMenu {
                                 Button { transactionToEdit = item } label: { Label("编辑", systemImage: "pencil") }
