@@ -37,6 +37,7 @@
   {
     "capPeriod" : {
       "yearly" : {
+
       }
     },
     "specialRate" : [
@@ -727,18 +728,19 @@
       }
     },
     "specialRate" : [
-        "dining",
-        200,
-        "travel",
-        200,
-        "other",
-        700
+      "dining",
+      200,
+      "travel",
+      200,
+      "other",
+      700
     ],
     "pictureURL" : "chaseihgpremier",
     "type" : "IHG Premier",
     "foreignBaseCap" : 0,
     "localBaseCap" : 0,
     "categoryCaps" : [
+
     ],
     "rewardType" : "points",
     "pointProgramKey" : "ihg|point|usd",
@@ -918,6 +920,7 @@
     "secondaryRegion" : "中国大陆",
     "dualCurrencyMode" : "secondaryAsLocal",
     "paymentCaps" : [
+
     ],
     "colors" : [
       "0F0F0F",
@@ -934,9 +937,11 @@
   {
     "capPeriod" : {
       "monthly" : {
+
       }
     },
     "specialRate" : [
+
     ],
     "pictureURL" : "beasgworldmaster",
     "type" : "SG World Mastercard",

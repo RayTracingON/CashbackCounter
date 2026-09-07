@@ -28,6 +28,8 @@ struct SettingsView: View {
     @AppStorage("defaultCardID") private var defaultCardID: String = ""
     // key 与 ReceiptParser.cloudModelDefaultsKey 保持一致
     @AppStorage("useCloudAIModel") private var useCloudAIModel: Bool = false
+    // key 与 ThirdPartyModelStore.backend 保持一致
+    @AppStorage("aiCloudBackend") private var cloudBackendRaw: String = AICloudBackend.applePCC.rawValue
     @State private var showSyncChangeAlert = false
     
     @Environment(\.modelContext) var context
@@ -44,6 +46,31 @@ struct SettingsView: View {
     
     // ViewModel
     @State private var viewModel = SettingsViewModel()
+
+    // MARK: - 云端通道
+
+    /// AppStorage 存的是 rawValue，这里桥接成枚举供 Picker 使用
+    private var cloudBackend: Binding<AICloudBackend> {
+        Binding(
+            get: { AICloudBackend(rawValue: cloudBackendRaw) ?? .applePCC },
+            set: { cloudBackendRaw = $0.rawValue }
+        )
+    }
+
+    private var thirdPartyStatusText: String {
+        guard ThirdPartyModelStore.isReady else {
+            return String(localized: "尚未配置，当前仍使用本地模型")
+        }
+        let config = ThirdPartyModelStore.config
+        return "\(config.provider.displayName) · \(config.modelName)"
+    }
+
+    private var cloudBackendFooter: String {
+        guard useCloudAIModel, cloudBackend.wrappedValue == .thirdParty else {
+            return String(localized: "云端解析通过 Apple Private Cloud Compute 完成：数据端到端加密，Apple 与开发者均无法读取。云端不可用时会自动回退到本地模型。")
+        }
+        return String(localized: "使用你自己的模型服务解析，费用由你的服务商结算。小票内容会发送到你填写的地址，不再受 Apple 私有云计算的隐私保证覆盖。未配置完整时自动回退到本地模型。")
+    }
 
     // MARK: - Body
     var body: some View {
@@ -150,6 +177,31 @@ struct SettingsView: View {
                                     .foregroundColor(.blue)
                             }
                         }
+
+                        if useCloudAIModel {
+                            Picker("云端通道", selection: cloudBackend) {
+                                Text("Apple 私有云计算").tag(AICloudBackend.applePCC)
+                                Text("自定义 API").tag(AICloudBackend.thirdParty)
+                            }
+
+                            if cloudBackend.wrappedValue == .thirdParty {
+                                NavigationLink(destination: ThirdPartyModelSettingsView()) {
+                                    Label {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("配置自定义 API")
+                                            Text(thirdPartyStatusText)
+                                                .font(.caption)
+                                                .foregroundColor(
+                                                    ThirdPartyModelStore.isReady ? .secondary : .orange
+                                                )
+                                        }
+                                    } icon: {
+                                        Image(systemName: "key.horizontal.fill")
+                                            .foregroundColor(.purple)
+                                    }
+                                }
+                            }
+                        }
                     } else {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
@@ -166,7 +218,7 @@ struct SettingsView: View {
                 } header: {
                     Text("AI 智能识别")
                 } footer: {
-                    Text("云端解析通过 Apple Private Cloud Compute 完成：数据端到端加密，Apple 与开发者均无法读取。云端不可用时会自动回退到本地模型。")
+                    Text(cloudBackendFooter)
                 }
 
                 // Shortcuts Section

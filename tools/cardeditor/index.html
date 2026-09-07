@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卡片模板编辑器</title>
+<style>
+:root{
+  --bg:#f6f6f7; --panel:#fff; --border:#e2e2e5; --text:#1c1c1e; --muted:#78787f;
+  --accent:#2f6feb; --danger:#c0392b; --warn:#b7791f; --ok:#2c8a4a; --input:#fff;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#151517; --panel:#1e1e21; --border:#33333a; --text:#ececf0; --muted:#9a9aa4;
+         --accent:#5b8dfb; --danger:#ef6f61; --warn:#e0a33a; --ok:#5cc47f; --input:#26262b; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:13px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;}
+header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;
+  padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border);}
+header h1{font-size:14px;margin:0;font-weight:650;}
+header .path{font:11px ui-monospace,SFMono-Regular,monospace;color:var(--muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+button{font:inherit;padding:6px 13px;border-radius:7px;border:1px solid var(--border);
+  background:var(--input);color:var(--text);cursor:pointer;}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+button.primary:disabled{opacity:.4;cursor:default;background:var(--muted);border-color:var(--muted);}
+button.ghost{padding:3px 8px;font-size:11px;}
+.layout{display:grid;grid-template-columns:270px 1fr;gap:14px;padding:14px;align-items:start;}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;}
+aside{position:sticky;top:56px;max-height:calc(100vh - 74px);overflow:auto;}
+aside .filter{padding:9px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;}
+aside .filter select,aside .filter input{flex:1;min-width:0;padding:5px 7px;border-radius:6px;
+  border:1px solid var(--border);background:var(--input);color:var(--text);font:inherit;}
+.cardrow{display:flex;gap:9px;align-items:center;padding:7px 9px;cursor:pointer;
+  border-bottom:1px solid var(--border);}
+.cardrow:hover{background:rgba(127,127,127,.08)}
+.cardrow.sel{background:color-mix(in srgb,var(--accent) 16%,transparent);}
+.swatch{width:38px;height:24px;border-radius:4px;flex:none;border:1px solid rgba(0,0,0,.15);}
+.cardrow .meta{min-width:0}
+.cardrow .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cardrow .b{font-size:11px;color:var(--muted);}
+section{padding:14px 16px;border-bottom:1px solid var(--border);}
+section:last-child{border-bottom:0}
+section h2{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  margin:0 0 11px;font-weight:650;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;}
+label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;}
+input[type=text],input[type=number],select,textarea{width:100%;padding:6px 8px;border-radius:6px;
+  border:1px solid var(--border);background:var(--input);color:var(--text);font:inherit;}
+input[type=color]{width:38px;height:30px;padding:0;border:1px solid var(--border);
+  border-radius:6px;background:none;cursor:pointer;vertical-align:middle;}
+.suffix{position:relative}
+.suffix span{position:absolute;right:9px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:11px;pointer-events:none;}
+.suffix input{padding-right:26px}
+/* 复刻 CreditCardView：135deg 渐变 + 装饰圆 + 全白文字 */
+.preview{position:relative;height:132px;border-radius:12px;overflow:hidden;padding:20px;
+  display:flex;flex-direction:column;justify-content:space-between;color:#fff;}
+.preview .circle{position:absolute;width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.1);right:-40px;top:-70px;}
+.preview .top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;}
+.preview .tag{font-size:11px;font-weight:700;padding:4px 7px;border-radius:5px;
+  background:rgba(255,255,255,.22);backdrop-filter:blur(8px);}
+.preview .num{font-size:14px;letter-spacing:.1em;position:relative;}
+.hexrow{display:flex;gap:7px;align-items:center;margin-top:9px;}
+.hexrow input[type=text]{width:88px;font-family:ui-monospace,SFMono-Regular,monospace;
+  text-transform:uppercase;}
+.cr{font:11px ui-monospace,monospace;padding:2px 6px;border-radius:5px;border:1px solid var(--border);}
+.cr.bad{background:var(--danger);color:#fff;border-color:var(--danger);}
+.pairs{display:flex;flex-direction:column;gap:7px;}
+.pair{display:grid;grid-template-columns:1fr 108px 118px 30px;gap:7px;align-items:center;}
+.pair.nocap{grid-template-columns:1fr 108px 30px;}
+table.eff{width:100%;border-collapse:collapse;font-size:12px;}
+table.eff th{text-align:left;font-weight:600;color:var(--muted);font-size:11px;
+  padding:4px 8px 6px;border-bottom:1px solid var(--border);}
+table.eff td{padding:4px 8px;border-bottom:1px solid var(--border);}
+table.eff td.n{font-family:ui-monospace,monospace;text-align:right;}
+table.eff tr.bonus td{font-weight:600;}
+table.eff tr.bonus td.n:last-child{color:var(--ok);}
+.msgs{margin:0 14px;display:flex;flex-direction:column;gap:6px;}
+.msg{padding:8px 12px;border-radius:8px;font-size:12px;border:1px solid;}
+.msg.err{background:color-mix(in srgb,var(--danger) 14%,transparent);border-color:var(--danger);}
+.msg.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);border-color:var(--warn);}
+.msg.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);border-color:var(--ok);}
+.dirty{color:var(--warn);font-weight:600;font-size:12px;}
+.hint{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.5;}
+</style>
+</head>
+<body>
+<header>
+  <h1>卡片模板编辑器</h1>
+  <span class="path" id="path"></span>
+  <span class="dirty" id="dirty"></span>
+  <button id="revert">放弃改动</button>
+  <button class="primary" id="save" disabled>保存到磁盘</button>
+</header>
+<div class="msgs" id="msgs"></div>
+<div class="layout">
+  <aside class="panel">
+    <div class="filter">
+      <select id="fregion"><option value="">全部地区</option></select>
+      <input id="fsearch" type="text" placeholder="搜索…">
+    </div>
+    <div id="list"></div>
+    <div style="padding:9px"><button class="ghost" id="add">+ 新增卡片</button></div>
+  </aside>
+  <main class="panel" id="editor"></main>
+</div>
+
+<script>
+let ENUMS = null, TEMPLATES = [], ORIGINAL = "", sel = 0;
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* 交替数组 <-> 键值对：Swift 的 Dictionary<非String键,V> 编码成 [k,v,k,v] */
+const toPairs = a => { const r=[]; a=a||[]; for(let i=0;i<a.length;i+=2) r.push([a[i], a[i+1]]); return r; };
+const fromPairs = p => p.flatMap(([k,v]) => [k, v]);
+
+/* 白字对比度：CreditCardView 把文字层写死成白色 */
+function lum(hex){
+  const ch = v => { v/=255; return v<=.03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); };
+  return .2126*ch(parseInt(hex.slice(0,2),16)) + .7152*ch(parseInt(hex.slice(2,4),16)) + .0722*ch(parseInt(hex.slice(4,6),16));
+}
+const cw = hex => 1.05 / (lum(hex) + .05);
+const mid = (a,b) => [0,2,4].map(i =>
+  Math.round((parseInt(a.substr(i,2),16)+parseInt(b.substr(i,2),16))/2).toString(16).padStart(2,"0")).join("").toUpperCase();
+const isHex = s => /^[0-9A-Fa-f]{6}$/.test(s||"");
+
+/* 文件里存的是百分数×100（CardTemplate.applyRules 加载时 /100） */
+const toDisplay = raw => (Number(raw)||0) / 100;
+const toRaw = disp => { const n = Number(disp); return Number.isFinite(n) ? Math.round(n*100*1e6)/1e6 : 0; };
+
+const cur = () => TEMPLATES[sel];
+const unit = t => (t?.rewardType === "points" ? "×" : "%");
+
+function markDirty(){
+  const d = JSON.stringify(TEMPLATES) !== ORIGINAL;
+  document.getElementById("dirty").textContent = d ? "● 未保存" : "";
+  document.getElementById("save").disabled = !d;
+}
+
+function set(path, value){
+  const t = cur(); t[path] = value; markDirty(); renderList(); renderEditor();
+}
+
+/* ---------- 左侧列表 ---------- */
+function renderList(){
+  const rg = document.getElementById("fregion").value;
+  const q = document.getElementById("fsearch").value.trim().toLowerCase();
+  const html = TEMPLATES.map((t,i) => {
+    if (rg && t.region !== rg) return "";
+    if (q && !`${t.bankName} ${t.type}`.toLowerCase().includes(q)) return "";
+    const [a,b] = (t.colors||["888888","888888"]);
+    return `<div class="cardrow ${i===sel?"sel":""}" data-i="${i}">
+      <div class="swatch" style="background:linear-gradient(135deg,#${esc(a)},#${esc(b)})"></div>
+      <div class="meta"><div class="t">${esc(t.type)}</div><div class="b">${esc(t.bankName)} · ${esc(t.region)}</div></div>
+    </div>`;
+  }).join("");
+  document.getElementById("list").innerHTML = html || `<div style="padding:14px;color:var(--muted)">没有匹配的卡片</div>`;
+  document.querySelectorAll(".cardrow").forEach(el =>
+    el.onclick = () => { sel = +el.dataset.i; renderList(); renderEditor(); });
+}
+
+/* ---------- 键值对区块 ---------- */
+function pairBlock(field, capField, allowed, u){
+  const t = cur();
+  const pairs = toPairs(t[field]);
+  const caps = capField ? Object.fromEntries(toPairs(t[capField])) : null;
+  const rows = pairs.map(([k,v],i) => `
+    <div class="pair ${capField?"":"nocap"}">
+      <select data-pk="${field}" data-i="${i}">
+        ${allowed.map(a => `<option value="${a}" ${a===k?"selected":""}>${a}</option>`).join("")}
+      </select>
+      <div class="suffix"><input type="number" step="0.01" data-pv="${field}" data-i="${i}"
+        value="${toDisplay(v)}"><span>+${u}</span></div>
+      ${capField ? `<input type="number" step="1" placeholder="无上限" data-cap="${capField}" data-k="${k}"
+        value="${caps[k] ?? ""}">` : ""}
+      <button class="ghost" data-del="${field}" data-i="${i}">✕</button>
+    </div>`).join("");
+  return `<div class="pairs">${rows || `<div style="color:var(--muted)">（无）</div>`}</div>
+    <div style="margin-top:9px"><button class="ghost" data-addpair="${field}">+ 添加</button></div>`;
+}
+
+/* ---------- 生效倍率表 ---------- */
+function effTable(){
+  const t = cur(), u = unit(t);
+  const sp = Object.fromEntries(toPairs(t.specialRate));
+  const base = toDisplay(t.defaultRate);
+  const rows = ENUMS.categories.map(c => {
+    const bonus = sp[c] === undefined ? null : toDisplay(sp[c]);
+    const eff = base + (bonus || 0);
+    return `<tr class="${bonus!==null?"bonus":""}">
+      <td>${c}</td>
+      <td class="n">${base}</td>
+      <td class="n">${bonus===null ? "—" : "+"+bonus}</td>
+      <td class="n">${(Math.round(eff*1e4)/1e4)}${u}</td></tr>`;
+  }).join("");
+  return `<table class="eff"><tr><th>类别</th><th style="text-align:right">基础</th>
+    <th style="text-align:right">加成</th><th style="text-align:right">实际生效</th></tr>${rows}</table>
+    <div class="hint">CreditCard.getRate() = 基础费率 + 类别加成 + 支付方式加成。
+    注意 <code>other</code>（其他消费）是用户可选的普通类别 —— 把酒店/门户加成放这里，
+    随手记的杂项消费也会拿到最高倍率。</div>`;
+}
+
+/* ---------- 编辑器 ---------- */
+function renderEditor(){
+  const t = cur();
+  if (!t){ document.getElementById("editor").innerHTML = `<section>没有选中卡片</section>`; return; }
+  const u = unit(t);
+  const [a,b] = (t.colors && t.colors.length===2) ? t.colors : ["888888","888888"];
+  const okHex = isHex(a) && isHex(b);
+  const m = okHex ? mid(a,b) : "888888";
+  const crBadge = (hex,label) => {
+    const v = isHex(hex) ? cw(hex) : 0;
+    return `<span class="cr ${v<4.5?"bad":""}" title="${label}">${label} ${v.toFixed(1)}</span>`;
+  };
+  const capKey = Object.keys(t.capPeriod || {yearly:{}})[0] || "yearly";
+
+  document.getElementById("editor").innerHTML = `
+  <section>
+    <h2>基本信息</h2>
+    <div class="grid">
+      <div><label>银行 bankName</label><input type="text" data-f="bankName" value="${esc(t.bankName)}"></div>
+      <div><label>卡种 type</label><input type="text" data-f="type" value="${esc(t.type)}"></div>
+      <div><label>地区 region</label><select data-f="region">
+        ${ENUMS.regions.map(r=>`<option ${r===t.region?"selected":""}>${r}</option>`).join("")}</select></div>
+      <div><label>卡面图 pictureURL</label><input type="text" data-f="pictureURL" value="${esc(t.pictureURL)}"></div>
+      <div><label>奖励类型 rewardType</label><select data-f="rewardType">
+        ${ENUMS.rewardTypes.map(r=>`<option ${r===t.rewardType?"selected":""}>${r}</option>`).join("")}</select></div>
+      <div><label>积分账户 pointProgramKey</label><input type="text" data-f="pointProgramKey" value="${esc(t.pointProgramKey)}"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>配色（渐变 topLeading → bottomTrailing）</h2>
+    <div class="preview" style="background:linear-gradient(135deg,#${esc(a)},#${esc(b)})">
+      <div class="circle"></div>
+      <div class="top"><span>((( ·</span><span class="tag">${esc(t.bankName)} ${esc(t.type)}</span></div>
+      <div class="num">**** **** **** 1234</div>
+    </div>
+    <div class="hexrow">
+      <input type="color" data-color="0" value="#${okHex?a:"888888"}">
+      <input type="text" data-hex="0" value="${esc(a).toUpperCase()}" maxlength="6">
+      <input type="color" data-color="1" value="#${okHex?b:"888888"}">
+      <input type="text" data-hex="1" value="${esc(b).toUpperCase()}" maxlength="6">
+      ${crBadge(a,"起点")} ${crBadge(m,"中点")}
+    </div>
+    <div class="hint">文字层在 CreditCardView 里写死成白色，卡号落在渐变中点 —— 起点和中点对白字的对比度都要 ≥ 4.5。</div>
+  </section>
+
+  <section>
+    <h2>基础费率与上限</h2>
+    <div class="grid">
+      <div><label>本币费率 defaultRate</label>
+        <div class="suffix"><input type="number" step="0.01" data-r="defaultRate" value="${toDisplay(t.defaultRate)}"><span>${u}</span></div></div>
+      <div><label>外币费率 foreignCurrencyRate</label>
+        <div class="suffix"><input type="number" step="0.01" data-r="foreignCurrencyRate" value="${t.foreignCurrencyRate==null?"":toDisplay(t.foreignCurrencyRate)}"><span>${u}</span></div></div>
+      <div><label>本币上限 localBaseCap（0 = 无上限）</label><input type="number" data-n="localBaseCap" value="${t.localBaseCap ?? 0}"></div>
+      <div><label>外币上限 foreignBaseCap（0 = 无上限）</label><input type="number" data-n="foreignBaseCap" value="${t.foreignBaseCap ?? 0}"></div>
+      <div><label>上限周期 capPeriod</label><select data-cp>
+        ${ENUMS.capPeriods.map(c=>`<option value="${c}" ${c===capKey?"selected":""}>${c}</option>`).join("")}</select></div>
+    </div>
+    <div class="hint">文件里存的是百分数×100（<code>300</code> = 3${u}），这里显示和输入的都是最终倍率，保存时自动换算。</div>
+  </section>
+
+  <section><h2>类别加成（额外叠加）与类别上限</h2>${pairBlock("specialRate","categoryCaps",ENUMS.categories,u)}</section>
+  <section><h2>支付方式加成与上限</h2>${pairBlock("paymentMethodRates","paymentCaps",ENUMS.payments,u)}</section>
+  <section><h2>实际生效倍率</h2>${effTable()}</section>
+
+  <section>
+    <h2>双币卡（留空 = 单币卡）</h2>
+    <div class="grid">
+      <div><label>第二币种 secondaryRegion</label><select data-f2="secondaryRegion">
+        <option value="">（无）</option>
+        ${ENUMS.regions.map(r=>`<option ${r===t.secondaryRegion?"selected":""}>${r}</option>`).join("")}</select></div>
+      <div><label>上限模式 dualCurrencyMode</label><select data-f2="dualCurrencyMode">
+        <option value="">（默认 secondaryAsLocal）</option>
+        ${ENUMS.dualModes.map(r=>`<option ${r===t.dualCurrencyMode?"selected":""}>${r}</option>`).join("")}</select></div>
+      <div><label>副币种费率 secondaryRate</label>
+        <div class="suffix"><input type="number" step="0.01" data-r="secondaryRate" value="${t.secondaryRate==null?"":toDisplay(t.secondaryRate)}"><span>${u}</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>其他</h2>
+    <div><label>备注 memo</label><input type="text" data-f="memo" value="${esc(t.memo)}"></div>
+    <div style="margin-top:14px"><button id="del" style="color:var(--danger)">删除这张卡</button></div>
+  </section>`;
+
+  bindEditor();
+}
+
+function bindEditor(){
+  const t = cur(), ed = document.getElementById("editor");
+
+  ed.querySelectorAll("[data-f]").forEach(el => el.onchange = () => {
+    const v = el.value.trim();
+    if (v === "" && ["pictureURL","pointProgramKey","memo"].includes(el.dataset.f)) delete t[el.dataset.f];
+    else t[el.dataset.f] = v;
+    markDirty(); renderList(); renderEditor();
+  });
+  ed.querySelectorAll("[data-f2]").forEach(el => el.onchange = () => {
+    if (el.value === "") delete t[el.dataset.f2]; else t[el.dataset.f2] = el.value;
+    markDirty(); renderEditor();
+  });
+  ed.querySelectorAll("[data-r]").forEach(el => el.onchange = () => {
+    if (el.value === "") delete t[el.dataset.r]; else t[el.dataset.r] = toRaw(el.value);
+    markDirty(); renderEditor();
+  });
+  ed.querySelectorAll("[data-n]").forEach(el => el.onchange = () => {
+    t[el.dataset.n] = Number(el.value) || 0; markDirty();
+  });
+  ed.querySelector("[data-cp]").onchange = e => { t.capPeriod = {[e.target.value]: {}}; markDirty(); };
+
+  const setColor = (idx, hex) => {
+    hex = hex.replace("#","").toUpperCase();
+    if (!isHex(hex)) return;
+    t.colors = t.colors && t.colors.length===2 ? t.colors.slice() : ["888888","888888"];
+    t.colors[idx] = hex; markDirty(); renderList(); renderEditor();
+  };
+  ed.querySelectorAll("[data-color]").forEach(el => el.oninput = () => setColor(+el.dataset.color, el.value));
+  ed.querySelectorAll("[data-hex]").forEach(el => el.onchange = () => setColor(+el.dataset.hex, el.value));
+
+  ed.querySelectorAll("[data-pk]").forEach(el => el.onchange = () => {
+    const p = toPairs(t[el.dataset.pk]); p[+el.dataset.i][0] = el.value;
+    t[el.dataset.pk] = fromPairs(p); markDirty(); renderEditor();
+  });
+  ed.querySelectorAll("[data-pv]").forEach(el => el.onchange = () => {
+    const p = toPairs(t[el.dataset.pv]); p[+el.dataset.i][1] = toRaw(el.value);
+    t[el.dataset.pv] = fromPairs(p); markDirty(); renderEditor();
+  });
+  ed.querySelectorAll("[data-cap]").forEach(el => el.onchange = () => {
+    const f = el.dataset.cap, k = el.dataset.k;
+    const p = toPairs(t[f]).filter(([kk]) => kk !== k);
+    if (el.value !== "" && Number(el.value) !== 0) p.push([k, Number(el.value)]);
+    t[f] = fromPairs(p); markDirty();
+  });
+  ed.querySelectorAll("[data-del]").forEach(el => el.onclick = () => {
+    const f = el.dataset.del, p = toPairs(t[f]);
+    const [k] = p[+el.dataset.i];
+    p.splice(+el.dataset.i, 1); t[f] = fromPairs(p);
+    const capF = f === "specialRate" ? "categoryCaps" : f === "paymentMethodRates" ? "paymentCaps" : null;
+    if (capF) t[capF] = fromPairs(toPairs(t[capF]).filter(([kk]) => kk !== k));
+    markDirty(); renderEditor();
+  });
+  ed.querySelectorAll("[data-addpair]").forEach(el => el.onclick = () => {
+    const f = el.dataset.addpair;
+    const allowed = f === "specialRate" ? ENUMS.categories : ENUMS.payments;
+    const used = toPairs(t[f]).map(([k]) => k);
+    const next = allowed.find(a => !used.includes(a));
+    if (!next) return;
+    t[f] = [...(t[f]||[]), next, 100]; markDirty(); renderEditor();
+  });
+
+  ed.querySelector("#del").onclick = () => {
+    if (!confirm(`删除 ${t.bankName} ${t.type}？`)) return;
+    TEMPLATES.splice(sel,1); sel = Math.max(0, sel-1); markDirty(); renderList(); renderEditor();
+  };
+}
+
+/* ---------- 顶部动作 ---------- */
+function showMsgs({errors=[], warnings=[], ok=null}){
+  const html = [
+    ok ? `<div class="msg ok">${esc(ok)}</div>` : "",
+    ...errors.map(e => `<div class="msg err">❌ ${esc(e)}</div>`),
+    ...warnings.map(w => `<div class="msg warn">⚠️ ${esc(w)}</div>`),
+  ].join("");
+  document.getElementById("msgs").innerHTML = html;
+}
+
+async function save(){
+  const btn = document.getElementById("save");
+  btn.disabled = true; btn.textContent = "保存中…";
+  try{
+    const res = await fetch("/api/templates", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({templates: TEMPLATES}),
+    });
+    const body = await res.json();
+    if (!res.ok){
+      showMsgs({errors: body.errors || [body.error], warnings: body.warnings || []});
+    } else {
+      ORIGINAL = JSON.stringify(TEMPLATES);
+      showMsgs({ok:`已写入 CardTemplates.json（${TEMPLATES.length} 张卡）`, warnings: body.warnings || []});
+    }
+  } catch(e){
+    showMsgs({errors:[`保存失败：${e.message}`]});
+  }
+  btn.textContent = "保存到磁盘"; markDirty();
+}
+
+async function boot(){
+  const r = await (await fetch("/api/templates")).json();
+  ENUMS = r.enums; TEMPLATES = r.templates; ORIGINAL = JSON.stringify(TEMPLATES);
+  document.getElementById("path").textContent = r.path;
+  document.getElementById("fregion").innerHTML =
+    `<option value="">全部地区</option>` + ENUMS.regions.map(x=>`<option>${x}</option>`).join("");
+  showMsgs({errors:r.errors, warnings:r.warnings});
+  renderList(); renderEditor(); markDirty();
+}
+
+document.getElementById("save").onclick = save;
+document.getElementById("revert").onclick = () => {
+  if (!confirm("放弃所有未保存的改动？")) return;
+  TEMPLATES = JSON.parse(ORIGINAL); sel = Math.min(sel, TEMPLATES.length-1);
+  renderList(); renderEditor(); markDirty();
+};
+document.getElementById("add").onclick = () => {
+  TEMPLATES.push({ capPeriod:{yearly:{}}, specialRate:[], pictureURL:"", type:"新卡种",
+    foreignBaseCap:0, localBaseCap:0, categoryCaps:[], rewardType:"cashback",
+    region:"美国", paymentCaps:[], colors:["1C1C1E","4A4A50"], foreignCurrencyRate:100,
+    paymentMethodRates:[], bankName:"新银行", defaultRate:100 });
+  sel = TEMPLATES.length-1; markDirty(); renderList(); renderEditor();
+};
+document.getElementById("fregion").onchange = renderList;
+document.getElementById("fsearch").oninput = renderList;
+window.addEventListener("beforeunload", e => {
+  if (JSON.stringify(TEMPLATES) !== ORIGINAL){ e.preventDefault(); e.returnValue = ""; }
+});
+document.addEventListener("keydown", e => {
+  if ((e.metaKey||e.ctrlKey) && e.key === "s"){ e.preventDefault(); if(!document.getElementById("save").disabled) save(); }
+});
+boot();
+</script>
+</body>
+</html>

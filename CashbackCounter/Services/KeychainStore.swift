@@ -23,6 +23,10 @@ enum KeychainStore {
         case sessionToken = "backend_session_token"
         /// 会话对应的 Apple user id（sub）。用来在启动时调 getCredentialState 检查授权是否被撤销
         case appleUserID = "apple_user_id"
+        /// 用户自带的第三方模型 API Key。和会话 token 同级：泄露即等于别人能花用户的钱。
+        /// ⚠️ 刻意不进 clearAll()：它是设备级的功能配置，不属于某个登录账号，
+        /// 退出登录不该把用户手填的 key 一起抹掉。
+        case thirdPartyAPIKey = "third_party_model_api_key"
     }
 
     /// 所有条目共用的 service 名，避免和别的 App / 别的用途撞车

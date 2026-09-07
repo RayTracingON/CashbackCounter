@@ -232,25 +232,60 @@ enum ReceiptParseMode {
     }
 }
 
+// MARK: - 云端通道
+
+/// 「使用云端模型」打开后实际接上的那个远端模型。
+/// 两条通道都实现了 iOS 27 的 LanguageModel 协议，所以对 session 构造而言完全等价：
+/// - Apple PCC：系统内置，端到端加密，无需配置
+/// - 第三方：用户自带 endpoint 和密钥（见 Services/ThirdPartyModel/）
+@available(iOS 27.0, *)
+enum CloudRoute {
+    case applePCC(PrivateCloudComputeLanguageModel)
+    case thirdParty(ThirdPartyLanguageModel)
+
+    var model: any LanguageModel {
+        switch self {
+        case .applePCC(let model):    return model
+        case .thirdParty(let model):  return model
+        }
+    }
+
+    /// 是否可以走图片直传。PCC 一定支持；第三方取决于用户给自己的模型勾了没有。
+    var supportsVision: Bool {
+        switch self {
+        case .applePCC:               return true
+        case .thirdParty(let model):  return model.config.supportsVision
+        }
+    }
+
+    var logLabel: String {
+        switch self {
+        case .applePCC:               return "☁️ 使用云端模型 (Private Cloud Compute)"
+        case .thirdParty(let model):  return "🔌 使用第三方模型 (\(model.config.provider.displayName) / \(model.config.modelName))"
+        }
+    }
+}
+
 // MARK: - Dynamic Profile（iOS 27+，WWDC26 Foundation Models）
 /// 声明式 Profile：统一路由「场景指令 + 本地/云端模型」。
-/// cloudModel 非 nil 时整个会话走 Private Cloud Compute；
+/// route 非 nil 时整个会话走对应的云端通道；
 /// 否则不加 .model 修饰符，使用默认端侧模型。
 @available(iOS 27.0, *)
 private struct ReceiptParserProfile: LanguageModelSession.DynamicProfile {
     let mode: ReceiptParseMode
-    let cloudModel: PrivateCloudComputeLanguageModel?
+    let route: CloudRoute?
 
     var body: some DynamicProfile {
-        if let cloudModel {
-            // 云端 PCC：带按场景分档的推理（旧 beta 运行时缺 reasoningLevel 符号则不加档位）
+        if let route {
+            // 云端：带按场景分档的推理（旧 beta 运行时缺 reasoningLevel 符号则不加档位）。
+            // 第三方通道会把它映射成各家的推理参数（reasoning_effort / thinking budget）。
             if FoundationModelsRuntime.reasoningModifierAvailable {
                 Profile { mode.instructions }
-                    .model(cloudModel)
+                    .model(route.model)
                     .reasoningLevel(mode.cloudReasoningLevel)
             } else {
                 Profile { mode.instructions }
-                    .model(cloudModel)
+                    .model(route.model)
             }
         } else {
             Profile { mode.instructions }
@@ -276,23 +311,34 @@ final class ReceiptParser {
         UserDefaults.standard.bool(forKey: cloudModelDefaultsKey)
     }
 
-    /// 云端开关开启且 PCC 就绪时返回云端模型，否则 nil（调用方回退本地）。
-    /// 云端需要 iOS 27+ 及 com.apple.developer.private-cloud-compute 受管权限。
-    /// beta 运行时缺少泛型 session init 符号时整体禁用云端，避免空符号调用崩溃。
+    /// 云端开关开启且目标通道就绪时返回该通道，否则 nil（调用方回退本地）。
+    /// 两条通道都需要 iOS 27+；PCC 另需 com.apple.developer.private-cloud-compute 受管权限。
+    /// beta 运行时缺少泛型 session init 符号时整体禁用云端，避免空符号调用崩溃
+    /// —— 这个符号正是 LanguageModelSession(model: some LanguageModel, ...)，
+    /// 第三方通道同样依赖它。
     @available(iOS 27.0, *)
-    nonisolated private static func activeCloudModel() -> PrivateCloudComputeLanguageModel? {
+    nonisolated static func activeCloudRoute() -> CloudRoute? {
         guard isCloudModelEnabled,
               FoundationModelsRuntime.cloudSessionInitAvailable else { return nil }
-        let model = PrivateCloudComputeLanguageModel()
-        return model.isAvailable ? model : nil
+
+        switch ThirdPartyModelStore.backend {
+        case .thirdParty:
+            // 第三方没配全就回退本地，不再偷偷走 PCC：
+            // 用户明确选了自己的服务，静默换成别家会让「数据发去哪」变得不可预期
+            return ThirdPartyLanguageModel.current().map(CloudRoute.thirdParty)
+        case .applePCC:
+            let model = PrivateCloudComputeLanguageModel()
+            return model.isAvailable ? .applePCC(model) : nil
+        }
     }
 
     /// 多模态（图片直传）解析是否可用。
-    /// ⚡️ 本地模型跑图片输入过慢，刻意只在云端 PCC 就绪时开放多模态；
+    /// ⚡️ 本地模型跑图片输入过慢，刻意只在云端就绪时开放多模态；
     /// 另需系统运行时具备 Attachment 符号（旧 beta 缺失）。
     nonisolated static var isMultimodalAvailable: Bool {
         if #available(iOS 27.0, *) {
-            return FoundationModelsRuntime.imageAttachmentAvailable && activeCloudModel() != nil
+            return FoundationModelsRuntime.imageAttachmentAvailable
+                && (activeCloudRoute()?.supportsVision ?? false)
         }
         return false
     }
@@ -304,18 +350,17 @@ final class ReceiptParser {
     /// （本地裸文本、云端带前导语），调用方据 isCloud 分流。
     private func makeSession(mode: ReceiptParseMode) -> (session: LanguageModelSession, isCloud: Bool) {
         if #available(iOS 27.0, *) {
-            let cloud = Self.activeCloudModel()
+            let route = Self.activeCloudRoute()
             if Self.isCloudModelEnabled {
-                print(cloud != nil
-                      ? "☁️ 使用云端模型 (Private Cloud Compute)"
-                      : "⚠️ 云端模型不可用（未授权/无网络/系统未就绪），回退本地模型")
+                print(route?.logLabel
+                      ?? "⚠️ 云端模型不可用（未配置/未授权/无网络/系统未就绪），回退本地模型")
             }
-            if let cloud {
+            if let route {
                 // Dynamic Profile 只用于云端：它的增量价值只有 reasoningLevel 档位
                 if FoundationModelsRuntime.dynamicProfileAvailable {
-                    return (LanguageModelSession(profile: ReceiptParserProfile(mode: mode, cloudModel: cloud)), true)
+                    return (LanguageModelSession(profile: ReceiptParserProfile(mode: mode, route: route)), true)
                 }
-                return (LanguageModelSession(model: cloud, instructions: mode.instructions), true)
+                return (LanguageModelSession(model: route.model, instructions: mode.instructions), true)
             }
         }
         // ⚠️ 本地一律走经典 instructions 构造，不走 Dynamic Profile：
@@ -349,26 +394,27 @@ final class ReceiptParser {
     @available(iOS 27.0, *)
     private func makeMultimodalSession(mode: ReceiptParseMode) throws -> LanguageModelSession {
         guard FoundationModelsRuntime.imageAttachmentAvailable,
-              let cloud = Self.activeCloudModel() else {
+              let route = Self.activeCloudRoute(),
+              route.supportsVision else {
             throw NSError(
                 domain: "ReceiptParser",
                 code: 11,
                 userInfo: [NSLocalizedDescriptionKey: String(localized: "云端模型不可用，无法使用图像解析")]
             )
         }
-        print("☁️🖼️ 使用云端多模态解析 (Private Cloud Compute)")
+        print("🖼️ \(route.logLabel) —— 多模态直传")
         if FoundationModelsRuntime.dynamicProfileAvailable {
-            return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, cloudModel: cloud))
+            return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, route: route))
         }
-        return LanguageModelSession(model: cloud, instructions: mode.instructions)
+        return LanguageModelSession(model: route.model, instructions: mode.instructions)
     }
 
     /// 检查 Apple Intelligence 是否可用；不可用时抛出带用户可读原因的错误。
     /// 所有 parse 方法调用模型前统一走这里，避免在不支持的设备上静默失败。
     nonisolated static func ensureModelAvailable() throws {
-        // 云端模式且 PCC 可用时直接放行（makeSession 会选择云端模型）；
+        // 云端模式且通道可用时直接放行（makeSession 会选择云端模型）；
         // 否则继续检查本地模型作为兜底路径
-        if #available(iOS 27.0, *), activeCloudModel() != nil {
+        if #available(iOS 27.0, *), activeCloudRoute() != nil {
             return
         }
         switch SystemLanguageModel.default.availability {
@@ -397,7 +443,7 @@ final class ReceiptParser {
     /// 预热模型：在 OCR 进行的同时把模型权重加载进内存，缩短首次 respond 的延迟。
     /// 云端模式下无本地权重可加载，直接跳过。
     func prewarm() {
-        if #available(iOS 27.0, *), Self.activeCloudModel() != nil { return }
+        if #available(iOS 27.0, *), Self.activeCloudRoute() != nil { return }
         guard case .available = SystemLanguageModel.default.availability else { return }
         let session = LanguageModelSession(instructions: ReceiptParseMode.receipt.instructions)
         session.prewarm()

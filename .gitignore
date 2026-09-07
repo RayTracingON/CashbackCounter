@@ -54,3 +54,7 @@ fastlane/test_output
 # 日志与临时文件
 *.log
 *.tmp
+
+# Python 工具产生的字节码
+__pycache__/
+*.pyc
