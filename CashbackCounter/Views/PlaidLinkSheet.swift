@@ -32,9 +32,22 @@ struct PlaidLinkSheet: View {
             onSuccess(success.publicToken, success.metadata.institution.name)
         } onExit: { exit in
             onExit(exit.error.map { $0.displayMessage ?? $0.localizedDescription })
-        } onEvent: { _ in
+        } onEvent: { event in
             // Link 流程里的细粒度事件（选了哪家银行、卡在哪一步）。
-            // 现在不需要，将来要做绑定漏斗分析时从这里取。
+            // 将来要做绑定漏斗分析时从这里取。
+            //
+            // 现在只在 Debug 里打日志，用来回答一个具体问题：
+            // update mode（管理已连接的账户）到底把用户送到了哪个面板？
+            //   · viewName = selectAccount → Plaid 自己的账户勾选页，符合预期
+            //   · viewName = oauth / credential → 银行接管了账户选择，
+            //     用户得在银行自己的页面上改共享范围（OAuth 机构的正常行为）
+            //   · isUpdateMode = false → link_token 根本没进 update mode，那才是后端的问题
+            #if DEBUG
+            print("🔗 Link event: \(event.eventName)"
+                  + "  view=\(event.metadata.viewName.map(String.init(describing:)) ?? "-")"
+                  + "  updateMode=\(event.metadata.isUpdateMode ?? "-")"
+                  + "  institution=\(event.metadata.institutionName ?? "-")")
+            #endif
         } errorView: { error in
             // 只有 link_token 本身有问题才会走到这里（过期、环境不匹配）
             VStack(spacing: 12) {

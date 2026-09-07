@@ -89,6 +89,8 @@ struct BankSyncView: View {
     @State private var itemPendingUnlink: String?
     /// reconcile 后 Plaid 一个账户都没返回的 item —— 等用户确认要不要整个解绑
     @State private var itemPendingZombieCleanup: String?
+    /// 左滑待删除的那张卡
+    @State private var accountPendingDelete: PendingDelete?
     @State private var showSignIn = false
     /// 登录成功后要不要顺势进入绑定流程。
     /// 只有"点了绑定银行才被要求登录"的路径为 true —— 从页面上的登录引导进来的
@@ -111,6 +113,18 @@ struct BankSyncView: View {
         let id = UUID()
         let token: String
         let mode: LinkMode
+    }
+
+    /// 左滑删除的目标。
+    ///
+    /// `isLastInItem` 决定这次删除到底是什么语义 —— 这是整个交互唯一的分岔：
+    /// Plaid 的 `/item/remove` 是 **item 粒度**的，没有「移除单个 account」的接口。
+    /// 所以只有「这个 item 下就剩这一张卡」时，删除才谈得上真的向银行撤权；
+    /// 其余情况只能本地移除，**文案上不能谎称已撤销授权**。
+    private struct PendingDelete: Identifiable {
+        let id = UUID()
+        let account: LinkedBankAccount
+        let isLastInItem: Bool
     }
 
     /// 需要用户手动指定卡片的账户
@@ -146,6 +160,15 @@ struct BankSyncView: View {
                     Section {
                         ForEach(group.accounts) { account in
                             accountRow(account)
+                                // allowsFullSwipe: false —— 一滑到底就执行太容易误触，
+                                // 而这个动作在「最后一张卡」时会连带撤销整家银行的授权。
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button("删除", role: .destructive) {
+                                        accountPendingDelete = PendingDelete(
+                                            account: account,
+                                            isLastInItem: group.accounts.count == 1)
+                                    }
+                                }
                         }
                     } header: {
                         Text(group.title)
@@ -233,6 +256,27 @@ struct BankSyncView: View {
             Button("保留", role: .cancel) {}
         } message: { _ in
             Text("Plaid 没有返回任何账户。\n\n不解除的话这次绑定会一直留在这里但不再同步，而且没有任何账户可管理。")
+        }
+        // 左滑删除的确认。两种语义差别很大，所以按钮和说明都随情况变。
+        .confirmationDialog(
+            "删除这张卡？",
+            isPresented: Binding(
+                get: { accountPendingDelete != nil },
+                set: { if !$0 { accountPendingDelete = nil } }),
+            titleVisibility: .visible,
+            presenting: accountPendingDelete
+        ) { pending in
+            Button(pending.isLastInItem
+                   ? String(localized: "删除并撤销银行授权")
+                   : String(localized: "仅从 App 移除"),
+                   role: .destructive) {
+                Task { await deleteAccount(pending) }
+            }
+            Button("取消", role: .cancel) {}
+        } message: { pending in
+            Text(pending.isLastInItem
+                 ? "这是这次绑定下最后一张卡。删除会同时向银行撤销这次绑定的授权，之后不再自动同步。\n\n已经导入的交易记录会全部保留。"
+                 : "Plaid 不支持单独撤销一个账户的授权 —— 只能整次绑定一起撤。\n\n这里只会把它从 App 移除并停止同步，银行授权仍然有效。要真正撤销，用下面的「管理已连接的账户」。\n\n已经导入的交易记录会全部保留。")
         }
     }
 
@@ -505,7 +549,10 @@ struct BankSyncView: View {
                 let message: String
                 switch (removed, added) {
                 case (0, 0):
-                    message = String(localized: "账户列表已是最新")
+                    // 这句最容易误导：很多银行（OAuth 机构）的账户共享范围由银行自己的
+                    // 页面控制，Plaid 不显示自家的勾选页。用户在那边只是重新登录、
+                    // 没改共享范围的话，回到这里确实什么都没变 —— 得说清楚原因。
+                    message = String(localized: "账户列表没有变化。\n\n如果刚才跳转到了银行自己的页面：这类银行的账户共享范围由银行控制，需要在那个页面上取消勾选要移除的卡，回到这里才会生效。")
                 case (_, 0):
                     message = String(localized: "已移除 \(removed) 个账户")
                 case (0, _):
@@ -578,6 +625,31 @@ struct BankSyncView: View {
             banner = Banner(title: String(localized: "同步未完全成功"),
                             message: result.errors.joined(separator: "\n"))
         }
+    }
+
+    /// 左滑删除某一张卡。
+    ///
+    /// ⚠️ Plaid **没有**「移除单个 account」的接口，`/item/remove` 是 item 粒度的。
+    /// 所以只有一种情况能真正向 Plaid 撤权：这个 item 下已经只剩这一张卡。
+    /// 其余情况只能做本地移除 —— 那时**不能**在文案上说「已撤销授权」，
+    /// 说了就是在用户的隐私预期上撒谎。
+    private func deleteAccount(_ pending: PendingDelete) async {
+        // 先取出来：走 unlink 那条路时这个对象会被删掉
+        let itemId = pending.account.itemId
+
+        if pending.isLastInItem {
+            // 唯一能真撤的情况。后端保证顺序：先调 Plaid /item/remove，
+            // 成功了才删自己的记录。
+            await unlink(
+                itemId: itemId,
+                successMessage: String(localized: "已向银行撤销这次绑定的授权。已导入的交易记录全部保留。"))
+            return
+        }
+
+        linkService.removeLocally(account: pending.account, context: context)
+        banner = Banner(
+            title: String(localized: "已从 App 移除"),
+            message: String(localized: "这张卡不再显示，也不再同步。\n\n银行授权仍然有效 —— Plaid 不支持单独撤销一个账户。要真正撤销，用「管理已连接的账户」在银行页面取消勾选。"))
     }
 
     private func unlink(itemId: String, successMessage: String? = nil) async {

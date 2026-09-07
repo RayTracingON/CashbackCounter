@@ -8774,6 +8774,150 @@
           }
         }
       }
+    },
+    "账户列表没有变化。\n\n如果刚才跳转到了银行自己的页面：这类银行的账户共享范围由银行控制，需要在那个页面上取消勾选要移除的卡，回到这里才会生效。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account list is unchanged.\n\nIf you were sent to your bank's own page: banks like this control account sharing themselves. Deselect the card there, and the change will show up here."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳戶清單沒有變化。\n\n如果剛才跳轉到了銀行自己的頁面：這類銀行的帳戶共用範圍由銀行控制，需要在那個頁面上取消勾選要移除的卡，回到這裡才會生效。"
+          }
+        }
+      }
+    },
+    "删除这张卡？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this card?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除這張卡？"
+          }
+        }
+      }
+    },
+    "删除并撤销银行授权" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete and revoke access"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除並撤銷銀行授權"
+          }
+        }
+      }
+    },
+    "仅从 App 移除" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from app only"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅從 App 移除"
+          }
+        }
+      }
+    },
+    "已从 App 移除" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed from app"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已從 App 移除"
+          }
+        }
+      }
+    },
+    "这是这次绑定下最后一张卡。删除会同时向银行撤销这次绑定的授权，之后不再自动同步。\n\n已经导入的交易记录会全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is the last card in this connection. Deleting it also revokes the bank authorization, and syncing stops.\n\nAll imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這是這次綁定下最後一張卡。刪除會同時向銀行撤銷這次綁定的授權，之後不再自動同步。\n\n已經匯入的交易記錄會全部保留。"
+          }
+        }
+      }
+    },
+    "Plaid 不支持单独撤销一个账户的授权 —— 只能整次绑定一起撤。\n\n这里只会把它从 App 移除并停止同步，银行授权仍然有效。要真正撤销，用下面的「管理已连接的账户」。\n\n已经导入的交易记录会全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid can't revoke a single account — only the whole connection.\n\nThis only removes the card from the app and stops syncing; the bank authorization stays active. To actually revoke it, use “Manage connected accounts” below.\n\nAll imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid 不支援單獨撤銷一個帳戶的授權 —— 只能整次綁定一起撤。\n\n這裡只會把它從 App 移除並停止同步，銀行授權仍然有效。要真正撤銷，用下面的「管理已連接的帳戶」。\n\n已經匯入的交易記錄會全部保留。"
+          }
+        }
+      }
+    },
+    "已向银行撤销这次绑定的授权。已导入的交易记录全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The bank authorization for this connection has been revoked. All imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已向銀行撤銷這次綁定的授權。已匯入的交易記錄全部保留。"
+          }
+        }
+      }
+    },
+    "这张卡不再显示，也不再同步。\n\n银行授权仍然有效 —— Plaid 不支持单独撤销一个账户。要真正撤销，用「管理已连接的账户」在银行页面取消勾选。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This card no longer appears and no longer syncs.\n\nThe bank authorization is still active — Plaid can't revoke a single account. To actually revoke it, use “Manage connected accounts” and deselect it on your bank's page."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這張卡不再顯示，也不再同步。\n\n銀行授權仍然有效 —— Plaid 不支援單獨撤銷一個帳戶。要真正撤銷，用「管理已連接的帳戶」在銀行頁面取消勾選。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

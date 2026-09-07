@@ -296,6 +296,23 @@ final class PlaidLinkService {
         try context.save()
     }
 
+    /// 把一个账户**只**从本地移除：从列表消失、停止同步。
+    ///
+    /// ⚠️ 这**不是**撤销银行授权。Plaid 的 `/item/remove` 是 item 粒度的，
+    /// 官方没有「移除单个 account」的接口 —— 真正的单账户撤权只有
+    /// Link update mode 一条路（`createUpdateLinkToken` / `reconcileAccounts`）。
+    /// 调用方不得把这个动作向用户描述成「已撤销授权」。
+    ///
+    /// 同步引擎只读本地记录、从不重建，所以删掉就不会自己回来；
+    /// 但用户重走一遍绑定或「管理已连接的账户」时它会被重新建出来 ——
+    /// 那时 Plaid 仍然在共享它，重新出现才是诚实的。
+    ///
+    /// **交易记录一律保留** —— 那些消费真实发生过。
+    func removeLocally(account: LinkedBankAccount, context: ModelContext) {
+        context.delete(account)
+        try? context.save()
+    }
+
     /// 清空本地全部绑定记录。
     ///
     /// 只在**账号已被删除**之后调用 —— 那时后端的 linked_item 已经连同用户一起没了，
