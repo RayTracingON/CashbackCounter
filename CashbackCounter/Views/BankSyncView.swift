@@ -13,6 +13,60 @@
 import SwiftData
 import SwiftUI
 
+/// 一次银行绑定（Plaid 的 item）在列表里的一个分组。
+struct BankAccountGroup: Identifiable {
+
+    /// 分组键就是 itemId —— 解绑和账户管理都是**按 item** 发起的
+    let itemId: String
+
+    /// section header 文案。同一家银行有多个 item 时会带上尾号区分
+    let title: String
+
+    let accounts: [LinkedBankAccount]
+
+    var id: String { itemId }
+}
+
+/// 按 itemId 分组，**不是**按 institutionName。
+///
+/// 按银行名分组是个会静默删错东西的 bug：`completeLink` 的去重键是
+/// `(itemId, accountId)`，同一家银行重走一遍 Link 会拿到**新的 itemId**
+/// （个人号 + 商务号、断连后重绑都会），两个 item 因为名字一样被塞进同一个
+/// section，而解绑按钮取的是 `accounts.first?.itemId` —— 到底解掉哪一个
+/// 取决于排序，用户看到的「将撤销这家银行的授权」在那时是假的。
+///
+/// update mode 更是必须按 item 发起：UI 层指不准 item，整个功能就没有正确的入口。
+///
+/// 抽成自由函数是为了能测 —— View 里的 private 计算属性测不到，
+/// 而这条逻辑值一个回归用例。
+func groupAccountsByItem(_ accounts: [LinkedBankAccount]) -> [BankAccountGroup] {
+    let byItem = Dictionary(grouping: accounts, by: \.itemId)
+
+    // 同一个银行名落在几个 item 上？只有 >1 时才需要在 header 上加尾号，
+    // 否则每个 section 都挂一串尾号只是噪音。
+    var itemCountByInstitution: [String: Int] = [:]
+    for group in byItem.values {
+        guard let name = group.first?.institutionName else { continue }
+        itemCountByInstitution[name, default: 0] += 1
+    }
+
+    return byItem.map { itemId, accounts -> BankAccountGroup in
+        let institution = accounts.first?.institutionName ?? ""
+        let masks = accounts.map(\.mask).filter { !$0.isEmpty }
+
+        let needsDisambiguation = (itemCountByInstitution[institution] ?? 0) > 1
+        let title = (needsDisambiguation && !masks.isEmpty)
+            ? "\(institution) " + masks.map { "···\($0)" }.joined(separator: ", ")
+            : institution
+
+        return BankAccountGroup(itemId: itemId, title: title, accounts: accounts)
+    }
+    // 排序必须是确定的：Dictionary 的遍历顺序每次运行都可能不同，
+    // 不排的话 section 会在每次刷新时跳来跳去。itemId 作为最后的决胜键，
+    // 保证两个 item 连 title 都一样时顺序也稳定。
+    .sorted { ($0.title, $0.itemId) < ($1.title, $1.itemId) }
+}
+
 struct BankSyncView: View {
 
     @Environment(\.modelContext) private var context
@@ -27,18 +81,37 @@ struct BankSyncView: View {
     @State private var subscriptions = SubscriptionManager.shared
     @State private var showPaywall = false
 
-    @State private var linkToken: String?
-    @State private var isPresentingLink = false
+    @State private var pendingLink: PendingLink?
     @State private var isPreparingLink = false
 
     @State private var pendingMatch: PendingMatch?
     @State private var banner: Banner?
     @State private var itemPendingUnlink: String?
+    /// reconcile 后 Plaid 一个账户都没返回的 item —— 等用户确认要不要整个解绑
+    @State private var itemPendingZombieCleanup: String?
     @State private var showSignIn = false
     /// 登录成功后要不要顺势进入绑定流程。
     /// 只有"点了绑定银行才被要求登录"的路径为 true —— 从页面上的登录引导进来的
     /// 用户只是想登录，不该被直接甩进 Plaid 弹窗。
     @State private var startLinkAfterSignIn = false
+
+    /// 唤起 Link 弹窗的两种目的。
+    ///
+    /// **必须区分**：update mode 成功后绝不能走 `finishLink` —— 它会调
+    /// `/api/plaid/exchange`，那会换出一个新的 itemId，同一家银行凭空多一份
+    /// 绑定并开始重复计费。
+    private enum LinkMode: Equatable {
+        /// 新绑定，收尾走 completeLink
+        case create
+        /// 账户选择（update mode），收尾走 reconcileAccounts
+        case update(itemId: String)
+    }
+
+    private struct PendingLink: Identifiable {
+        let id = UUID()
+        let token: String
+        let mode: LinkMode
+    }
 
     /// 需要用户手动指定卡片的账户
     private struct PendingMatch: Identifiable {
@@ -55,11 +128,9 @@ struct BankSyncView: View {
         let message: String
     }
 
-    /// 按银行分组
-    private var grouped: [(institution: String, accounts: [LinkedBankAccount])] {
-        Dictionary(grouping: accounts, by: \.institutionName)
-            .map { (institution: $0.key, accounts: $0.value) }
-            .sorted { $0.institution < $1.institution }
+    /// 按 item 分组。逻辑在 `groupAccountsByItem`，这里只是接线
+    private var grouped: [BankAccountGroup] {
+        groupAccountsByItem(accounts)
     }
 
     var body: some View {
@@ -71,15 +142,15 @@ struct BankSyncView: View {
             } else if accounts.isEmpty {
                 emptyState
             } else {
-                ForEach(grouped, id: \.institution) { group in
+                ForEach(grouped) { group in
                     Section {
                         ForEach(group.accounts) { account in
                             accountRow(account)
                         }
                     } header: {
-                        Text(group.institution)
+                        Text(group.title)
                     } footer: {
-                        unlinkButton(for: group)
+                        groupActions(for: group)
                     }
                 }
             }
@@ -104,7 +175,7 @@ struct BankSyncView: View {
         // 所以手动刷新不是锦上添花，是方案成立的另一半。
         .refreshable { await syncNow() }
         .overlay { syncOverlay }
-        .sheet(isPresented: $isPresentingLink) { linkSheet }
+        .sheet(item: $pendingLink) { pending in linkSheet(pending) }
         .sheet(isPresented: $showSignIn) {
             SignInView {
                 guard startLinkAfterSignIn else { return }
@@ -140,7 +211,28 @@ struct BankSyncView: View {
             Button("解绑", role: .destructive) { Task { await unlink(itemId: itemId) } }
             Button("取消", role: .cancel) {}
         } message: { _ in
-            Text("将撤销这家银行的授权，之后不再自动同步。\n\n已经导入的交易记录会全部保留。")
+            Text("将撤销这次绑定的授权，之后不再自动同步。\n\n同一家银行的其它绑定不受影响。已经导入的交易记录会全部保留。")
+        }
+        // Plaid 一个账户都没返回时走这里 —— 本地记录此刻**一条都没动**，
+        // 由用户决定要不要整个解绑。不问就删是不可逆的。
+        .confirmationDialog(
+            "这次绑定已无共享账户",
+            isPresented: Binding(
+                get: { itemPendingZombieCleanup != nil },
+                set: { if !$0 { itemPendingZombieCleanup = nil } }),
+            titleVisibility: .visible,
+            presenting: itemPendingZombieCleanup
+        ) { itemId in
+            Button("解除绑定", role: .destructive) {
+                Task {
+                    await unlink(
+                        itemId: itemId,
+                        successMessage: String(localized: "这次绑定已经没有共享账户，已一并解除。已导入的交易记录全部保留。"))
+                }
+            }
+            Button("保留", role: .cancel) {}
+        } message: { _ in
+            Text("Plaid 没有返回任何账户。\n\n不解除的话这次绑定会一直留在这里但不再同步，而且没有任何账户可管理。")
         }
     }
 
@@ -254,11 +346,23 @@ struct BankSyncView: View {
         .padding(.vertical, 2)
     }
 
-    private func unlinkButton(for group: (institution: String, accounts: [LinkedBankAccount])) -> some View {
+    /// section footer 的两个动作。
+    ///
+    /// 「管理已连接的账户」是**单独摘掉一张卡**的唯一入口 —— Plaid 的解绑接口
+    /// 是 item 粒度的，一次绑定下面有多张卡时它只能全解。
+    private func groupActions(for group: BankAccountGroup) -> some View {
         HStack {
+            Button("管理已连接的账户") {
+                Task { await startAccountSelection(itemId: group.itemId) }
+            }
+            .font(.caption)
+            .buttonStyle(.borderless)
+            .disabled(isPreparingLink || syncService.isSyncing)
+
             Spacer()
-            Button("解绑 \(group.institution)", role: .destructive) {
-                itemPendingUnlink = group.accounts.first?.itemId
+
+            Button("解绑 \(group.title)", role: .destructive) {
+                itemPendingUnlink = group.itemId
             }
             .font(.caption)
             .buttonStyle(.borderless)
@@ -281,20 +385,26 @@ struct BankSyncView: View {
         }
     }
 
-    @ViewBuilder
-    private var linkSheet: some View {
-        if let linkToken {
-            PlaidLinkSheet(linkToken: linkToken) { publicToken, institutionName in
-                isPresentingLink = false
+    /// PlaidLinkSheet 对模式无感知 —— 它只收一个 token。
+    /// 分流在这里：走错分支的代价是凭空多一个 item（见 LinkMode 的注释）。
+    private func linkSheet(_ pending: PendingLink) -> some View {
+        PlaidLinkSheet(linkToken: pending.token) { publicToken, institutionName in
+            pendingLink = nil
+            switch pending.mode {
+            case .create:
                 Task {
                     await finishLink(publicToken: publicToken, institutionName: institutionName)
                 }
-            } onExit: { errorMessage in
-                isPresentingLink = false
-                // 用户主动退出不是错误，只有真的报错才提示
-                if let errorMessage {
-                    banner = Banner(title: String(localized: "绑定未完成"), message: errorMessage)
-                }
+            case .update(let itemId):
+                // update mode 下 publicToken 和 institutionName 直接丢弃：
+                // access_token 没变、itemId 已知，**再 exchange 一次就是多一个 item**。
+                Task { await finishAccountSelection(itemId: itemId) }
+            }
+        } onExit: { errorMessage in
+            pendingLink = nil
+            // 用户主动退出不是错误，只有真的报错才提示
+            if let errorMessage {
+                banner = Banner(title: String(localized: "绑定未完成"), message: errorMessage)
             }
         }
     }
@@ -322,7 +432,7 @@ struct BankSyncView: View {
         //
         // 放在申请 link_token **之前**：验证没过就不该消耗一个 token，
         // 也不该让任何请求打到后端。
-        switch await BiometricGate.authenticate(reason: "验证身份后连接银行账户") {
+        switch await BiometricGate.authenticate(reason: String(localized: "验证身份后连接银行账户")) {
         case .success:
             break
         case .canceled:
@@ -340,10 +450,82 @@ struct BankSyncView: View {
         defer { isPreparingLink = false }
 
         do {
-            linkToken = try await linkService.createLinkToken()
-            isPresentingLink = true
+            let token = try await linkService.createLinkToken()
+            pendingLink = PendingLink(token: token, mode: .create)
         } catch {
             banner = Banner(title: String(localized: "无法开始绑定"), message: error.localizedDescription)
+        }
+    }
+
+    /// 「管理已连接的账户」：把用户送进 Plaid 的账户选择页（Link update mode）。
+    private func startAccountSelection(itemId: String) async {
+        guard auth.isSignedIn else {
+            startLinkAfterSignIn = false
+            showSignIn = true
+            return
+        }
+
+        // ⚠️ **有意不加付费墙**（后端那个端点也刻意没拦）：
+        // update mode 是让用户**减少**共享范围的动作。订阅过期就撤销不了银行
+        // 授权，那是合规和信任问题，不是可以拿来做转化的杠杆。
+        // 这条别顺手对齐 startLink，改之前先和仓库所有者确认。
+
+        // 生物识别照加：改的是银行授权范围，和 startLink 同级。
+        // 放在申请 token **之前** —— 没验过就不该有任何请求打到后端。
+        switch await BiometricGate.authenticate(reason: String(localized: "验证身份后管理已连接的账户")) {
+        case .success:
+            break
+        case .canceled:
+            return
+        case .unavailable(let message):
+            banner = Banner(title: "无法验证身份", message: message)
+            return
+        case .failed(let message):
+            banner = Banner(title: "身份验证失败", message: message)
+            return
+        }
+
+        isPreparingLink = true
+        defer { isPreparingLink = false }
+
+        do {
+            let token = try await linkService.createUpdateLinkToken(itemId: itemId)
+            pendingLink = PendingLink(token: token, mode: .update(itemId: itemId))
+        } catch {
+            banner = Banner(title: String(localized: "无法开始管理账户"),
+                            message: error.localizedDescription)
+        }
+    }
+
+    /// update mode 结束后的收尾：**不 exchange**，只把本地列表对齐到 Plaid。
+    private func finishAccountSelection(itemId: String) async {
+        do {
+            switch try await linkService.reconcileAccounts(itemId: itemId, context: context) {
+            case .aligned(let removed, let added):
+                let message: String
+                switch (removed, added) {
+                case (0, 0):
+                    message = String(localized: "账户列表已是最新")
+                case (_, 0):
+                    message = String(localized: "已移除 \(removed) 个账户")
+                case (0, _):
+                    message = String(localized: "新增 \(added) 个账户")
+                default:
+                    message = String(localized: "已移除 \(removed) 个账户，新增 \(added) 个")
+                }
+                banner = Banner(title: String(localized: "账户已更新"), message: message)
+
+            case .noRemoteAccounts:
+                // 本地此刻一条都没删 —— 交给用户决定要不要整个解绑，
+                // 免得留下一个 App 里点不到、Plaid 那边还在计费的僵尸 item。
+                itemPendingZombieCleanup = itemId
+            }
+        } catch {
+            // 失败时本地记录原样保留。这条提示要说清楚「什么都没变」，
+            // 否则用户会以为自己刚才的勾选生效了。
+            banner = Banner(
+                title: String(localized: "账户列表更新失败"),
+                message: String(localized: "本地账户列表未做任何改动，可以稍后重试。\n\n\(error.localizedDescription)"))
         }
     }
 
@@ -398,9 +580,12 @@ struct BankSyncView: View {
         }
     }
 
-    private func unlink(itemId: String) async {
+    private func unlink(itemId: String, successMessage: String? = nil) async {
         do {
             try await linkService.unlink(itemId: itemId, context: context)
+            if let successMessage {
+                banner = Banner(title: String(localized: "已解除绑定"), message: successMessage)
+            }
         } catch {
             banner = Banner(title: String(localized: "解绑失败"), message: error.localizedDescription)
         }

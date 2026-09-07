@@ -8470,6 +8470,310 @@
           }
         }
       }
+    },
+    "管理已连接的账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage connected accounts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理已連接的帳戶"
+          }
+        }
+      }
+    },
+    "解除绑定" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlink"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解除綁定"
+          }
+        }
+      }
+    },
+    "保留" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留"
+          }
+        }
+      }
+    },
+    "这次绑定已无共享账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No accounts shared with this connection"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這次綁定已無共用帳戶"
+          }
+        }
+      }
+    },
+    "验证身份后连接银行账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verify your identity to connect a bank account"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "驗證身分後連接銀行帳戶"
+          }
+        }
+      }
+    },
+    "验证身份后管理已连接的账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verify your identity to manage connected accounts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "驗證身分後管理已連接的帳戶"
+          }
+        }
+      }
+    },
+    "无法开始管理账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't manage accounts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法開始管理帳戶"
+          }
+        }
+      }
+    },
+    "账户已更新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accounts updated"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳戶已更新"
+          }
+        }
+      }
+    },
+    "账户列表更新失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't update accounts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳戶清單更新失敗"
+          }
+        }
+      }
+    },
+    "账户列表已是最新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account list is already up to date."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳戶清單已是最新"
+          }
+        }
+      }
+    },
+    "已移除 %lld 个账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed %lld account(s)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已移除 %lld 個帳戶"
+          }
+        }
+      }
+    },
+    "新增 %lld 个账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %lld account(s)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增 %lld 個帳戶"
+          }
+        }
+      }
+    },
+    "已移除 %lld 个账户，新增 %lld 个" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed %lld account(s), added %lld."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已移除 %lld 個帳戶，新增 %lld 個"
+          }
+        }
+      }
+    },
+    "已解除绑定" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlinked"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已解除綁定"
+          }
+        }
+      }
+    },
+    "未知银行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown bank"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知銀行"
+          }
+        }
+      }
+    },
+    "这次绑定已经没有共享账户，已一并解除。已导入的交易记录全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This connection no longer shares any accounts, so it has been unlinked. All imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這次綁定已經沒有共用帳戶，已一併解除。已匯入的交易記錄全部保留。"
+          }
+        }
+      }
+    },
+    "Plaid 没有返回任何账户。\n\n不解除的话这次绑定会一直留在这里但不再同步，而且没有任何账户可管理。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid returned no accounts.\n\nIf you keep it, this connection stays in the list but never syncs, and there are no accounts left to manage."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid 沒有回傳任何帳戶。\n\n不解除的話這次綁定會一直留在這裡但不再同步，而且沒有任何帳戶可管理。"
+          }
+        }
+      }
+    },
+    "将撤销这次绑定的授权，之后不再自动同步。\n\n同一家银行的其它绑定不受影响。已经导入的交易记录会全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This revokes the authorization for this connection; it will stop syncing.\n\nOther connections to the same bank are unaffected. All imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將撤銷這次綁定的授權，之後不再自動同步。\n\n同一家銀行的其它綁定不受影響。已經匯入的交易記錄會全部保留。"
+          }
+        }
+      }
+    },
+    "本地账户列表未做任何改动，可以稍后重试。\n\n%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing changed locally. You can try again later.\n\n%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地帳戶清單未做任何改動，可以稍後重試。\n\n%@"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

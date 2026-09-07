@@ -35,6 +35,19 @@ final class PlaidLinkService {
         case unmatched(LinkedBankAccount)
     }
 
+    /// `reconcileAccounts` 的结果。
+    ///
+    /// 不用一个 Int 表达，是因为「Plaid 一个账户都没返回」和「正常移除了 0 个」
+    /// 必须分开：前者是可疑状态，本地一条都不能删，得让用户来判断。
+    /// 混在一起的话，后端或机构侧的一次临时空响应就会把一整家银行的
+    /// syncEnabled / didInitialSync / card 关联全部抹掉，且不可逆。
+    enum ReconcileResult: Equatable {
+        /// 正常对齐。removed / added 供 UI 提示
+        case aligned(removed: Int, added: Int)
+        /// Plaid 侧一个账户都没返回。**本地未做任何改动**
+        case noRemoteAccounts
+    }
+
     struct LinkResult {
         let itemId: String
         let institutionName: String
@@ -146,6 +159,106 @@ final class PlaidLinkService {
         try? context.save()
     }
 
+    // MARK: - Update mode：管理已连接的账户
+
+    /// 铸一个 update mode 的 link_token，用于让用户重新选择共享哪些账户。
+    ///
+    /// 这是**单独摘掉一张卡**的唯一途径 —— Plaid 的 `/item/remove` 是 item 粒度的，
+    /// 一次绑定下面挂着多张卡时它只能全解，官方没有「移除单个 account」的接口。
+    ///
+    /// ⚠️ 用这个 token 走完 Link 之后**绝不能**调 `completeLink`：
+    /// 它第一件事就是 `/api/plaid/exchange`，那会换出一个**新的 itemId**，
+    /// 同一家银行凭空多一份绑定并开始重复计费。
+    /// update mode 下 access_token 和 itemId 都没变，收尾走 `reconcileAccounts`。
+    func createUpdateLinkToken(itemId: String) async throws -> String {
+        let response: LinkTokenResponse = try await api.post(
+            "/api/plaid/link-token/update",
+            query: [URLQueryItem(name: "itemId", value: itemId)])
+        return response.linkToken
+    }
+
+    /// Link update mode 结束后，把本地账户列表对齐到 Plaid 的最新状态。
+    ///
+    /// **保守失败**是这里的底线，和同步引擎的第三条原则一致（宁可少算不要多算）：
+    /// 读不到远端账户列表时**一条本地记录都不动**，把错误抛给 UI。
+    /// 把「读不到」当成「用户取消了这些账户」，会静默删掉还在正常同步的卡，
+    /// 而用户在界面上完全看不出发生过什么。
+    @discardableResult
+    func reconcileAccounts(itemId: String, context: ModelContext) async throws -> ReconcileResult {
+        let remote: [PlaidAccountDTO]
+        do {
+            remote = try await api.get(
+                "/api/plaid/accounts",
+                query: [URLQueryItem(name: "itemId", value: itemId)])
+
+        } catch PlaidAPIError.server(let status, _) where status == 404 {
+            // 后端不认识这个 item。和 unlink 的处理一致：认为它已经不在了。
+            // 留着本地这份镜像只会变成一条永远删不掉的僵尸记录 ——
+            // 再点多少次「管理账户」，后端都只会回 404。
+            let stale = accounts(itemId: itemId, context: context)
+            for account in stale { context.delete(account) }
+            try context.save()
+            print("ℹ️ 后端已无此绑定（404），清理本地记录: itemId=\(itemId)")
+            return .aligned(removed: stale.count, added: 0)
+        }
+        // 其它错误（网络 / 401 / 502 / 超时）原样抛出去，本地保持不动。
+
+        return try reconcile(itemId: itemId, remote: remote, context: context)
+    }
+
+    /// `reconcileAccounts` 的纯逻辑部分 —— 不碰网络，便于单测。
+    ///
+    /// 三种账户的处理各有理由：
+    ///   · 远端没有的 → 删（用户在 update mode 里取消了勾选，Plaid 已撤权）
+    ///   · 本地没有的 → 建（用户**新勾选**了账户；漏掉的话它在 App 里完全不可见）
+    ///   · 两边都有的 → **原样不动**，保住 syncEnabled / lastSyncedAt /
+    ///     didInitialSync / card。丢掉 didInitialSync 的后果是下次同步重跑 730 天全量
+    @discardableResult
+    func reconcile(itemId: String,
+                   remote: [PlaidAccountDTO],
+                   context: ModelContext) throws -> ReconcileResult {
+
+        let local = accounts(itemId: itemId, context: context)
+
+        // 空数组视为**可疑**，不当成「用户取消了全部账户」。
+        // Plaid 的账户选择页本身不允许一个都不勾，所以真收到空数组更可能是
+        // 后端或机构侧的临时状态。照着删就是把一整家银行的本地状态一次抹掉。
+        guard !remote.isEmpty else { return .noRemoteAccounts }
+
+        let remoteIds = Set(remote.map(\.accountId))
+        let localIds = Set(local.map(\.accountId))
+
+        // 银行名从现有记录上取：update mode 不经过 Link 的 metadata，拿不到
+        // institution.name，而同一个 item 下的账户本来就都属于同一家银行。
+        let institutionName = local.first?.institutionName ?? String(localized: "未知银行")
+
+        var removed = 0
+        for account in local where !remoteIds.contains(account.accountId) {
+            context.delete(account)
+            removed += 1
+        }
+
+        let cards = (try? context.fetch(FetchDescriptor<CreditCard>())) ?? []
+
+        var added = 0
+        for dto in remote where !localIds.contains(dto.accountId) {
+            let account = LinkedBankAccount(
+                itemId: itemId,
+                accountId: dto.accountId,
+                institutionName: institutionName,
+                accountName: dto.name ?? dto.officialName ?? String(localized: "信用卡"),
+                mask: dto.mask ?? "")
+
+            context.insert(account)
+            // 尾号匹配走和初次绑定完全相同的一条路径 —— 唯一命中才自动开同步
+            _ = match(account: account, against: cards)
+            added += 1
+        }
+
+        try context.save()
+        return .aligned(removed: removed, added: added)
+    }
+
     // MARK: - 解绑
 
     /// 解绑一家银行。
@@ -205,7 +318,9 @@ final class PlaidLinkService {
         try await api.get("/api/plaid/items")
     }
 
-    private func accounts(itemId: String, context: ModelContext) -> [LinkedBankAccount] {
+    /// 取某个 item 下的全部本地账户。
+    /// 不是 private —— unlink 和 reconcile 都要用，测试也要用。
+    func accounts(itemId: String, context: ModelContext) -> [LinkedBankAccount] {
         let descriptor = FetchDescriptor<LinkedBankAccount>(
             predicate: #Predicate { $0.itemId == itemId })
         return (try? context.fetch(descriptor)) ?? []
