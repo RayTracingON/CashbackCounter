@@ -606,11 +606,12 @@ private struct PointDetailView: View {
     private func formattedPoints(_ value: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
+        formatter.locale = AppLanguage.locale
         return formatter.string(from: NSNumber(value: value)) ?? String(value)
     }
 
     private func formattedCurrency(_ value: Double, code: String) -> String {
-        value.formatted(.currency(code: code))
+        value.formatted(.currency(code: code).locale(AppLanguage.locale))
     }
 
     private func convertToMainCurrency(_ amount: Double, from currencyCode: String) -> Double {

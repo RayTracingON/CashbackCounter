@@ -60,7 +60,12 @@ struct CashbackCounterApp: App { // 2. 这个结构体必须遵守 App 协议
             ContentView()
                 .environment(CardTemplateManager.shared)
                 .preferredColorScheme(userTheme == 1 ? .light : (userTheme == 2 ? .dark : nil))
-                .environment(\.locale, userLanguage == "system" ? .current : Locale(identifier: userLanguage))
+                .environment(\.locale, AppLanguage.locale)
+                // 切语言后必须换掉整棵树的 identity 来强制重建。
+                // 只改 environment 是不够的：它只能让 `Text("字面量")` 重新取词，
+                // 而 `String.loc(…)` 是普通函数调用，SwiftUI 不知道哪些 View 依赖它，
+                // 不换 id 的话筛选条、图表标题这些会一直停在旧语言。
+                .id(userLanguage)
                 .task {
                     // 用户可能在系统设置里撤销了本 App 的 Apple ID 授权，
                     // 也可能换了设备。撤销了就本地登出，避免 UI 显示"已登录"

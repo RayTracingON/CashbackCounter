@@ -258,8 +258,8 @@ struct ThirdPartyModelSettingsView: View {
                       let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       object["status"] != nil else {
                     await MainActor.run {
-                        testState = .failure(String(
-                            localized: "连接成功，但返回的不是预期的 JSON：\(String(cleaned.prefix(120)))"
+                        testState = .failure(String.loc(
+                            "连接成功，但返回的不是预期的 JSON：\(String(cleaned.prefix(120)))"
                         ))
                     }
                     return
@@ -268,8 +268,8 @@ struct ThirdPartyModelSettingsView: View {
                 let resolved = ThirdPartyModelStore.cachedStructuredMode(for: config)
                     ?? config.structuredOutputMode
                 await MainActor.run {
-                    testState = .success(String(
-                        localized: "连接正常。结构化输出档位：\(resolved.displayName)，本次消耗 \(completion.inputTokens + completion.outputTokens) tokens。"
+                    testState = .success(String.loc(
+                        "连接正常。结构化输出档位：\(resolved.displayName)，本次消耗 \(completion.inputTokens + completion.outputTokens) tokens。"
                     ))
                 }
             } catch {

@@ -179,8 +179,8 @@ struct AccountSection: View {
     @State private var outcome: Outcome?
 
     private var subscriptionExpiryText: String {
-        guard let expiresAt = subscriptions.expiresAt else { return String(localized: "已订阅") }
-        return String(localized: "续期于 \(expiresAt.formatted(date: .abbreviated, time: .omitted))")
+        guard let expiresAt = subscriptions.expiresAt else { return String.loc("已订阅") }
+        return String.loc("续期于 \(expiresAt.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(AppLanguage.locale)))")
     }
 
     var body: some View {
@@ -322,21 +322,21 @@ struct AccountSection: View {
             PlaidLinkService.shared.clearAllLocalBindings(context: context)
 
             var message = result.unlinkedItems > 0
-                ? String(localized: "已解绑 \(result.unlinkedItems) 家银行，账号记录已删除。")
-                : String(localized: "账号记录已删除。")
+                ? String.loc("已解绑 \(result.unlinkedItems) 家银行，账号记录已删除。")
+                : String.loc("账号记录已删除。")
 
             if !result.appleAuthorizationRevoked {
                 // 诚实地告诉用户还剩一步 —— 否则他们会在系统设置里
                 // 看到本 App 还挂在那儿，以为没删干净。
-                message += String(localized: "\n\n未能自动移除 Apple ID 的授权记录，如需彻底清理，请到「设置 → Apple 账户 → 使用 Apple ID 的 App」中手动移除。")
+                message += String.loc("\n\n未能自动移除 Apple ID 的授权记录，如需彻底清理，请到「设置 → Apple 账户 → 使用 Apple ID 的 App」中手动移除。")
             }
 
-            outcome = Outcome(title: String(localized: "账号已删除"), message: message)
+            outcome = Outcome(title: String.loc("账号已删除"), message: message)
 
         } catch {
             // 失败时标题不能还写"账号已删除" —— 后端整体中止的情况下
             // 服务器上什么都没删，说反了会让用户以为数据没了。
-            outcome = Outcome(title: String(localized: "删除失败"), message: error.localizedDescription)
+            outcome = Outcome(title: String.loc("删除失败"), message: error.localizedDescription)
         }
     }
 }

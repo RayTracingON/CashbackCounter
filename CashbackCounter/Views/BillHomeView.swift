@@ -90,7 +90,7 @@ struct BillHomeContentView: View {
                     }
                 } label: {
                     FilterChip(
-                        title: viewModel.selectedCategory?.displayName ?? String(localized: "全部种类"),
+                        title: viewModel.selectedCategory?.displayName ?? String.loc("全部种类"),
                         icon: viewModel.selectedCategory?.iconName ?? "line.3.horizontal.decrease.circle",
                         isSelected: viewModel.selectedCategory != nil
                     )
@@ -99,7 +99,7 @@ struct BillHomeContentView: View {
                 // B. 收入筛选
                 Button(action: { viewModel.showIncomeOnly.toggle() }) {
                     FilterChip(
-                        title: String(localized: "收入单"),
+                        title: String.loc("收入单"),
                         icon: "tray.and.arrow.down.fill",
                         isSelected: viewModel.showIncomeOnly
                     )
@@ -190,9 +190,11 @@ struct BillHomeContentView: View {
             // 空状态提示
             if filteredTransactions.isEmpty {
                 ContentUnavailableView(
-                    LocalizedStringKey(isSearchingActive ? "未找到结果" : "暂无账单"),
+                    // 用 String.loc 而不是 LocalizedStringKey(运行时字符串)：后者既不跟随
+                    // App 内语言设置，也不会被 Xcode 提取进字符串目录，直接回落成中文原文。
+                    isSearchingActive ? String.loc("未找到结果") : String.loc("暂无账单"),
                     systemImage: isSearchingActive ? "magnifyingglass" : "list.bullet.clipboard",
-                    description: Text(isSearchingActive ? "尝试更换关键词" : "该筛选条件下没有交易记录")
+                    description: Text(isSearchingActive ? String.loc("尝试更换关键词") : String.loc("该筛选条件下没有交易记录"))
                 )
                 .padding(.top, 40)
             }
@@ -335,7 +337,9 @@ struct FilterChip: View {
             Image(systemName: icon)
             Text(title)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                // 英文比中文长得多（"全部种类" vs "All Categories"），三等分的宽度
+                // 按 0.8 缩完还是会截断，放到 0.6
+                .minimumScaleFactor(0.6)
         }
         .font(.subheadline)
         .padding(.horizontal, DesignConstants.Spacing.chipSpacing).padding(.vertical, 5)

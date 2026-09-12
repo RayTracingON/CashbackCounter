@@ -103,7 +103,7 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                 userInfo: [NSLocalizedDescriptionKey: "未能从截图中识别出金额"]
             )
         }
-        let merchant = metadata.merchant ?? String(localized: "未知商户")
+        let merchant = metadata.merchant ?? String.loc("未知商户")
 
         let category = metadata.category ?? .other
 

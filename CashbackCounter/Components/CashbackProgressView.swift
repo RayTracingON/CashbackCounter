@@ -69,8 +69,8 @@ extension CreditCard {
             results.append(CashbackCapProgress(
                 id: "base_local",
                 title: rewardType == .points
-                    ? String(localized: "本地基础积分")
-                    : String(localized: "本地基础返现"),
+                    ? String.loc("本地基础积分")
+                    : String.loc("本地基础返现"),
                 iconName: "creditcard.fill",
                 color: .blue,
                 used: used,
@@ -91,8 +91,8 @@ extension CreditCard {
             results.append(CashbackCapProgress(
                 id: "base_foreign",
                 title: rewardType == .points
-                    ? String(localized: "境外基础积分")
-                    : String(localized: "境外基础返现"),
+                    ? String.loc("境外基础积分")
+                    : String.loc("境外基础返现"),
                 iconName: "airplane",
                 color: .teal,
                 used: used,
@@ -152,7 +152,7 @@ struct CashbackProgressRow: View {
 
     private func formatted(_ value: Double) -> String {
         let rounded = String(format: "%.0f", value)
-        return isPoints ? String(localized: "\(rounded)分") : "\(currencySymbol)\(rounded)"
+        return isPoints ? String.loc("\(rounded)分") : "\(currencySymbol)\(rounded)"
     }
 
     var body: some View {
@@ -226,10 +226,10 @@ struct CashbackProgressSection: View {
 
     private var headerTitle: String {
         switch (card.capPeriod, card.rewardType) {
-        case (.monthly, .points):   return String(localized: "本月积分进度")
-        case (.monthly, .cashback): return String(localized: "本月返现进度")
-        case (.yearly, .points):    return String(localized: "本年积分进度")
-        case (.yearly, .cashback):  return String(localized: "本年返现进度")
+        case (.monthly, .points):   return String.loc("本月积分进度")
+        case (.monthly, .cashback): return String.loc("本月返现进度")
+        case (.yearly, .points):    return String.loc("本年积分进度")
+        case (.yearly, .cashback):  return String.loc("本年返现进度")
         }
     }
 

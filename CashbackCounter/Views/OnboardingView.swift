@@ -678,7 +678,7 @@ private struct ReceiptScanAnimationView: View {
                         )
                         receiptRow(
                             label: "日期",
-                            value: Date().formatted(date: .abbreviated, time: .omitted),
+                            value: Date().formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(AppLanguage.locale)),
                             highlighted: field3Highlight,
                             icon: "calendar"
                         )

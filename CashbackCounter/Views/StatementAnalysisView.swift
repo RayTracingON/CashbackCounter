@@ -113,6 +113,7 @@ struct StatementAnalysisEntryView: View {
 }
 
 struct StatementAnalysisView: View {
+    @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
     let statement: StatementMetadata
 
     @Query private var transactions: [Transaction]
@@ -129,6 +130,14 @@ struct StatementAnalysisView: View {
         viewModel.report(statement: statement, transactions: transactions, cards: cards)
     }
 
+    /// 账单金额的记账货币。选中卡的发卡地区说了算，没选卡时退回主货币。
+    ///
+    /// 必须显式告诉 NumberFormatter 用哪个货币：只给它一个 locale 的话，
+    /// 货币符号就跟着 App 语言走，同一份英镑账单切成中文会变成 ¥。
+    private var billingCurrencyCode: String {
+        viewModel.selectedCard(cards: cards)?.issueRegion.currencyCode ?? mainCurrencyCode
+    }
+
     var body: some View {
         VStack(spacing: 12) {
             StatementSummaryCard(
@@ -138,7 +147,8 @@ struct StatementAnalysisView: View {
                 selectedCardIndex: $viewModel.selectedCardIndex,
                 detectedCardText: viewModel.detectedCardText,
                 isDetectingCard: viewModel.isDetectingCard,
-                isAnalyzingTransactions: viewModel.isAnalyzingTransactions
+                isAnalyzingTransactions: viewModel.isAnalyzingTransactions,
+                currencyCode: billingCurrencyCode
             )
                 .padding(.horizontal)
 
@@ -152,7 +162,8 @@ struct StatementAnalysisView: View {
                             ReconciliationRow(
                                 transaction: item,
                                 status: .missing,
-                                onAdd: { viewModel.selectedMissing = item }
+                                onAdd: { viewModel.selectedMissing = item },
+                                currencyCode: billingCurrencyCode
                             )
                         }
                     }
@@ -167,7 +178,8 @@ struct StatementAnalysisView: View {
                             ReconciliationRow(
                                 transaction: item,
                                 status: .matched,
-                                onAdd: nil
+                                onAdd: nil,
+                                currencyCode: billingCurrencyCode
                             )
                         }
                     }
@@ -233,6 +245,7 @@ private struct StatementSummaryCard: View {
     let detectedCardText: String?
     let isDetectingCard: Bool
     let isAnalyzingTransactions: Bool
+    let currencyCode: String
 
     private var totalCount: Int {
         metadata.transactions.count
@@ -330,7 +343,8 @@ private struct StatementSummaryCard: View {
     private func formatAmount(_ amount: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.locale = Locale.current
+        formatter.currencyCode = currencyCode
+        formatter.locale = AppLanguage.locale
         return formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)
     }
 }
@@ -344,6 +358,7 @@ private struct ReconciliationRow: View {
     let transaction: ImportedTransaction
     let status: Status
     let onAdd: (() -> Void)?
+    let currencyCode: String
 
     var body: some View {
         HStack(spacing: 12) {
@@ -418,7 +433,8 @@ private struct ReconciliationRow: View {
     private func formatAmount(_ amount: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.locale = Locale.current
+        formatter.currencyCode = currencyCode
+        formatter.locale = AppLanguage.locale
         return formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)
     }
 }
@@ -442,15 +458,19 @@ private struct DateBadge: View {
         )
     }
 
-    private static let dayFormatter: DateFormatter = {
+    // 用计算属性而不是 static let：static let 只在首次访问时算一次，
+    // 之后在设置里切语言，月份缩写会一直卡在旧语言（"9月" / "Sep"）。
+    private static var dayFormatter: DateFormatter {
         let formatter = DateFormatter()
+        formatter.locale = AppLanguage.locale
         formatter.dateFormat = "d"
         return formatter
-    }()
+    }
 
-    private static let monthFormatter: DateFormatter = {
+    private static var monthFormatter: DateFormatter {
         let formatter = DateFormatter()
+        formatter.locale = AppLanguage.locale
         formatter.dateFormat = "MMM"
         return formatter
-    }()
+    }
 }

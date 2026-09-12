@@ -47,27 +47,27 @@ enum AppError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .networkFailure(let error):
-            return "网络请求失败：\(error.localizedDescription)"
+            return String.loc("网络请求失败：\(error.localizedDescription)")
         case .invalidResponse(let code):
-            return "服务器响应异常（状态码：\(code)）"
+            return String.loc("服务器响应异常（状态码：\(code)）")
         case .importFailed(let reason):
-            return "导入失败：\(reason)"
+            return String.loc("导入失败：\(reason)")
         case .exportFailed(let reason):
-            return "导出失败：\(reason)"
+            return String.loc("导出失败：\(reason)")
         case .dataCorrupted(let detail):
-            return "数据格式异常：\(detail)"
+            return String.loc("数据格式异常：\(detail)")
         case .decodingFailed(let detail):
-            return "数据解析失败：\(detail)"
+            return String.loc("数据解析失败：\(detail)")
         case .missingRequiredField(let field):
-            return "缺少必填信息：\(field)"
+            return String.loc("缺少必填信息：\(field)")
         case .fileAccessDenied(let path):
-            return "无法访问文件：\(path)"
+            return String.loc("无法访问文件：\(path)")
         case .saveFailed(let error):
-            return "保存失败：\(error.localizedDescription)"
+            return String.loc("保存失败：\(error.localizedDescription)")
         case .fetchFailed(let error):
-            return "查询失败：\(error.localizedDescription)"
+            return String.loc("查询失败：\(error.localizedDescription)")
         case .deleteFailed(let error):
-            return "删除失败：\(error.localizedDescription)"
+            return String.loc("删除失败：\(error.localizedDescription)")
         }
     }
 }

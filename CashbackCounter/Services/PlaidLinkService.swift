@@ -106,7 +106,7 @@ final class PlaidLinkService {
                 itemId: exchange.itemId,
                 accountId: dto.accountId,
                 institutionName: institutionName,
-                accountName: dto.name ?? dto.officialName ?? String(localized: "信用卡"),
+                accountName: dto.name ?? dto.officialName ?? String.loc("信用卡"),
                 mask: dto.mask ?? "")
 
             context.insert(account)
@@ -230,7 +230,7 @@ final class PlaidLinkService {
 
         // 银行名从现有记录上取：update mode 不经过 Link 的 metadata，拿不到
         // institution.name，而同一个 item 下的账户本来就都属于同一家银行。
-        let institutionName = local.first?.institutionName ?? String(localized: "未知银行")
+        let institutionName = local.first?.institutionName ?? String.loc("未知银行")
 
         var removed = 0
         for account in local where !remoteIds.contains(account.accountId) {
@@ -246,7 +246,7 @@ final class PlaidLinkService {
                 itemId: itemId,
                 accountId: dto.accountId,
                 institutionName: institutionName,
-                accountName: dto.name ?? dto.officialName ?? String(localized: "信用卡"),
+                accountName: dto.name ?? dto.officialName ?? String.loc("信用卡"),
                 mask: dto.mask ?? "")
 
             context.insert(account)

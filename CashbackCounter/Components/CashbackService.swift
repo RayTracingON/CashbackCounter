@@ -17,12 +17,12 @@ struct CashbackService {
     
     // 获取卡名
     static func getCardName(for transaction: Transaction) -> String {
-        guard let card = transaction.card else { return "已删除卡片" }
+        guard let card = transaction.card else { return String.loc("已删除卡片") }
         return "\(card.bankName) \(card.type)"
     }
     // 获取卡号
     static func getCardNum(for transaction: Transaction) -> String {
-        guard let card = transaction.card else { return "已删除卡片" }
+        guard let card = transaction.card else { return String.loc("已删除卡片") }
         return "\(card.endNum)"
     }
     // 获取货币符号

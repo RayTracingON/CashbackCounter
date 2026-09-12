@@ -82,7 +82,20 @@
       }
     },
     "「自动」会先尝试 JSON Schema，服务不支持时自动降级到 JSON 模式或纯提示词约束，并记住结果。只有在自动探测判断有误时才需要手动指定。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic tries JSON Schema first, falls back to JSON mode or prompt-only constraints if the service can't handle it, and remembers the result. Only choose a mode by hand if the auto-detection gets it wrong."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「自動」會先嘗試 JSON Schema，服務不支援時自動降級到 JSON 模式或純提示詞約束，並記住結果。只有在自動偵測判斷有誤時才需要手動指定。"
+          }
+        }
+      }
     },
     "**** **** **** %@" : {
       "localizations" : {
@@ -223,6 +236,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ %2$@趨勢"
+          }
+        }
+      }
+    },
+    "%@ 已被锁定，请用设备密码解锁一次后重试。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is locked. Unlock once with your device passcode, then try again."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 已被鎖定，請用裝置密碼解鎖一次後重試。"
           }
         }
       }
@@ -462,7 +492,32 @@
       }
     },
     "%lld 秒" : {
-
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld second"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seconds"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 秒"
+          }
+        }
+      }
     },
     "• 分享导出：仅当你主动使用导出功能时，数据才会通过系统导出面板离开应用。" : {
       "localizations" : {
@@ -981,19 +1036,84 @@
       }
     },
     "Anthropic" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anthropic"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anthropic"
+          }
+        }
+      }
     },
     "API 地址" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Endpoint"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API 位址"
+          }
+        }
+      }
     },
     "API 地址无效，请检查是否以 http:// 或 https:// 开头" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid API endpoint — check that it starts with http:// or https://"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API 位址無效，請檢查是否以 http:// 或 https:// 開頭"
+          }
+        }
+      }
     },
     "API 密钥" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key"
+          }
+        }
+      }
     },
     "API 密钥无效或已过期" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The API key is invalid or has expired"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key 無效或已過期"
+          }
+        }
+      }
     },
     "Apple ID" : {
       "localizations" : {
@@ -1076,7 +1196,20 @@
       }
     },
     "Apple 私有云计算" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Private Cloud Compute"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 私有雲端運算"
+          }
+        }
+      }
     },
     "Cashback Counter" : {
       "localizations" : {
@@ -1139,7 +1272,20 @@
       }
     },
     "Google Gemini" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google Gemini"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google Gemini"
+          }
+        }
+      }
     },
     "iCloud 数据同步" : {
       "localizations" : {
@@ -1174,10 +1320,36 @@
       }
     },
     "JSON Schema" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON Schema"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON Schema"
+          }
+        }
+      }
     },
     "JSON 模式" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON Mode"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON 模式"
+          }
+        }
+      }
     },
     "Matched: %lld items" : {
       "localizations" : {
@@ -1328,7 +1500,52 @@
       }
     },
     "OpenAI 兼容" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI-Compatible"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI 相容"
+          }
+        }
+      }
+    },
+    "Plaid 不支持单独撤销一个账户的授权 —— 只能整次绑定一起撤。\n\n这里只会把它从 App 移除并停止同步，银行授权仍然有效。要真正撤销，用下面的「管理已连接的账户」。\n\n已经导入的交易记录会全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid can't revoke a single account — only the whole connection.\n\nThis only removes the card from the app and stops syncing; the bank authorization stays active. To actually revoke it, use “Manage connected accounts” below.\n\nAll imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid 不支援單獨撤銷一個帳戶的授權 —— 只能整次綁定一起撤。\n\n這裡只會把它從 App 移除並停止同步，銀行授權仍然有效。要真正撤銷，用下面的「管理已連接的帳戶」。\n\n已經匯入的交易記錄會全部保留。"
+          }
+        }
+      }
+    },
+    "Plaid 没有返回任何账户。\n\n不解除的话这次绑定会一直留在这里但不再同步，而且没有任何账户可管理。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid returned no accounts.\n\nIf you keep it, this connection stays in the list but never syncs, and there are no accounts left to manage."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaid 沒有回傳任何帳戶。\n\n不解除的話這次綁定會一直留在這裡但不再同步，而且沒有任何帳戶可管理。"
+          }
+        }
+      }
     },
     "Pulse信用卡的合资格消费" : {
       "localizations" : {
@@ -1790,7 +2007,20 @@
       }
     },
     "云端通道" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud Channel"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "雲端通道"
+          }
+        }
+      }
     },
     "交易内容" : {
       "localizations" : {
@@ -1936,8 +2166,37 @@
         }
       }
     },
+    "仅从 App 移除" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from app only"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅從 App 移除"
+          }
+        }
+      }
+    },
     "仅提示词约束" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prompt Only"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅提示詞約束"
+          }
+        }
+      }
     },
     "从信用卡通知短信添加交易" : {
       "localizations" : {
@@ -2096,10 +2355,36 @@
       }
     },
     "使用你自己的模型服务解析，费用由你的服务商结算。小票内容会发送到你填写的地址，不再受 Apple 私有云计算的隐私保证覆盖。未配置完整时自动回退到本地模型。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parse with your own model service, billed by your provider. Receipt contents are sent to the endpoint you enter and are no longer covered by Apple Private Cloud Compute's privacy guarantees. Falls back to the on-device model while the setup is incomplete."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用你自己的模型服務解析，費用由你的服務商結算。小票內容會傳送到你填寫的位址，不再受 Apple 私有雲端運算的隱私保證涵蓋。未設定完整時自動回退到本機模型。"
+          }
+        }
+      }
     },
     "使用自定义 API 时，小票文字、截图和账单内容会发送到你填写的服务地址。这些数据的处理方式由该服务商决定，不再受 Apple Private Cloud Compute 的隐私保证覆盖。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With a custom API, receipt text, screenshots, and statement contents are sent to the endpoint you enter. How that data is handled is up to that provider, and it is no longer covered by Apple Private Cloud Compute's privacy guarantees."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用自訂 API 時，小票文字、截圖和帳單內容會傳送到你填寫的服務位址。這些資料的處理方式由該服務商決定，不再受 Apple Private Cloud Compute 的隱私保證涵蓋。"
+          }
+        }
+      }
     },
     "例如：兑换机票" : {
       "localizations" : {
@@ -2167,6 +2452,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "儲存"
+          }
+        }
+      }
+    },
+    "保存失败：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't save: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存失敗：%@"
+          }
+        }
+      }
+    },
+    "保留" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留"
           }
         }
       }
@@ -2263,6 +2581,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "免費試用 %@，之後按 %@ 自動續訂。可隨時在系統「設定 → Apple 帳戶 → 訂閱」中取消，取消需在目前週期結束前 24 小時完成。"
+          }
+        }
+      }
+    },
+    "兑换使用" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redeemed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "兌換使用"
           }
         }
       }
@@ -2380,7 +2715,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All Category"
+            "value" : "All Categories"
           }
         },
         "zh-Hant" : {
@@ -2484,27 +2819,17 @@
       }
     },
     "内容被服务商的安全策略拦截：%@" : {
-
-    },
-    "最新交易" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Latest Transactions"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最新交易"
+            "value" : "Blocked by the provider's safety policy: %@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最新交易"
+            "value" : "內容被服務商的安全政策攔截：%@"
           }
         }
       }
@@ -2617,6 +2942,39 @@
         }
       }
     },
+    "删除失败：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't delete: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除失敗：%@"
+          }
+        }
+      }
+    },
+    "删除并撤销银行授权" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete and revoke access"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除並撤銷銀行授權"
+          }
+        }
+      }
+    },
     "删除此交易" : {
       "localizations" : {
         "en" : {
@@ -2661,6 +3019,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刪除帳號？"
+          }
+        }
+      }
+    },
+    "删除这张卡？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this card?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除這張卡？"
           }
         }
       }
@@ -2736,7 +3110,20 @@
       }
     },
     "协议格式" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protocol"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "協定格式"
+          }
+        }
+      }
     },
     "单月最高" : {
       "localizations" : {
@@ -2999,7 +3386,20 @@
       }
     },
     "响应不是 JSON 对象" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The response is not a JSON object"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回應不是 JSON 物件"
+          }
+        }
+      }
     },
     "商户名称 (例如：星巴克)" : {
       "localizations" : {
@@ -3024,10 +3424,36 @@
       }
     },
     "图像识别" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image Recognition"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖像辨識"
+          }
+        }
+      }
     },
     "图片编码失败" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't encode the image"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖片編碼失敗"
+          }
+        }
+      }
     },
     "在登录相同 Apple ID 的设备间自动同步" : {
       "localizations" : {
@@ -3068,13 +3494,52 @@
       }
     },
     "填到 /v1 为止，例如 https://api.deepseek.com/v1。兼容任何 OpenAI 格式的服务。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include the path up to /v1, e.g. https://api.deepseek.com/v1. Works with any OpenAI-compatible service."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填到 /v1 為止，例如 https://api.deepseek.com/v1。相容任何 OpenAI 格式的服務。"
+          }
+        }
+      }
     },
     "填服务根地址，例如 https://api.anthropic.com，路径由 App 补全。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the root address, e.g. https://api.anthropic.com. The app appends the path."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填服務根位址，例如 https://api.anthropic.com，路徑由 App 補齊。"
+          }
+        }
+      }
     },
     "填服务根地址，例如 https://generativelanguage.googleapis.com。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the root address, e.g. https://generativelanguage.googleapis.com."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填服務根位址，例如 https://generativelanguage.googleapis.com。"
+          }
+        }
+      }
     },
     "境外基础积分" : {
       "localizations" : {
@@ -3255,7 +3720,20 @@
       }
     },
     "密钥保存在设备的钥匙串（Keychain）中，不会同步到 iCloud，也不会发送给本 App 的服务器。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The key is stored in the device Keychain. It is never synced to iCloud or sent to this app's servers."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "金鑰儲存在裝置的鑰匙圈（Keychain）中，不會同步到 iCloud，也不會傳送給本 App 的伺服器。"
+          }
+        }
+      }
     },
     "导入卡片" : {
       "localizations" : {
@@ -3291,6 +3769,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "導入失敗"
+          }
+        }
+      }
+    },
+    "导入失败：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import failed: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯入失敗：%@"
           }
         }
       }
@@ -3415,6 +3910,23 @@
         }
       }
     },
+    "导出失败：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export failed: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯出失敗：%@"
+          }
+        }
+      }
+    },
     "导出账单" : {
       "localizations" : {
         "en" : {
@@ -3438,6 +3950,7 @@
       }
     },
     "将撤销这家银行的授权，之后不再自动同步。\n\n已经导入的交易记录会全部保留。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3449,6 +3962,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將撤銷這家銀行的授權，之後不再自動同步。\n\n已經匯入的交易記錄會全部保留。"
+          }
+        }
+      }
+    },
+    "将撤销这次绑定的授权，之后不再自动同步。\n\n同一家银行的其它绑定不受影响。已经导入的交易记录会全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This revokes the authorization for this connection; it will stop syncing.\n\nOther connections to the same bank are unaffected. All imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將撤銷這次綁定的授權，之後不再自動同步。\n\n同一家銀行的其它綁定不受影響。已經匯入的交易記錄會全部保留。"
           }
         }
       }
@@ -3501,6 +4030,23 @@
         }
       }
     },
+    "尚未录入 %@。请先在系统设置中录入，或为设备设置密码。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ isn't set up yet. Enroll it in Settings, or set a device passcode."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未錄入 %@。請先在系統設定中錄入，或為裝置設定密碼。"
+          }
+        }
+      }
+    },
     "尚未登录，请先用 Apple ID 登录" : {
       "localizations" : {
         "en" : {
@@ -3518,10 +4064,36 @@
       }
     },
     "尚未配置，当前仍使用本地模型" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not configured — still using the on-device model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未設定，目前仍使用本機模型"
+          }
+        }
+      }
     },
     "尚未配置第三方模型，请在设置中填写 API 地址、模型名和密钥" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No third-party model configured. Enter the API endpoint, model name, and key in Settings."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未設定第三方模型，請在設定中填寫 API 位址、模型名稱和金鑰"
+          }
+        }
+      }
     },
     "尝试更换关键词" : {
       "localizations" : {
@@ -3593,6 +4165,22 @@
         }
       }
     },
+    "已从 App 移除" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed from app"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已從 App 移除"
+          }
+        }
+      }
+    },
     "已关联「%@ %@」" : {
       "localizations" : {
         "en" : {
@@ -3615,6 +4203,23 @@
         }
       }
     },
+    "已删除卡片" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted Card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已刪除卡片"
+          }
+        }
+      }
+    },
     "已取消 Apple 登录" : {
       "localizations" : {
         "en" : {
@@ -3627,6 +4232,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已取消 Apple 登入"
+          }
+        }
+      }
+    },
+    "已向银行撤销这次绑定的授权。已导入的交易记录全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The bank authorization for this connection has been revoked. All imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已向銀行撤銷這次綁定的授權。已匯入的交易記錄全部保留。"
           }
         }
       }
@@ -3685,6 +4306,38 @@
         }
       }
     },
+    "已移除 %lld 个账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed %lld account(s)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已移除 %lld 個帳戶"
+          }
+        }
+      }
+    },
+    "已移除 %lld 个账户，新增 %lld 个" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed %lld account(s), added %lld."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已移除 %lld 個帳戶，新增 %lld 個"
+          }
+        }
+      }
+    },
     "已解绑 %lld 家银行，账号记录已删除。" : {
       "localizations" : {
         "en" : {
@@ -3697,6 +4350,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已解除綁定 %lld 家銀行，帳號記錄已刪除。"
+          }
+        }
+      }
+    },
+    "已解除绑定" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlinked"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已解除綁定"
           }
         }
       }
@@ -3787,6 +4456,23 @@
         }
       }
     },
+    "并入本币上限 (1:1)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared with local cap (1:1)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "併入本幣上限 (1:1)"
+          }
+        }
+      }
+    },
     "并入本币上限：仅第二币种地区消费入账副币，金额按 1:1 计入本币上限（如港币+人民币卡）。\n独立外币上限：所有境外消费入账副币种，使用外币费率与外币上限（如人民币+美元卡）。" : {
       "localizations" : {
         "en" : {
@@ -3868,7 +4554,20 @@
       }
     },
     "开启后小票和截图直接发原图，跳过本地 OCR" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends receipts and screenshots as images, skipping on-device OCR"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟後小票和截圖直接傳原圖，略過本機 OCR"
+          }
+        }
+      }
     },
     "开始 %@ 免费试用" : {
       "localizations" : {
@@ -3957,10 +4656,36 @@
       }
     },
     "当前第三方模型未开启图像支持，无法解析图片" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image recognition is off for the current third-party model, so images can't be parsed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前第三方模型未開啟圖像支援，無法解析圖片"
+          }
+        }
+      }
     },
     "必填" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Required"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "必填"
+          }
+        }
+      }
     },
     "快捷指令截取的屏幕截图" : {
       "localizations" : {
@@ -4241,6 +4966,23 @@
         }
       }
     },
+    "手动调整" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual Adjustment"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手動調整"
+          }
+        }
+      }
+    },
     "拍一笔" : {
       "localizations" : {
         "en" : {
@@ -4296,7 +5038,20 @@
       }
     },
     "按场景自动调节思考强度，账单和图片解析更准，但更慢更贵" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjusts thinking effort per task — more accurate on statements and images, but slower and more expensive"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "依場景自動調節思考強度，帳單和圖片解析更準，但更慢更貴"
+          }
+        }
+      }
     },
     "按年" : {
       "localizations" : {
@@ -4331,7 +5086,20 @@
       }
     },
     "推理模式" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reasoning"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推理模式"
+          }
+        }
+      }
     },
     "搜索商户" : {
       "localizations" : {
@@ -4569,6 +5337,23 @@
         }
       }
     },
+    "数据格式异常：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unexpected data format: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "資料格式異常：%@"
+          }
+        }
+      }
+    },
     "数据管理" : {
       "localizations" : {
         "en" : {
@@ -4651,6 +5436,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新台幣（TWD）"
+          }
+        }
+      }
+    },
+    "新增 %lld 个账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %lld account(s)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增 %lld 個帳戶"
           }
         }
       }
@@ -4754,7 +5555,70 @@
       }
     },
     "无效的 HTTP 响应" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid HTTP response"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無效的 HTTP 回應"
+          }
+        }
+      }
+    },
+    "无法在这台设备上完成身份验证" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication isn't available on this device"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法在這台裝置上完成身分驗證"
+          }
+        }
+      }
+    },
+    "无法完成身份验证" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication failed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法完成身分驗證"
+          }
+        }
+      }
+    },
+    "无法开始管理账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't manage accounts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法開始管理帳戶"
+          }
+        }
+      }
     },
     "无法开始绑定" : {
       "localizations" : {
@@ -4789,7 +5653,37 @@
       }
     },
     "无法解析模型返回的内容：%@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't parse the model's response: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法解析模型回傳的內容：%@"
+          }
+        }
+      }
+    },
+    "无法访问文件：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't access the file: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法存取檔案：%@"
+          }
+        }
+      }
     },
     "无法访问相机" : {
       "localizations" : {
@@ -5011,6 +5905,23 @@
         }
       }
     },
+    "暂无账单" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Bills Yet"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫無帳單"
+          }
+        }
+      }
+    },
     "暂时无法获取订阅选项，请稍后再试。" : {
       "localizations" : {
         "en" : {
@@ -5146,7 +6057,20 @@
       }
     },
     "服务商" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Provider"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服務商"
+          }
+        }
+      }
     },
     "服务器响应异常（状态码：%lld）" : {
       "localizations" : {
@@ -5166,10 +6090,22 @@
     },
     "服务返回错误 %lld：%@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service returned error %lld: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "服务返回错误 %1$lld：%2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服務回傳錯誤 %lld：%@"
           }
         }
       }
@@ -5206,6 +6142,23 @@
         }
       }
     },
+    "未找到结果" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Results"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到結果"
+          }
+        }
+      }
+    },
     "未知商户" : {
       "localizations" : {
         "en" : {
@@ -5218,6 +6171,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不明商戶"
+          }
+        }
+      }
+    },
+    "未知银行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown bank"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知銀行"
           }
         }
       }
@@ -5320,6 +6289,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "本機的卡片和交易記錄都會保留。已綁定的銀行不會解除綁定，重新登入後可繼續同步。"
+          }
+        }
+      }
+    },
+    "本地账户列表未做任何改动，可以稍后重试。\n\n%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing changed locally. You can try again later.\n\n%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地帳戶清單未做任何改動，可以稍後重試。\n\n%@"
           }
         }
       }
@@ -5468,14 +6453,70 @@
         }
       }
     },
+    "查询失败：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load data: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查詢失敗：%@"
+          }
+        }
+      }
+    },
     "模型名称" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model Name"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型名稱"
+          }
+        }
+      }
     },
     "模型没有返回任何内容" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model returned nothing"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型沒有回傳任何內容"
+          }
+        }
+      }
     },
     "模型能力" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model Capabilities"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型能力"
+          }
+        }
+      }
     },
     "欧元（EUR）" : {
       "localizations" : {
@@ -5643,6 +6684,23 @@
         }
       }
     },
+    "活动赠送" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bonus"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活動贈送"
+          }
+        }
+      }
+    },
     "浅色模式" : {
       "localizations" : {
         "en" : {
@@ -5666,13 +6724,52 @@
       }
     },
     "测试中…" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testing…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "測試中…"
+          }
+        }
+      }
     },
     "测试会发一次极小的结构化请求，用来验证地址、密钥、模型名以及该服务对 JSON Schema 的支持程度。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The test sends one tiny structured request to verify the endpoint, key, model name, and how well the service supports JSON Schema."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "測試會發一次極小的結構化請求，用來驗證位址、金鑰、模型名稱以及該服務對 JSON Schema 的支援程度。"
+          }
+        }
+      }
     },
     "测试连接" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Connection"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "測試連線"
+          }
+        }
+      }
     },
     "消费地区" : {
       "localizations" : {
@@ -5736,6 +6833,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "消費類別"
+          }
+        }
+      }
+    },
+    "消费获得" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earned"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "消費獲得"
           }
         }
       }
@@ -5893,7 +7007,20 @@
       }
     },
     "清除密钥" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Key"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除金鑰"
+          }
+        }
+      }
     },
     "渐变色 1" : {
       "localizations" : {
@@ -6005,6 +7132,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "狀態"
+          }
+        }
+      }
+    },
+    "独立外币上限" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separate foreign-currency cap"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "獨立外幣上限"
           }
         }
       }
@@ -6323,6 +7467,40 @@
         }
       }
     },
+    "积分转移" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transferred"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "積分轉移"
+          }
+        }
+      }
+    },
+    "积分过期" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expired"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "積分過期"
+          }
+        }
+      }
+    },
     "移除积分数量" : {
       "localizations" : {
         "en" : {
@@ -6340,7 +7518,20 @@
       }
     },
     "第三方模型通道暂不支持工具调用" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The third-party model channel doesn't support tool calling yet"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第三方模型通道暫不支援工具呼叫"
+          }
+        }
+      }
     },
     "第二币种地区" : {
       "localizations" : {
@@ -6376,6 +7567,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "简体中文"
+          }
+        }
+      }
+    },
+    "管理已连接的账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage connected accounts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理已連接的帳戶"
           }
         }
       }
@@ -6665,7 +7872,20 @@
       }
     },
     "结构化输出" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Structured Output"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結構化輸出"
+          }
+        }
+      }
     },
     "继续" : {
       "localizations" : {
@@ -6826,13 +8046,69 @@
       }
     },
     "缺少 candidates[0].content" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing candidates[0].content"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少 candidates[0].content"
+          }
+        }
+      }
     },
     "缺少 choices[0].message" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing choices[0].message"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少 choices[0].message"
+          }
+        }
+      }
     },
     "缺少 content" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing content"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少 content"
+          }
+        }
+      }
+    },
+    "缺少必填信息：%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing required field: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少必填資訊：%@"
+          }
+        }
+      }
     },
     "网络请求失败：%@" : {
       "localizations" : {
@@ -6867,7 +8143,20 @@
       }
     },
     "自动（推荐）" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic (Recommended)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動（推薦）"
+          }
+        }
+      }
     },
     "自动化与快捷指令" : {
       "localizations" : {
@@ -6934,7 +8223,20 @@
       }
     },
     "自定义 API" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom API"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂 API"
+          }
+        }
+      }
     },
     "自定义添加" : {
       "localizations" : {
@@ -7150,6 +8452,22 @@
         }
       }
     },
+    "解除绑定" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlink"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解除綁定"
+          }
+        }
+      }
+    },
     "订阅" : {
       "localizations" : {
         "en" : {
@@ -7232,6 +8550,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記一筆"
+          }
+        }
+      }
+    },
+    "设备密码" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device Passcode"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "裝置密碼"
           }
         }
       }
@@ -7431,16 +8766,68 @@
       }
     },
     "请按你所选模型的实际能力勾选。为不支持的模型开启这些选项会导致请求失败。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match these to what your model actually supports. Enabling them for a model that doesn't will make requests fail."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請依你所選模型的實際能力勾選。為不支援的模型開啟這些選項會導致請求失敗。"
+          }
+        }
+      }
     },
     "请求超时，可在设置中调长超时时间或换用更快的模型" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The request timed out. Raise the timeout in Settings or switch to a faster model."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請求逾時，可在設定中調長逾時時間或改用更快的模型"
+          }
+        }
+      }
     },
     "请求过于频繁，请在 %@ 后重试" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many requests. Try again after %@."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請求過於頻繁，請在 %@ 後重試"
+          }
+        }
+      }
     },
     "请求过于频繁，请稍后重试" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many requests. Try again later."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請求過於頻繁，請稍後重試"
+          }
+        }
+      }
     },
     "请添加积分计划以供卡片选择" : {
       "localizations" : {
@@ -7630,6 +9017,54 @@
         }
       }
     },
+    "账户列表更新失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't update accounts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳戶清單更新失敗"
+          }
+        }
+      }
+    },
+    "账户列表没有变化。\n\n如果刚才跳转到了银行自己的页面：这类银行的账户共享范围由银行控制，需要在那个页面上取消勾选要移除的卡，回到这里才会生效。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account list is unchanged.\n\nIf you were sent to your bank's own page: banks like this control account sharing themselves. Deselect the card there, and the change will show up here."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳戶清單沒有變化。\n\n如果剛才跳轉到了銀行自己的頁面：這類銀行的帳戶共用範圍由銀行控制，需要在那個頁面上取消勾選要移除的卡，回到這裡才會生效。"
+          }
+        }
+      }
+    },
+    "账户已更新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accounts updated"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳戶已更新"
+          }
+        }
+      }
+    },
     "赚 %@" : {
       "localizations" : {
         "en" : {
@@ -7663,7 +9098,20 @@
       }
     },
     "超时" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeout"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "逾時"
+          }
+        }
+      }
     },
     "跟随系统" : {
       "localizations" : {
@@ -7822,6 +9270,104 @@
         }
       }
     },
+    "这台设备没有设置密码。绑定银行账户前请先在「设置 → 面容 ID 与密码」中设置设备密码。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device has no passcode. Set one in Settings → Face ID & Passcode before linking a bank account."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這台裝置沒有設定密碼。綁定銀行帳戶前請先在「設定 → 面容 ID 與密碼」中設定裝置密碼。"
+          }
+        }
+      }
+    },
+    "这台设备的生物识别不可用。请为设备设置密码后重试。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biometrics aren't available on this device. Set a device passcode and try again."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這台裝置的生物辨識不可用。請為裝置設定密碼後重試。"
+          }
+        }
+      }
+    },
+    "这张卡不再显示，也不再同步。\n\n银行授权仍然有效 —— Plaid 不支持单独撤销一个账户。要真正撤销，用「管理已连接的账户」在银行页面取消勾选。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This card no longer appears and no longer syncs.\n\nThe bank authorization is still active — Plaid can't revoke a single account. To actually revoke it, use “Manage connected accounts” and deselect it on your bank's page."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這張卡不再顯示，也不再同步。\n\n銀行授權仍然有效 —— Plaid 不支援單獨撤銷一個帳戶。要真正撤銷，用「管理已連接的帳戶」在銀行頁面取消勾選。"
+          }
+        }
+      }
+    },
+    "这是这次绑定下最后一张卡。删除会同时向银行撤销这次绑定的授权，之后不再自动同步。\n\n已经导入的交易记录会全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is the last card in this connection. Deleting it also revokes the bank authorization, and syncing stops.\n\nAll imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這是這次綁定下最後一張卡。刪除會同時向銀行撤銷這次綁定的授權，之後不再自動同步。\n\n已經匯入的交易記錄會全部保留。"
+          }
+        }
+      }
+    },
+    "这次绑定已无共享账户" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No accounts shared with this connection"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這次綁定已無共用帳戶"
+          }
+        }
+      }
+    },
+    "这次绑定已经没有共享账户，已一并解除。已导入的交易记录全部保留。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This connection no longer shares any accounts, so it has been unlinked. All imported transactions are kept."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這次綁定已經沒有共用帳戶，已一併解除。已匯入的交易記錄全部保留。"
+          }
+        }
+      }
+    },
     "连接你的银行" : {
       "localizations" : {
         "en" : {
@@ -7839,17 +9385,55 @@
       }
     },
     "连接信息" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線資訊"
+          }
+        }
+      }
     },
     "连接成功，但返回的不是预期的 JSON：%@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected, but the response wasn't the expected JSON: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線成功，但回傳的不是預期的 JSON：%@"
+          }
+        }
+      }
     },
     "连接正常。结构化输出档位：%@，本次消耗 %lld tokens。" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection works. Structured output level: %@. This test used %lld tokens."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "连接正常。结构化输出档位：%1$@，本次消耗 %2$lld tokens。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線正常。結構化輸出檔位：%@，本次消耗 %lld tokens。"
           }
         }
       }
@@ -7968,29 +9552,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇卡片"
-          }
-        }
-      }
-    },
-    "选择卡片查看详情" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a card to view details"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择卡片查看详情"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇卡片查看詳情"
           }
         }
       }
@@ -8148,7 +9709,20 @@
       }
     },
     "配置自定义 API" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configure Custom API"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定自訂 API"
+          }
+        }
+      }
     },
     "重新上传" : {
       "localizations" : {
@@ -8452,85 +10026,18 @@
         }
       }
     },
-    "高级" : {
-
-    },
-    "默认记账卡片" : {
+    "验证身份后管理已连接的账户" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Default Card"
+            "value" : "Verify your identity to manage connected accounts"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "預設記帳卡片"
-          }
-        }
-      }
-    },
-    "管理已连接的账户" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Manage connected accounts"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "管理已連接的帳戶"
-          }
-        }
-      }
-    },
-    "解除绑定" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unlink"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "解除綁定"
-          }
-        }
-      }
-    },
-    "保留" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保留"
-          }
-        }
-      }
-    },
-    "这次绑定已无共享账户" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No accounts shared with this connection"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "這次綁定已無共用帳戶"
+            "value" : "驗證身分後管理已連接的帳戶"
           }
         }
       }
@@ -8551,370 +10058,34 @@
         }
       }
     },
-    "验证身份后管理已连接的账户" : {
+    "高级" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verify your identity to manage connected accounts"
+            "value" : "Advanced"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "驗證身分後管理已連接的帳戶"
+            "value" : "進階"
           }
         }
       }
     },
-    "无法开始管理账户" : {
+    "默认记账卡片" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can't manage accounts"
+            "value" : "Default Card"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法開始管理帳戶"
-          }
-        }
-      }
-    },
-    "账户已更新" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Accounts updated"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "帳戶已更新"
-          }
-        }
-      }
-    },
-    "账户列表更新失败" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't update accounts"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "帳戶清單更新失敗"
-          }
-        }
-      }
-    },
-    "账户列表已是最新" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your account list is already up to date."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "帳戶清單已是最新"
-          }
-        }
-      }
-    },
-    "已移除 %lld 个账户" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removed %lld account(s)."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已移除 %lld 個帳戶"
-          }
-        }
-      }
-    },
-    "新增 %lld 个账户" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added %lld account(s)."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新增 %lld 個帳戶"
-          }
-        }
-      }
-    },
-    "已移除 %lld 个账户，新增 %lld 个" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removed %lld account(s), added %lld."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已移除 %lld 個帳戶，新增 %lld 個"
-          }
-        }
-      }
-    },
-    "已解除绑定" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unlinked"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已解除綁定"
-          }
-        }
-      }
-    },
-    "未知银行" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown bank"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未知銀行"
-          }
-        }
-      }
-    },
-    "这次绑定已经没有共享账户，已一并解除。已导入的交易记录全部保留。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This connection no longer shares any accounts, so it has been unlinked. All imported transactions are kept."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "這次綁定已經沒有共用帳戶，已一併解除。已匯入的交易記錄全部保留。"
-          }
-        }
-      }
-    },
-    "Plaid 没有返回任何账户。\n\n不解除的话这次绑定会一直留在这里但不再同步，而且没有任何账户可管理。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plaid returned no accounts.\n\nIf you keep it, this connection stays in the list but never syncs, and there are no accounts left to manage."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plaid 沒有回傳任何帳戶。\n\n不解除的話這次綁定會一直留在這裡但不再同步，而且沒有任何帳戶可管理。"
-          }
-        }
-      }
-    },
-    "将撤销这次绑定的授权，之后不再自动同步。\n\n同一家银行的其它绑定不受影响。已经导入的交易记录会全部保留。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This revokes the authorization for this connection; it will stop syncing.\n\nOther connections to the same bank are unaffected. All imported transactions are kept."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "將撤銷這次綁定的授權，之後不再自動同步。\n\n同一家銀行的其它綁定不受影響。已經匯入的交易記錄會全部保留。"
-          }
-        }
-      }
-    },
-    "本地账户列表未做任何改动，可以稍后重试。\n\n%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing changed locally. You can try again later.\n\n%@"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本地帳戶清單未做任何改動，可以稍後重試。\n\n%@"
-          }
-        }
-      }
-    },
-    "账户列表没有变化。\n\n如果刚才跳转到了银行自己的页面：这类银行的账户共享范围由银行控制，需要在那个页面上取消勾选要移除的卡，回到这里才会生效。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your account list is unchanged.\n\nIf you were sent to your bank's own page: banks like this control account sharing themselves. Deselect the card there, and the change will show up here."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "帳戶清單沒有變化。\n\n如果剛才跳轉到了銀行自己的頁面：這類銀行的帳戶共用範圍由銀行控制，需要在那個頁面上取消勾選要移除的卡，回到這裡才會生效。"
-          }
-        }
-      }
-    },
-    "删除这张卡？" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete this card?"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "刪除這張卡？"
-          }
-        }
-      }
-    },
-    "删除并撤销银行授权" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete and revoke access"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "刪除並撤銷銀行授權"
-          }
-        }
-      }
-    },
-    "仅从 App 移除" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from app only"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "僅從 App 移除"
-          }
-        }
-      }
-    },
-    "已从 App 移除" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removed from app"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已從 App 移除"
-          }
-        }
-      }
-    },
-    "这是这次绑定下最后一张卡。删除会同时向银行撤销这次绑定的授权，之后不再自动同步。\n\n已经导入的交易记录会全部保留。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This is the last card in this connection. Deleting it also revokes the bank authorization, and syncing stops.\n\nAll imported transactions are kept."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "這是這次綁定下最後一張卡。刪除會同時向銀行撤銷這次綁定的授權，之後不再自動同步。\n\n已經匯入的交易記錄會全部保留。"
-          }
-        }
-      }
-    },
-    "Plaid 不支持单独撤销一个账户的授权 —— 只能整次绑定一起撤。\n\n这里只会把它从 App 移除并停止同步，银行授权仍然有效。要真正撤销，用下面的「管理已连接的账户」。\n\n已经导入的交易记录会全部保留。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plaid can't revoke a single account — only the whole connection.\n\nThis only removes the card from the app and stops syncing; the bank authorization stays active. To actually revoke it, use “Manage connected accounts” below.\n\nAll imported transactions are kept."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plaid 不支援單獨撤銷一個帳戶的授權 —— 只能整次綁定一起撤。\n\n這裡只會把它從 App 移除並停止同步，銀行授權仍然有效。要真正撤銷，用下面的「管理已連接的帳戶」。\n\n已經匯入的交易記錄會全部保留。"
-          }
-        }
-      }
-    },
-    "已向银行撤销这次绑定的授权。已导入的交易记录全部保留。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The bank authorization for this connection has been revoked. All imported transactions are kept."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已向銀行撤銷這次綁定的授權。已匯入的交易記錄全部保留。"
-          }
-        }
-      }
-    },
-    "这张卡不再显示，也不再同步。\n\n银行授权仍然有效 —— Plaid 不支持单独撤销一个账户。要真正撤销，用「管理已连接的账户」在银行页面取消勾选。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This card no longer appears and no longer syncs.\n\nThe bank authorization is still active — Plaid can't revoke a single account. To actually revoke it, use “Manage connected accounts” and deselect it on your bank's page."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "這張卡不再顯示，也不再同步。\n\n銀行授權仍然有效 —— Plaid 不支援單獨撤銷一個帳戶。要真正撤銷，用「管理已連接的帳戶」在銀行頁面取消勾選。"
+            "value" : "預設記帳卡片"
           }
         }
       }

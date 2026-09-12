@@ -117,7 +117,7 @@ enum ThirdPartyHTTP {
         }
 
         guard let http = response as? HTTPURLResponse else {
-            throw ThirdPartyModelError.malformedResponse(String(localized: "无效的 HTTP 响应"))
+            throw ThirdPartyModelError.malformedResponse(String.loc("无效的 HTTP 响应"))
         }
 
         guard (200..<300).contains(http.statusCode) else {
@@ -135,7 +135,7 @@ enum ThirdPartyHTTP {
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw ThirdPartyModelError.malformedResponse(String(localized: "响应不是 JSON 对象"))
+            throw ThirdPartyModelError.malformedResponse(String.loc("响应不是 JSON 对象"))
         }
         return json
     }
@@ -244,7 +244,7 @@ struct OpenAICompatibleAdapter: ThirdPartyChatAdapter {
     func decode(_ json: [String: Any], expectsSchema: Bool) throws -> ChatCompletion {
         guard let choices = json["choices"] as? [[String: Any]],
               let message = choices.first?["message"] as? [String: Any] else {
-            throw ThirdPartyModelError.malformedResponse(String(localized: "缺少 choices[0].message"))
+            throw ThirdPartyModelError.malformedResponse(String.loc("缺少 choices[0].message"))
         }
         // 有的服务把结构化结果放 content，有的（走 tool 的中转层）放 tool_calls
         var text = message["content"] as? String ?? ""
@@ -364,7 +364,7 @@ struct AnthropicAdapter: ThirdPartyChatAdapter {
 
     func decode(_ json: [String: Any], expectsSchema expectingTool: Bool) throws -> ChatCompletion {
         guard let blocks = json["content"] as? [[String: Any]] else {
-            throw ThirdPartyModelError.malformedResponse(String(localized: "缺少 content"))
+            throw ThirdPartyModelError.malformedResponse(String.loc("缺少 content"))
         }
 
         var text = ""
@@ -482,7 +482,7 @@ struct GeminiAdapter: ThirdPartyChatAdapter {
                let reason = feedback["blockReason"] as? String {
                 throw ThirdPartyModelError.blocked(reason)
             }
-            throw ThirdPartyModelError.malformedResponse(String(localized: "缺少 candidates[0].content"))
+            throw ThirdPartyModelError.malformedResponse(String.loc("缺少 candidates[0].content"))
         }
 
         // thought:true 的 part 是推理过程，不是答案

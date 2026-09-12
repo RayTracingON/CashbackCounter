@@ -59,7 +59,7 @@ struct SettingsView: View {
 
     private var thirdPartyStatusText: String {
         guard ThirdPartyModelStore.isReady else {
-            return String(localized: "尚未配置，当前仍使用本地模型")
+            return String.loc("尚未配置，当前仍使用本地模型")
         }
         let config = ThirdPartyModelStore.config
         return "\(config.provider.displayName) · \(config.modelName)"
@@ -67,9 +67,9 @@ struct SettingsView: View {
 
     private var cloudBackendFooter: String {
         guard useCloudAIModel, cloudBackend.wrappedValue == .thirdParty else {
-            return String(localized: "云端解析通过 Apple Private Cloud Compute 完成：数据端到端加密，Apple 与开发者均无法读取。云端不可用时会自动回退到本地模型。")
+            return String.loc("云端解析通过 Apple Private Cloud Compute 完成：数据端到端加密，Apple 与开发者均无法读取。云端不可用时会自动回退到本地模型。")
         }
-        return String(localized: "使用你自己的模型服务解析，费用由你的服务商结算。小票内容会发送到你填写的地址，不再受 Apple 私有云计算的隐私保证覆盖。未配置完整时自动回退到本地模型。")
+        return String.loc("使用你自己的模型服务解析，费用由你的服务商结算。小票内容会发送到你填写的地址，不再受 Apple 私有云计算的隐私保证覆盖。未配置完整时自动回退到本地模型。")
     }
 
     // MARK: - Body

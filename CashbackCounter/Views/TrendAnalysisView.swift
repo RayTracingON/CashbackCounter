@@ -9,8 +9,8 @@ enum TrendType {
     
     var title: String {
         switch self {
-        case .expense : return String(localized: "支出")
-        case .cashback: return String(localized: "返现")
+        case .expense : return String.loc("支出")
+        case .cashback: return String.loc("返现")
         }
     }
     
@@ -134,7 +134,7 @@ struct TrendAnalysisView: View {
                 cardName = card.bankName
                 cardColor = card.colors.first ?? .gray
             } else {
-                cardName = String(localized: "未分类")
+                cardName = String.loc("未分类")
                 cardColor = .gray
             }
             
@@ -176,7 +176,7 @@ struct TrendAnalysisView: View {
         }
         let formatter = DateFormatter()
         formatter.calendar = Calendar.current
-        formatter.locale = Locale.current
+        formatter.locale = AppLanguage.locale
         formatter.dateFormat = "yyyy/MM"
         return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
     }
@@ -186,9 +186,9 @@ struct TrendAnalysisView: View {
     }
 
     private func peakMonthLabel(for date: Date?) -> String {
-        guard let date else { return String(localized: "暂无数据") }
-        let month = date.formatted(.dateTime.month(.twoDigits))
-        return String(localized: "\(month)月峰值")
+        guard let date else { return String.loc("暂无数据") }
+        let month = date.formatted(.dateTime.month(.twoDigits).locale(AppLanguage.locale))
+        return String.loc("\(month)月峰值")
     }
 
     private func formattedCurrencyInteger(_ amount: Double) -> String {
@@ -199,11 +199,13 @@ struct TrendAnalysisView: View {
                 .currency(code: mainCurrencyCode)
                 .notation(.compactName)
                 .precision(.fractionLength(0...1))
+                .locale(AppLanguage.locale)
             )
         }
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = mainCurrencyCode
+        formatter.locale = AppLanguage.locale
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: amount)) ?? ""
     }
@@ -216,16 +218,16 @@ struct TrendAnalysisView: View {
     }
 
     private func formattedCurrency(_ amount: Double) -> String {
-        amount.formatted(.currency(code: mainCurrencyCode))
+        amount.formatted(.currency(code: mainCurrencyCode).locale(AppLanguage.locale))
     }
 
     private func axisLabel(for date: Date) -> String {
         let calendar = Calendar.current
         let month = calendar.component(.month, from: date)
         if month == 1 {
-            return date.formatted(.dateTime.year().month(.abbreviated))
+            return date.formatted(.dateTime.year().month(.abbreviated).locale(AppLanguage.locale))
         }
-        return date.formatted(.dateTime.month(.abbreviated))
+        return date.formatted(.dateTime.month(.abbreviated).locale(AppLanguage.locale))
     }
 
     // MARK: - 可滚动/缩放图表计算属性
@@ -317,18 +319,18 @@ struct TrendAnalysisView: View {
                     // 三列式的数据仪表盘卡片网格
                     HStack(spacing: 8) {
                         statCard(
-                            title: String(localized: "全部累计"),
+                            title: String.loc("全部累计"),
                             value: formattedCurrencyInteger(totalAmount),
                             subtitle: monthRangeText.isEmpty ? nil : monthRangeText,
                             highlightColor: type.color
                         )
                         statCard(
-                            title: String(localized: "月均水平"),
+                            title: String.loc("月均水平"),
                             value: formattedCurrencyInteger(totalAmount / Double(totalMonthCount)),
-                            subtitle: String(localized: "月均\(type.title)")
+                            subtitle: String.loc("月均\(type.title)")
                         )
                         statCard(
-                            title: String(localized: "单月最高"),
+                            title: String.loc("单月最高"),
                             value: formattedCurrencyInteger(peakMonthData?.amount ?? 0.0),
                             subtitle: peakMonthLabel(for: peakMonthData?.date)
                         )
@@ -339,8 +341,8 @@ struct TrendAnalysisView: View {
                         ForEach(chartData) { item in
                             // 线条
                             LineMark(
-                                x: .value(String(localized: "月份"), item.date, unit: .month),
-                                y: .value(String(localized: "金额"), item.amount)
+                                x: .value(String.loc("月份"), item.date, unit: .month),
+                                y: .value(String.loc("金额"), item.amount)
                             )
                             .interpolationMethod(.monotone)
                             .foregroundStyle(type.color.gradient)
@@ -348,8 +350,8 @@ struct TrendAnalysisView: View {
                             
                             // 渐变填充
                             AreaMark(
-                                x: .value(String(localized: "月份"), item.date, unit: .month),
-                                y: .value(String(localized: "金额"), item.amount)
+                                x: .value(String.loc("月份"), item.date, unit: .month),
+                                y: .value(String.loc("金额"), item.amount)
                             )
                             .interpolationMethod(.monotone)
                             .foregroundStyle(
@@ -362,8 +364,8 @@ struct TrendAnalysisView: View {
                             
                             // 数据点
                             PointMark(
-                                x: .value(String(localized: "月份"), item.date, unit: .month),
-                                y: .value(String(localized: "金额"), item.amount)
+                                x: .value(String.loc("月份"), item.date, unit: .month),
+                                y: .value(String.loc("金额"), item.amount)
                             )
                             .foregroundStyle(type.color)
                             .symbolSize(16)
@@ -371,14 +373,14 @@ struct TrendAnalysisView: View {
 
                         if let highlighted = highlightedData {
                             RuleMark(
-                                x: .value(String(localized: "选中月份"), highlighted.date, unit: .month)
+                                x: .value(String.loc("选中月份"), highlighted.date, unit: .month)
                             )
                             .foregroundStyle(.secondary.opacity(0.3))
                             .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
 
                             PointMark(
-                                x: .value(String(localized: "月份"), highlighted.date, unit: .month),
-                                y: .value(String(localized: "金额"), highlighted.amount)
+                                x: .value(String.loc("月份"), highlighted.date, unit: .month),
+                                y: .value(String.loc("金额"), highlighted.amount)
                             )
                             .symbolSize(80)
                             .foregroundStyle(type.color)
@@ -440,7 +442,7 @@ struct TrendAnalysisView: View {
                                 .foregroundStyle(Color.secondary.opacity(0.15))
                             if let amount = value.as(Double.self) {
                                 AxisValueLabel {
-                                    Text(amount.formatted(.currency(code: mainCurrencyCode).notation(.compactName)))
+                                    Text(amount.formatted(.currency(code: mainCurrencyCode).notation(.compactName).locale(AppLanguage.locale)))
                                         .font(.system(size: 10, weight: .semibold, design: .rounded))
                                 }
                             }
@@ -454,9 +456,9 @@ struct TrendAnalysisView: View {
                 // --- 2. 扇形图区域 ---
                 HStack(alignment: .top, spacing: 12) {
                     // 按卡片分类扇形图
-                    pieChartSection(title: String(localized: "卡片\(type.title)占比"), data: cardPieData)
+                    pieChartSection(title: String.loc("卡片\(type.title)占比"), data: cardPieData)
                     // 按消费类别扇形图
-                    pieChartSection(title: String(localized: "类别\(type.title)占比"), data: categoryPieData)
+                    pieChartSection(title: String.loc("类别\(type.title)占比"), data: categoryPieData)
                 }
                 .padding(.horizontal)
             }
@@ -524,7 +526,7 @@ struct TrendAnalysisView: View {
                 .foregroundColor(.secondary)
             
             if data.isEmpty || total <= 0 {
-                Text(String(localized: "暂无数据"))
+                Text(String.loc("暂无数据"))
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(height: 140)

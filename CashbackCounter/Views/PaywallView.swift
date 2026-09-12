@@ -223,11 +223,11 @@ struct PaywallView: View {
     /// 周单独折算成天：试用配的是 P1W，但"7 天"比"1 周"更像一句承诺。
     private static func durationText(_ period: Product.SubscriptionPeriod) -> String {
         switch period.unit {
-        case .day: String(localized: "\(period.value) 天")
-        case .week: String(localized: "\(period.value * 7) 天")
-        case .month: String(localized: "\(period.value) 个月")
-        case .year: String(localized: "\(period.value) 年")
-        @unknown default: String(localized: "\(period.value) 天")
+        case .day: String.loc("\(period.value) 天")
+        case .week: String.loc("\(period.value * 7) 天")
+        case .month: String.loc("\(period.value) 个月")
+        case .year: String.loc("\(period.value) 年")
+        @unknown default: String.loc("\(period.value) 天")
         }
     }
 
@@ -237,10 +237,10 @@ struct PaywallView: View {
             return product.displayPrice
         }
         return switch period.unit {
-        case .day: String(localized: "\(product.displayPrice)/天")
-        case .week: String(localized: "\(product.displayPrice)/周")
-        case .month: String(localized: "\(product.displayPrice)/月")
-        case .year: String(localized: "\(product.displayPrice)/年")
+        case .day: String.loc("\(product.displayPrice)/天")
+        case .week: String.loc("\(product.displayPrice)/周")
+        case .month: String.loc("\(product.displayPrice)/月")
+        case .year: String.loc("\(product.displayPrice)/年")
         @unknown default: product.displayPrice
         }
     }

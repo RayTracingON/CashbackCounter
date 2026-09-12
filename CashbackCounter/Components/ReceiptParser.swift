@@ -399,7 +399,7 @@ final class ReceiptParser {
             throw NSError(
                 domain: "ReceiptParser",
                 code: 11,
-                userInfo: [NSLocalizedDescriptionKey: String(localized: "云端模型不可用，无法使用图像解析")]
+                userInfo: [NSLocalizedDescriptionKey: String.loc("云端模型不可用，无法使用图像解析")]
             )
         }
         print("🖼️ \(route.logLabel) —— 多模态直传")
@@ -424,13 +424,13 @@ final class ReceiptParser {
             let message: String
             switch reason {
             case .deviceNotEligible:
-                message = String(localized: "此设备不支持 Apple Intelligence")
+                message = String.loc("此设备不支持 Apple Intelligence")
             case .appleIntelligenceNotEnabled:
-                message = String(localized: "请在系统设置中开启 Apple Intelligence")
+                message = String.loc("请在系统设置中开启 Apple Intelligence")
             case .modelNotReady:
-                message = String(localized: "Apple Intelligence 模型尚未就绪，请稍后再试")
+                message = String.loc("Apple Intelligence 模型尚未就绪，请稍后再试")
             @unknown default:
-                message = String(localized: "Apple Intelligence 暂不可用")
+                message = String.loc("Apple Intelligence 暂不可用")
             }
             throw NSError(
                 domain: "ReceiptParser",
@@ -554,7 +554,7 @@ final class ReceiptParser {
             throw NSError(
                 domain: "ReceiptParser",
                 code: 12,
-                userInfo: [NSLocalizedDescriptionKey: String(localized: "无法读取图片数据")]
+                userInfo: [NSLocalizedDescriptionKey: String.loc("无法读取图片数据")]
             )
         }
         return Attachment(cgImage, orientation: OCRService.cgImageOrientation(from: image.imageOrientation))

@@ -22,9 +22,9 @@ enum DualCurrencyMode: String, Codable, CaseIterable {
     var displayName: String {
         switch self {
         case .secondaryAsLocal:
-            return "并入本币上限 (1:1)"
+            return String.loc("并入本币上限 (1:1)")
         case .secondaryAsForeign:
-            return "独立外币上限"
+            return String.loc("独立外币上限")
         }
     }
 }
@@ -42,9 +42,9 @@ enum RewardType: String, Codable, CaseIterable {
     var displayName: String {
         switch self {
         case .cashback:
-            return String(localized: "返现")
+            return String.loc("返现")
         case .points:
-            return String(localized: "积分")
+            return String.loc("积分")
         }
     }
 }

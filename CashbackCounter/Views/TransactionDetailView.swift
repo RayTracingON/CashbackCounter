@@ -18,6 +18,7 @@ struct TransactionDetailView: View {
     // 格式化日期
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
+        formatter.locale = AppLanguage.locale
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter
@@ -154,7 +155,7 @@ struct TransactionDetailView: View {
                                 .foregroundColor(.yellow)
                         }
                         Spacer()
-                        Text("+\(transaction.cashbackamount.formatted(.currency(code: rewardCurrency)))")
+                        Text("+\(transaction.cashbackamount.formatted(.currency(code: rewardCurrency).locale(AppLanguage.locale)))")
                             .font(.headline)
                             .foregroundColor(.green)
                     }
@@ -205,7 +206,7 @@ struct TransactionDetailView: View {
                                         .foregroundColor(.gray)
                                 }
                                 Spacer()
-                                Text("-\(income.amount.formatted(.currency(code: income.location.currencyCode)))")
+                                Text("-\(income.amount.formatted(.currency(code: income.location.currencyCode).locale(AppLanguage.locale)))")
                                     .foregroundColor(.red)
                             }
                         }

@@ -86,32 +86,34 @@ enum ThirdPartyModelError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return String(localized: "尚未配置第三方模型，请在设置中填写 API 地址、模型名和密钥")
+            return String.loc("尚未配置第三方模型，请在设置中填写 API 地址、模型名和密钥")
         case .invalidBaseURL:
-            return String(localized: "API 地址无效，请检查是否以 http:// 或 https:// 开头")
+            return String.loc("API 地址无效，请检查是否以 http:// 或 https:// 开头")
         case .unauthorized:
-            return String(localized: "API 密钥无效或已过期")
+            return String.loc("API 密钥无效或已过期")
         case .rateLimited(let retryAfter):
             if let retryAfter {
-                let time = retryAfter.formatted(date: .omitted, time: .shortened)
-                return String(localized: "请求过于频繁，请在 \(time) 后重试")
+                let time = retryAfter.formatted(
+                    Date.FormatStyle(date: .omitted, time: .shortened).locale(AppLanguage.locale)
+                )
+                return String.loc("请求过于频繁，请在 \(time) 后重试")
             }
-            return String(localized: "请求过于频繁，请稍后重试")
+            return String.loc("请求过于频繁，请稍后重试")
         case .httpError(let status, let body):
             let detail = body.prefix(300)
-            return String(localized: "服务返回错误 \(status)：\(String(detail))")
+            return String.loc("服务返回错误 \(status)：\(String(detail))")
         case .emptyResponse:
-            return String(localized: "模型没有返回任何内容")
+            return String.loc("模型没有返回任何内容")
         case .malformedResponse(let detail):
-            return String(localized: "无法解析模型返回的内容：\(detail)")
+            return String.loc("无法解析模型返回的内容：\(detail)")
         case .visionUnsupported:
-            return String(localized: "当前第三方模型未开启图像支持，无法解析图片")
+            return String.loc("当前第三方模型未开启图像支持，无法解析图片")
         case .toolsUnsupported:
-            return String(localized: "第三方模型通道暂不支持工具调用")
+            return String.loc("第三方模型通道暂不支持工具调用")
         case .timedOut:
-            return String(localized: "请求超时，可在设置中调长超时时间或换用更快的模型")
+            return String.loc("请求超时，可在设置中调长超时时间或换用更快的模型")
         case .blocked(let reason):
-            return String(localized: "内容被服务商的安全策略拦截：\(reason)")
+            return String.loc("内容被服务商的安全策略拦截：\(reason)")
         }
     }
 }
@@ -212,7 +214,7 @@ enum TranscriptFlattener {
             : source
 
         guard let data = resized.jpegData(compressionQuality: jpegQuality) else {
-            throw ThirdPartyModelError.malformedResponse(String(localized: "图片编码失败"))
+            throw ThirdPartyModelError.malformedResponse(String.loc("图片编码失败"))
         }
         return data
     }

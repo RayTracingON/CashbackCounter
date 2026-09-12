@@ -87,26 +87,26 @@ enum BiometricGate {
         case .faceID: return "Face ID"
         case .touchID: return "Touch ID"
         case .opticID: return "Optic ID"
-        default: return "设备密码"
+        default: return String.loc("设备密码")
         }
     }
 
     private static func describe(_ error: NSError?) -> String {
         guard let code = (error as? LAError)?.code else {
-            return "无法在这台设备上完成身份验证"
+            return String.loc("无法在这台设备上完成身份验证")
         }
         switch code {
         case .passcodeNotSet:
             // 没设密码的设备上绑定银行账户风险太高，这里要说清楚为什么被挡
-            return "这台设备没有设置密码。绑定银行账户前请先在「设置 → 面容 ID 与密码」中设置设备密码。"
+            return String.loc("这台设备没有设置密码。绑定银行账户前请先在「设置 → 面容 ID 与密码」中设置设备密码。")
         case .biometryNotEnrolled:
-            return "尚未录入 \(methodName)。请先在系统设置中录入，或为设备设置密码。"
+            return String.loc("尚未录入 \(methodName)。请先在系统设置中录入，或为设备设置密码。")
         case .biometryNotAvailable:
-            return "这台设备的生物识别不可用。请为设备设置密码后重试。"
+            return String.loc("这台设备的生物识别不可用。请为设备设置密码后重试。")
         case .biometryLockout:
-            return "\(methodName) 已被锁定，请用设备密码解锁一次后重试。"
+            return String.loc("\(methodName) 已被锁定，请用设备密码解锁一次后重试。")
         default:
-            return "无法完成身份验证"
+            return String.loc("无法完成身份验证")
         }
     }
 }

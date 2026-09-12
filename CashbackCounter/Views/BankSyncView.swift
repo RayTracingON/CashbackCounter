@@ -250,7 +250,7 @@ struct BankSyncView: View {
                 Task {
                     await unlink(
                         itemId: itemId,
-                        successMessage: String(localized: "这次绑定已经没有共享账户，已一并解除。已导入的交易记录全部保留。"))
+                        successMessage: String.loc("这次绑定已经没有共享账户，已一并解除。已导入的交易记录全部保留。"))
                 }
             }
             Button("保留", role: .cancel) {}
@@ -267,8 +267,8 @@ struct BankSyncView: View {
             presenting: accountPendingDelete
         ) { pending in
             Button(pending.isLastInItem
-                   ? String(localized: "删除并撤销银行授权")
-                   : String(localized: "仅从 App 移除"),
+                   ? String.loc("删除并撤销银行授权")
+                   : String.loc("仅从 App 移除"),
                    role: .destructive) {
                 Task { await deleteAccount(pending) }
             }
@@ -377,7 +377,7 @@ struct BankSyncView: View {
                 }
 
                 if let last = account.lastSyncedAt {
-                    Text("上次同步 \(last.formatted(.relative(presentation: .named)))")
+                    Text("上次同步 \(last.formatted(.relative(presentation: .named).locale(AppLanguage.locale)))")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 } else if account.syncEnabled {
@@ -448,7 +448,7 @@ struct BankSyncView: View {
             pendingLink = nil
             // 用户主动退出不是错误，只有真的报错才提示
             if let errorMessage {
-                banner = Banner(title: String(localized: "绑定未完成"), message: errorMessage)
+                banner = Banner(title: String.loc("绑定未完成"), message: errorMessage)
             }
         }
     }
@@ -476,7 +476,7 @@ struct BankSyncView: View {
         //
         // 放在申请 link_token **之前**：验证没过就不该消耗一个 token，
         // 也不该让任何请求打到后端。
-        switch await BiometricGate.authenticate(reason: String(localized: "验证身份后连接银行账户")) {
+        switch await BiometricGate.authenticate(reason: String.loc("验证身份后连接银行账户")) {
         case .success:
             break
         case .canceled:
@@ -497,7 +497,7 @@ struct BankSyncView: View {
             let token = try await linkService.createLinkToken()
             pendingLink = PendingLink(token: token, mode: .create)
         } catch {
-            banner = Banner(title: String(localized: "无法开始绑定"), message: error.localizedDescription)
+            banner = Banner(title: String.loc("无法开始绑定"), message: error.localizedDescription)
         }
     }
 
@@ -516,7 +516,7 @@ struct BankSyncView: View {
 
         // 生物识别照加：改的是银行授权范围，和 startLink 同级。
         // 放在申请 token **之前** —— 没验过就不该有任何请求打到后端。
-        switch await BiometricGate.authenticate(reason: String(localized: "验证身份后管理已连接的账户")) {
+        switch await BiometricGate.authenticate(reason: String.loc("验证身份后管理已连接的账户")) {
         case .success:
             break
         case .canceled:
@@ -536,7 +536,7 @@ struct BankSyncView: View {
             let token = try await linkService.createUpdateLinkToken(itemId: itemId)
             pendingLink = PendingLink(token: token, mode: .update(itemId: itemId))
         } catch {
-            banner = Banner(title: String(localized: "无法开始管理账户"),
+            banner = Banner(title: String.loc("无法开始管理账户"),
                             message: error.localizedDescription)
         }
     }
@@ -552,15 +552,15 @@ struct BankSyncView: View {
                     // 这句最容易误导：很多银行（OAuth 机构）的账户共享范围由银行自己的
                     // 页面控制，Plaid 不显示自家的勾选页。用户在那边只是重新登录、
                     // 没改共享范围的话，回到这里确实什么都没变 —— 得说清楚原因。
-                    message = String(localized: "账户列表没有变化。\n\n如果刚才跳转到了银行自己的页面：这类银行的账户共享范围由银行控制，需要在那个页面上取消勾选要移除的卡，回到这里才会生效。")
+                    message = String.loc("账户列表没有变化。\n\n如果刚才跳转到了银行自己的页面：这类银行的账户共享范围由银行控制，需要在那个页面上取消勾选要移除的卡，回到这里才会生效。")
                 case (_, 0):
-                    message = String(localized: "已移除 \(removed) 个账户")
+                    message = String.loc("已移除 \(removed) 个账户")
                 case (0, _):
-                    message = String(localized: "新增 \(added) 个账户")
+                    message = String.loc("新增 \(added) 个账户")
                 default:
-                    message = String(localized: "已移除 \(removed) 个账户，新增 \(added) 个")
+                    message = String.loc("已移除 \(removed) 个账户，新增 \(added) 个")
                 }
-                banner = Banner(title: String(localized: "账户已更新"), message: message)
+                banner = Banner(title: String.loc("账户已更新"), message: message)
 
             case .noRemoteAccounts:
                 // 本地此刻一条都没删 —— 交给用户决定要不要整个解绑，
@@ -571,8 +571,8 @@ struct BankSyncView: View {
             // 失败时本地记录原样保留。这条提示要说清楚「什么都没变」，
             // 否则用户会以为自己刚才的勾选生效了。
             banner = Banner(
-                title: String(localized: "账户列表更新失败"),
-                message: String(localized: "本地账户列表未做任何改动，可以稍后重试。\n\n\(error.localizedDescription)"))
+                title: String.loc("账户列表更新失败"),
+                message: String.loc("本地账户列表未做任何改动，可以稍后重试。\n\n\(error.localizedDescription)"))
         }
     }
 
@@ -603,8 +603,8 @@ struct BankSyncView: View {
                     return nil
                 }.joined(separator: "、")
                 banner = Banner(
-                    title: String(localized: "有账户未匹配到卡片"),
-                    message: String(localized: "卡包里没有尾号 \(masks) 的卡。可以先去「卡包」建卡，再回来点「指定卡片」。未关联卡片的账户不会同步。"))
+                    title: String.loc("有账户未匹配到卡片"),
+                    message: String.loc("卡包里没有尾号 \(masks) 的卡。可以先去「卡包」建卡，再回来点「指定卡片」。未关联卡片的账户不会同步。"))
             }
 
             // 首次全量。刚绑完 Plaid 还在向银行拉数据，
@@ -613,7 +613,7 @@ struct BankSyncView: View {
                 itemId: result.itemId, context: context)
 
         } catch {
-            banner = Banner(title: String(localized: "绑定后处理失败"), message: error.localizedDescription)
+            banner = Banner(title: String.loc("绑定后处理失败"), message: error.localizedDescription)
         }
     }
 
@@ -622,7 +622,7 @@ struct BankSyncView: View {
 
         let result = await syncService.syncAll(context: context)
         if !result.errors.isEmpty {
-            banner = Banner(title: String(localized: "同步未完全成功"),
+            banner = Banner(title: String.loc("同步未完全成功"),
                             message: result.errors.joined(separator: "\n"))
         }
     }
@@ -642,24 +642,24 @@ struct BankSyncView: View {
             // 成功了才删自己的记录。
             await unlink(
                 itemId: itemId,
-                successMessage: String(localized: "已向银行撤销这次绑定的授权。已导入的交易记录全部保留。"))
+                successMessage: String.loc("已向银行撤销这次绑定的授权。已导入的交易记录全部保留。"))
             return
         }
 
         linkService.removeLocally(account: pending.account, context: context)
         banner = Banner(
-            title: String(localized: "已从 App 移除"),
-            message: String(localized: "这张卡不再显示，也不再同步。\n\n银行授权仍然有效 —— Plaid 不支持单独撤销一个账户。要真正撤销，用「管理已连接的账户」在银行页面取消勾选。"))
+            title: String.loc("已从 App 移除"),
+            message: String.loc("这张卡不再显示，也不再同步。\n\n银行授权仍然有效 —— Plaid 不支持单独撤销一个账户。要真正撤销，用「管理已连接的账户」在银行页面取消勾选。"))
     }
 
     private func unlink(itemId: String, successMessage: String? = nil) async {
         do {
             try await linkService.unlink(itemId: itemId, context: context)
             if let successMessage {
-                banner = Banner(title: String(localized: "已解除绑定"), message: successMessage)
+                banner = Banner(title: String.loc("已解除绑定"), message: successMessage)
             }
         } catch {
-            banner = Banner(title: String(localized: "解绑失败"), message: error.localizedDescription)
+            banner = Banner(title: String.loc("解绑失败"), message: error.localizedDescription)
         }
     }
 }

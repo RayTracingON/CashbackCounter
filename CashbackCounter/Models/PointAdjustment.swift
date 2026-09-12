@@ -12,12 +12,12 @@ enum AdjustmentType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .earn:     return "消费获得"
-        case .redeem:   return "兑换使用"
-        case .expire:   return "积分过期"
-        case .transfer: return "积分转移"
-        case .bonus:    return "活动赠送"
-        case .manual:   return "手动调整"
+        case .earn:     return String.loc("消费获得")
+        case .redeem:   return String.loc("兑换使用")
+        case .expire:   return String.loc("积分过期")
+        case .transfer: return String.loc("积分转移")
+        case .bonus:    return String.loc("活动赠送")
+        case .manual:   return String.loc("手动调整")
         }
     }
 

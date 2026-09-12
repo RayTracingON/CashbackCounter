@@ -31,9 +31,9 @@ nonisolated enum ThirdPartyProvider: String, Codable, CaseIterable, Sendable, Id
 
     var displayName: String {
         switch self {
-        case .openAICompatible: return String(localized: "OpenAI 兼容")
-        case .anthropic:        return String(localized: "Anthropic")
-        case .gemini:           return String(localized: "Google Gemini")
+        case .openAICompatible: return String.loc("OpenAI 兼容")
+        case .anthropic:        return String.loc("Anthropic")
+        case .gemini:           return String.loc("Google Gemini")
         }
     }
 
@@ -58,11 +58,11 @@ nonisolated enum ThirdPartyProvider: String, Codable, CaseIterable, Sendable, Id
     var hint: String {
         switch self {
         case .openAICompatible:
-            return String(localized: "填到 /v1 为止，例如 https://api.deepseek.com/v1。兼容任何 OpenAI 格式的服务。")
+            return String.loc("填到 /v1 为止，例如 https://api.deepseek.com/v1。兼容任何 OpenAI 格式的服务。")
         case .anthropic:
-            return String(localized: "填服务根地址，例如 https://api.anthropic.com，路径由 App 补全。")
+            return String.loc("填服务根地址，例如 https://api.anthropic.com，路径由 App 补全。")
         case .gemini:
-            return String(localized: "填服务根地址，例如 https://generativelanguage.googleapis.com。")
+            return String.loc("填服务根地址，例如 https://generativelanguage.googleapis.com。")
         }
     }
 }
@@ -84,10 +84,10 @@ nonisolated enum StructuredOutputMode: String, Codable, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .auto:       return String(localized: "自动（推荐）")
-        case .jsonSchema: return String(localized: "JSON Schema")
-        case .jsonObject: return String(localized: "JSON 模式")
-        case .promptOnly: return String(localized: "仅提示词约束")
+        case .auto:       return String.loc("自动（推荐）")
+        case .jsonSchema: return String.loc("JSON Schema")
+        case .jsonObject: return String.loc("JSON 模式")
+        case .promptOnly: return String.loc("仅提示词约束")
         }
     }
 }

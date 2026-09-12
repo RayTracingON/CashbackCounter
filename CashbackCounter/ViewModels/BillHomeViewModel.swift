@@ -40,9 +40,9 @@ final class BillHomeViewModel {
 
     var dateButtonText: String {
         if isWholeYear {
-            return selectedDate.formatted(.dateTime.year()) + " " + String(localized: "全年")
+            return selectedDate.formatted(.dateTime.year().locale(AppLanguage.locale)) + " " + String.loc("全年")
         } else {
-            return selectedDate.formatted(.dateTime.year().month())
+            return selectedDate.formatted(.dateTime.year().month().locale(AppLanguage.locale))
         }
     }
 

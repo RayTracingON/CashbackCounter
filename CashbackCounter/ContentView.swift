@@ -4,7 +4,9 @@ import SwiftData
 // --- 2. 主入口 (包含底部导航栏) ---
 struct ContentView: View {
     // 选中的 Tab 索引
-    @State private var selectedTab = 0
+    // 用 @AppStorage 而不是 @State：切语言时整棵树会按 id 重建（见 CashbackCounterApp），
+    // @State 会被一起丢掉，把刚在设置页操作的用户弹回账单页。
+    @AppStorage("selectedTab") private var selectedTab = 0
     @Environment(\.modelContext) private var context
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     

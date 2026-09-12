@@ -37,10 +37,10 @@ enum PaymentMethod: String, CaseIterable, Codable {
         switch self {
         case .applePay: return "Apple Pay"
         case .qrCode: return "QR Code"
-        case .offline: return String(localized: "线下消费")
-        case .online: return String(localized: "线上消费")
-        case .pulse: return String(localized: "Pulse信用卡的合资格消费")
-        case .gba: return String(localized: "信银gba信用卡的合资格消费")
+        case .offline: return String.loc("线下消费")
+        case .online: return String.loc("线上消费")
+        case .pulse: return String.loc("Pulse信用卡的合资格消费")
+        case .gba: return String.loc("信银gba信用卡的合资格消费")
         }
     }
     

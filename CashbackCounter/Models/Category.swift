@@ -35,13 +35,13 @@ enum Category: String, CaseIterable, Codable {
     // 计算属性：返回给人看的名称（走本地化词典）
     var displayName: String {
         switch self {
-        case .dining: return String(localized: "餐饮美食")
-        case .grocery: return String(localized: "超市便利")
-        case .travel: return String(localized: "交通出行")
-        case .digital: return String(localized: "数码产品")
-        case .anime: return String(localized: "二次元")
-        case .streaming: return String(localized: "订阅")
-        case .other: return String(localized: "其他消费")
+        case .dining: return String.loc("餐饮美食")
+        case .grocery: return String.loc("超市便利")
+        case .travel: return String.loc("交通出行")
+        case .digital: return String.loc("数码产品")
+        case .anime: return String.loc("二次元")
+        case .streaming: return String.loc("订阅")
+        case .other: return String.loc("其他消费")
         }
     }
     var color: Color {
