@@ -9,6 +9,7 @@
 //
 
 import AuthenticationServices
+import StoreKit
 import SwiftData
 import SwiftUI
 
@@ -175,6 +176,7 @@ struct AccountSection: View {
 
     @State private var showSignIn = false
     @State private var showPaywall = false
+    @State private var showRedeemCode = false
     @State private var confirmation: Confirmation?
     @State private var outcome: Outcome?
 
@@ -200,6 +202,9 @@ struct AccountSection: View {
                 }
                 .sheet(isPresented: $showPaywall) {
                     PaywallView()
+                }
+                .offerCodeRedemption(isPresented: $showRedeemCode) { result in
+                    Task { await subscriptions.offerCodeRedemptionFinished(result) }
                 }
                 .confirmationDialog(
                     confirmation == .deleteAccount ? "删除账号？" : "退出登录？",
@@ -243,12 +248,21 @@ struct AccountSection: View {
             }
 
             if subscriptions.isPremium {
-                HStack {
-                    Label("订阅", systemImage: "star.circle")
-                    Spacer()
-                    Text(subscriptionExpiryText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Label("订阅", systemImage: "star.circle")
+                        Spacer()
+                        Text(subscriptionExpiryText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    // 兑换码换来的是一段优惠订阅，优惠结束会按原价自动续订。
+                    // 用户手里拿的叫"激活码"，默认会以为到期就失效 —— 必须说清楚。
+                    if subscriptions.isViaOfferCode {
+                        Text("当前为兑换码优惠期，结束后将按原价自动续订，如不需要请在到期前取消。")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 // 管理和取消一律跳系统页 —— App 内不该、也无法代改订阅
                 Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
@@ -267,6 +281,13 @@ struct AccountSection: View {
                 } label: {
                     Label("恢复购买", systemImage: "arrow.clockwise")
                 }
+            }
+
+            // 订阅中也显示：老订阅者兑换的优惠从下一个续订周期开始生效
+            Button {
+                showRedeemCode = true
+            } label: {
+                Label("使用兑换码", systemImage: "ticket")
             }
 
             if auth.isSignedIn {

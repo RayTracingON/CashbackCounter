@@ -10089,6 +10089,38 @@
           }
         }
       }
+    },
+    "使用兑换码" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redeem Code"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用兌換碼"
+          }
+        }
+      }
+    },
+    "当前为兑换码优惠期，结束后将按原价自动续订，如不需要请在到期前取消。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're on an offer code discount. It will renew at the regular price when it ends; cancel before then if you don't want to continue."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前為兌換碼優惠期，結束後將按原價自動續訂，如不需要請在到期前取消。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

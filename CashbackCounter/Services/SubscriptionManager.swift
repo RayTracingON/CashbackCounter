@@ -62,6 +62,12 @@ final class SubscriptionManager {
     /// 当前订阅的到期时刻，用于设置页展示
     private(set) var expiresAt: Date?
 
+    /// 当前有效的那段订阅是不是兑换码（App Store 优惠码）换来的。
+    ///
+    /// 设置页据此提醒"优惠结束后按原价续订"—— 用户拿到的是"激活码"，
+    /// 很容易以为到期就自动失效，不说清楚会变成一笔意料之外的扣款。
+    private(set) var isViaOfferCode = false
+
     private let api = PlaidAPIClient.shared
 
     /// 长驻监听 Transaction.updates。续订、退款、家庭共享变更都从这里来 ——
@@ -184,6 +190,18 @@ final class SubscriptionManager {
         }
     }
 
+    /// 系统兑换码弹窗（`.offerCodeRedemption`）关闭后调用。
+    ///
+    /// 兑换出来的是一笔普通订阅交易，会照常经过 `Transaction.updates` 和后端验签，
+    /// 这里不需要任何特殊处理。主动刷新一次只是为了让界面尽快跟上 ——
+    /// 交易经常比弹窗关闭晚到，晚到的那笔由 updates 监听补上。
+    func offerCodeRedemptionFinished(_ result: Result<Void, any Error>) async {
+        if case .failure(let error) = result {
+            print("⚠️ 兑换码弹窗异常结束：\(error.localizedDescription)")
+        }
+        await refreshEntitlements()
+    }
+
     // MARK: - 权益
 
     /// 重新计算权益，并把签名交易上报后端。
@@ -192,6 +210,7 @@ final class SubscriptionManager {
     func refreshEntitlements() async {
         var active = false
         var latestExpiry: Date?
+        var latestIsOfferCode = false
         var signedTransactions: [String] = []
 
         for await result in StoreKit.Transaction.currentEntitlements {
@@ -209,6 +228,7 @@ final class SubscriptionManager {
                 active = true
                 if latestExpiry == nil || expiry > latestExpiry! {
                     latestExpiry = expiry
+                    latestIsOfferCode = transaction.offer?.type == .code
                 }
             }
 
@@ -217,6 +237,7 @@ final class SubscriptionManager {
         }
 
         localEntitlementActive = active
+        isViaOfferCode = active && latestIsOfferCode
         if let latestExpiry {
             expiresAt = latestExpiry
         }

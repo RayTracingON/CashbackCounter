@@ -19,6 +19,14 @@ struct PaywallView: View {
 
     @State private var selected: Product?
     @State private var errorMessage: String?
+    @State private var showRedeemCode = false
+
+    /// onSubscribed 只能回调一次。
+    ///
+    /// 购买成功、恢复购买、兑换码、`isPremium` 变化这几条路径会先后命中同一次开通
+    /// （购买时 refreshEntitlements 就会翻转 isPremium）。调用方拿回调去发起绑卡，
+    /// 回调两次就是弹两次 Plaid Link。
+    @State private var didFinish = false
 
     /// 订阅成功后的回调，调用方拿它继续原本要做的事
     var onSubscribed: (() -> Void)?
@@ -63,6 +71,17 @@ struct PaywallView: View {
                     await subscriptions.refreshIntroOfferEligibility()
                 }
                 selected = selected ?? subscriptions.products.last
+            }
+            .offerCodeRedemption(isPresented: $showRedeemCode) { result in
+                Task {
+                    await subscriptions.offerCodeRedemptionFinished(result)
+                    dismissIfSubscribed()
+                }
+            }
+            // 兑换出来的交易经常比弹窗关闭晚到，只能从 Transaction.updates 进来，
+            // 所以不能只在 onCompletion 里判断一次
+            .onChange(of: subscriptions.isPremium) { _, isPremium in
+                if isPremium { finish() }
             }
         }
     }
@@ -197,6 +216,13 @@ struct PaywallView: View {
             }
             .font(.footnote)
 
+            // 兑换码走 Apple 自己的兑换弹窗（App Store 优惠码），
+            // 不是自建激活码 —— 后者违反审核指南 3.1.1
+            Button("使用兑换码") {
+                showRedeemCode = true
+            }
+            .font(.footnote)
+
             // App Store 审核硬要求：试用时长、试用结束后的价格、会自动续订，
             // 这三条必须写在购买按钮附近的可见位置，只写进条款链接里不算。
             termsText
@@ -254,8 +280,7 @@ struct PaywallView: View {
         do {
             let success = try await subscriptions.purchase(selected)
             if success {
-                onSubscribed?()
-                dismiss()
+                finish()
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -264,9 +289,15 @@ struct PaywallView: View {
 
     private func dismissIfSubscribed() {
         if subscriptions.isPremium {
-            onSubscribed?()
-            dismiss()
+            finish()
         }
+    }
+
+    private func finish() {
+        guard !didFinish else { return }
+        didFinish = true
+        onSubscribed?()
+        dismiss()
     }
 }
 
