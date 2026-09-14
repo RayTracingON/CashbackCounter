@@ -260,3 +260,44 @@ struct CashbackProgressSection: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("进度条 · 三种状态", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 18) {
+        // 进行中 / 已封顶 / 无上限
+        ForEach(PreviewData.capProgressSamples) { item in
+            CashbackProgressRow(item: item, isPoints: false, currencySymbol: "CN¥")
+        }
+
+        Divider()
+
+        // 积分口径：数值后缀变成"分"，不带货币符号
+        CashbackProgressRow(item: PreviewData.capProgressSamples[0],
+                            isPoints: true,
+                            currencySymbol: "")
+    }
+    .padding()
+}
+
+#Preview("进度区块 · 返现卡（月度）", traits: .sizeThatFitsLayout) {
+    // 用真实算出来的进度，跟着 PreviewData 那批交易走
+    CashbackProgressSection(card: PreviewData.cashbackCard)
+        .padding()
+        .previewEnvironment()
+}
+
+#Preview("进度区块 · 积分卡（年度）", traits: .sizeThatFitsLayout) {
+    CashbackProgressSection(card: PreviewData.pointsCard)
+        .padding()
+        .previewEnvironment()
+}
+
+#Preview("进度区块 · 双币卡", traits: .sizeThatFitsLayout) {
+    // 港式双币：副币种消费 1:1 并进本币上限，只应看到一条基础轨道
+    CashbackProgressSection(card: PreviewData.dualCurrencyCard)
+        .padding()
+        .previewEnvironment()
+}
+#endif

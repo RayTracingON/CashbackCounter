@@ -474,3 +474,55 @@ struct EmbeddedTransactionListView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("卡包") {
+    CardListView()
+        .previewEnvironment()
+}
+
+#Preview("卡包 · 空") {
+    CardListView()
+        .previewEmptyEnvironment()
+}
+
+#Preview("卡内交易列表 · 返现卡", traits: .sizeThatFitsLayout) {
+    ScrollView {
+        EmbeddedTransactionListView(card: PreviewData.cashbackCard,
+                                    exchangeRates: PreviewData.exchangeRates)
+    }
+    .previewEnvironment()
+}
+
+#Preview("卡内交易列表 · 无交易", traits: .sizeThatFitsLayout) {
+    // dualCurrencyCard 下只有两笔，换成一张新卡看"此卡片暂无交易记录"分支
+    ScrollView {
+        EmbeddedTransactionListView(card: PreviewData.dualCurrencyCard,
+                                    exchangeRates: PreviewData.exchangeRates)
+    }
+    .previewEnvironment()
+}
+
+#Preview("长按拖动识别器", traits: .sizeThatFitsLayout) {
+    // 它本体是个透明 UIView，画布里看不见。这条只验证能装起来、三个回调接得上，
+    // 真实的"抢不抢滚动手势"必须在真机上滑一遍才算验过。
+    @Previewable @State var log = "长按蓝色区域并上下拖动"
+    VStack(spacing: 12) {
+        Text(log)
+            .font(.footnote.monospaced())
+        Color.blue.opacity(0.15)
+            .frame(height: 120)
+            .overlay(
+                ReorderLongPressGesture(
+                    isEnabled: true,
+                    onBegan: { log = "began" },
+                    onChanged: { log = String(format: "changed %.0f", $0) },
+                    onEnded: { log = $0 ? "cancelled" : "ended" }
+                )
+            )
+    }
+    .padding()
+}
+#endif

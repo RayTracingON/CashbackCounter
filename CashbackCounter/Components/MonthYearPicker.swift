@@ -98,3 +98,20 @@ struct MonthYearPicker: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("年月选择器 · 选某月") {
+    @Previewable @State var date = Date()
+    @Previewable @State var isWholeYear = false
+    MonthYearPicker(date: $date, isWholeYear: $isWholeYear)
+}
+
+#Preview("年月选择器 · 全年") {
+    // isWholeYear = true 时月份滚轮应停在"全年"（内部用 0 表示）
+    @Previewable @State var date = Date()
+    @Previewable @State var isWholeYear = true
+    MonthYearPicker(date: $date, isWholeYear: $isWholeYear)
+}
+#endif

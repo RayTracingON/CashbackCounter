@@ -862,3 +862,84 @@ private struct PointRemovalEntryView: View {
         dismiss()
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("积分总览") {
+    PointSystemView()
+        .previewEnvironment()
+}
+
+#Preview("积分总览 · 空") {
+    PointSystemView()
+        .previewEmptyEnvironment()
+}
+
+#Preview("积分明细") {
+    NavigationStack {
+        PointDetailView(summary: PreviewData.pointSummary,
+                        transactions: PreviewData.transactions,
+                        adjustments: PreviewData.adjustments,
+                        exchangeRates: PreviewData.exchangeRates,
+                        mainCurrencyCode: "CNY")
+    }
+    .previewEnvironment()
+}
+
+#Preview("积分汇总卡", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 14) {
+        PointSummaryCard(summary: PreviewData.pointSummary, pointsText: "128,450")
+        // 未归属积分：program 为 nil、没有主题色，走灰色兜底
+        PointSummaryCard(
+            summary: PointProgramSummary(id: "unassigned", program: nil,
+                                         bankName: "未分类", pointName: "",
+                                         points: 1_280, themeColors: []),
+            pointsText: "1,280"
+        )
+    }
+    .padding()
+    .background(Color(uiColor: .systemGroupedBackground))
+    .previewEnvironment()
+}
+
+#Preview("积分 Logo 占位", traits: .sizeThatFitsLayout) {
+    HStack(spacing: 16) {
+        PointLogoPlaceholder(bankName: "HSBC HK", colors: [Color(hex: "C8102E"), Color(hex: "7A0A1C")])
+        PointLogoPlaceholder(bankName: "Chase", colors: [.blue, .indigo])
+        // 没有主题色时的灰色兜底
+        PointLogoPlaceholder(bankName: "未分类", colors: [])
+    }
+    .padding()
+}
+
+#Preview("手动添加积分") {
+    PointAdjustmentEntryView()
+        .previewEnvironment()
+}
+
+#Preview("手动添加积分 · 无积分计划") {
+    PointAdjustmentEntryView()
+        .previewEmptyEnvironment()
+}
+
+#Preview("手动移除积分") {
+    PointRemovalEntryView()
+        .previewEnvironment()
+}
+
+#Preview("卡面容器修饰器", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 16) {
+        Text("无 tint")
+            .frame(maxWidth: .infinity)
+            .padding(20)
+            .modifier(CardSurface(cornerRadius: 16, tint: nil))
+        Text("带 tint")
+            .frame(maxWidth: .infinity)
+            .padding(20)
+            .modifier(CardSurface(cornerRadius: 16, tint: .orange))
+    }
+    .padding()
+    .background(Color(uiColor: .systemGroupedBackground))
+}
+#endif

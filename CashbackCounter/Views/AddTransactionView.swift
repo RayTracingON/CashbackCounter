@@ -265,3 +265,52 @@ struct AddTransactionView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("手动记一笔") {
+    AddTransactionView()
+        .previewEnvironment()
+}
+
+#Preview("编辑已有交易") {
+    AddTransactionView(transaction: PreviewData.transaction)
+        .previewEnvironment()
+}
+
+#Preview("识别后预填（拍照 / 截屏）") {
+    // 模拟 OCR 出结果后的入口：带收据图 + 全字段预填 + 按尾号自动选卡
+    AddTransactionView(
+        image: PreviewData.receiptImage,
+        prefillMerchant: "山姆会员店",
+        prefillAmount: 486.50,
+        prefillDate: Date(),
+        prefillCategory: .grocery,
+        prefillLocation: .cn,
+        prefillPaymentMethod: .offline,
+        prefillCardLast4: "6688"
+    )
+    .previewEnvironment()
+}
+
+#Preview("外币预填（原币 / 入账双金额）") {
+    AddTransactionView(
+        prefillMerchant: "Amazon JP",
+        prefillAmount: 8_400,
+        prefillBillingAmount: 512.30,
+        prefillDate: Date(),
+        prefillCategory: .digital,
+        prefillLocation: .jp,
+        prefillPaymentMethod: .online,
+        prefillCardLast4: "1234"
+    )
+    .previewEnvironment()
+}
+
+#Preview("卡包为空") {
+    // 一张卡都没有时，卡片选择器该给出可理解的提示而不是空 Picker
+    AddTransactionView()
+        .previewEmptyEnvironment()
+}
+#endif

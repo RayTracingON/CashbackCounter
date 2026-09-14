@@ -495,3 +495,46 @@ private struct ShortcutGuideView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("设置") {
+    SettingsView()
+        .previewEnvironment()
+}
+
+#Preview("设置 · 空数据") {
+    SettingsView()
+        .previewEmptyEnvironment()
+}
+
+#Preview("设置 · 深色") {
+    SettingsView()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("隐私政策") {
+    NavigationStack {
+        PrivacyPolicyView()
+    }
+}
+
+#Preview("更新注意事项") {
+    NavigationStack {
+        UpdateNotesView(appVersion: "1.4.2")
+    }
+}
+
+#Preview("快捷指令指引") {
+    NavigationStack {
+        ShortcutGuideView()
+    }
+}
+
+#Preview("系统分享面板") {
+    // 导出 CSV 走的就是这个：画布里能看到真实的分享目标列表
+    ActivityViewController(activityItems: ["CashbackCounter 预览导出内容"])
+}
+#endif

@@ -66,3 +66,11 @@ struct ReceiptFullScreenView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("收据全屏（可双指缩放）") {
+    ReceiptFullScreenView(image: PreviewData.receiptImage)
+}
+#endif

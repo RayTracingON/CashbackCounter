@@ -63,3 +63,21 @@ struct PlaidLinkSheet: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("Plaid Link 弹窗") {
+    // 这里塞的是假 link_token，LinkKit 会直接走 onExit 报 token 无效 ——
+    // 那正是它该有的表现。真实绑定流程只能在模拟器/真机上用后端签发的 token 走。
+    PlaidLinkSheet(
+        linkToken: "link-sandbox-preview-token",
+        onSuccess: { publicToken, institution in
+            print("preview onSuccess: \(institution) \(publicToken)")
+        },
+        onExit: { message in
+            print("preview onExit: \(message ?? "用户主动取消")")
+        }
+    )
+}
+#endif

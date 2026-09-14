@@ -48,3 +48,33 @@ struct StatBox: View {
         )
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("统计卡片", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 12) {
+        HStack(spacing: 12) {
+            StatBox(title: "本月支出", amount: "CN¥ 1,886.50",
+                    icon: "arrow.up.right.circle.fill", color: .red)
+            StatBox(title: "本月返现", amount: "CN¥ 62.30",
+                    icon: "arrow.down.left.circle.fill", color: .green)
+        }
+        // 超长数字：验证不会把两列挤变形
+        StatBox(title: "累计积分价值", amount: "HK$ 1,284,500.00",
+                icon: "star.circle.fill", color: .orange)
+    }
+    .padding()
+}
+
+#Preview("统计卡片 · 深色", traits: .sizeThatFitsLayout) {
+    HStack(spacing: 12) {
+        StatBox(title: "本月支出", amount: "CN¥ 1,886.50",
+                icon: "arrow.up.right.circle.fill", color: .red)
+        StatBox(title: "本月返现", amount: "CN¥ 62.30",
+                icon: "arrow.down.left.circle.fill", color: .green)
+    }
+    .padding()
+    .preferredColorScheme(.dark)
+}
+#endif

@@ -57,3 +57,21 @@ struct NotificationSettingsView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("还款提醒") {
+    NavigationStack {
+        NotificationSettingsView()
+    }
+    .previewEnvironment()
+}
+
+#Preview("还款提醒 · 无卡片") {
+    NavigationStack {
+        NotificationSettingsView()
+    }
+    .previewEmptyEnvironment()
+}
+#endif

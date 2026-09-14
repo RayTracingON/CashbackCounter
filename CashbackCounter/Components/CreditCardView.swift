@@ -91,3 +91,42 @@ struct CreditCardView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("卡面 · 渐变", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 16) {
+        ForEach(PreviewData.cards) { card in
+            CreditCardView(bankName: card.bankName,
+                           type: card.type,
+                           endNum: card.endNum,
+                           colors: card.colors)
+                .frame(height: DesignConstants.CardList.cardHeight)
+        }
+    }
+    .padding()
+    .previewEnvironment()
+}
+
+#Preview("卡面 · 自定义图片", traits: .sizeThatFitsLayout) {
+    // 传了 cardImageData 就走图片分支，渐变和装饰纹理都不该再出现
+    CreditCardView(bankName: "招商银行",
+                   type: "经典白金卡",
+                   endNum: "6688",
+                   colors: [.blue, .purple],
+                   cardImageData: PreviewData.cardArtData)
+        .frame(height: DesignConstants.CardList.cardHeight)
+        .padding()
+}
+
+#Preview("卡面 · 极端文案", traits: .sizeThatFitsLayout) {
+    // 超长银行名 + 空卡号：验证不会撑破卡片
+    CreditCardView(bankName: "中国银行（香港）有限公司",
+                   type: "双币种世界之极尊享白金卡",
+                   endNum: "",
+                   colors: [Color(hex: "9C1B24"), Color(hex: "D94F45")])
+        .frame(height: DesignConstants.CardList.cardHeight)
+        .padding()
+}
+#endif

@@ -129,3 +129,21 @@ struct CameraPreview: UIViewRepresentable {
     
     func updateUIView(_ uiView: CameraPreviewView, context: Context) {}
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("相机预览层") {
+    // 画布和模拟器都没有摄像头，这里只验证 AVCaptureVideoPreviewLayer 能装起来不崩，
+    // 真实画面必须真机看。
+    CameraPreview(cameraService: CameraService())
+        .ignoresSafeArea()
+        .overlay(alignment: .bottom) {
+            Text("画布无摄像头，画面为空属正常")
+                .font(.footnote)
+                .padding(8)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.bottom, 40)
+        }
+}
+#endif

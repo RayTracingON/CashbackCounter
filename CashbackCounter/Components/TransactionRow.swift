@@ -150,3 +150,31 @@ struct TransactionRow: View {
 extension Color {
     static let tertiaryLabel = Color(uiColor: .tertiaryLabel)
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("交易行 · 各种形态", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 10) {
+        // 本币 + Apple Pay 加成
+        TransactionRow(transaction: PreviewData.transaction,
+                       exchangeRates: PreviewData.exchangeRates)
+        // 带报销：净收益文案走另一条分支
+        TransactionRow(transaction: PreviewData.transactionWithReceipt,
+                       exchangeRates: PreviewData.exchangeRates)
+        // 外币消费入账港币：折算文案
+        TransactionRow(transaction: PreviewData.foreignTransaction,
+                       exchangeRates: PreviewData.exchangeRates)
+    }
+    .padding()
+    .background(Color(uiColor: .systemGroupedBackground))
+    .previewEnvironment()
+}
+
+#Preview("交易行 · 无汇率表", traits: .sizeThatFitsLayout) {
+    // 汇率还没拉回来时的样子（折算应当退化而不是显示 0）
+    TransactionRow(transaction: PreviewData.foreignTransaction)
+        .padding()
+        .previewEnvironment()
+}
+#endif

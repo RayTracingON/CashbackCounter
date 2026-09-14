@@ -269,3 +269,18 @@ struct PaywallView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("付费墙") {
+    // StoreKit 商品要连沙盒才拉得到，画布里通常是空列表 / 加载态。
+    // 排版、文案、权益列表看这条；真实价格和购买流程要跑模拟器配 StoreKit 配置文件。
+    PaywallView()
+}
+
+#Preview("付费墙 · 深色") {
+    PaywallView()
+        .preferredColorScheme(.dark)
+}
+#endif

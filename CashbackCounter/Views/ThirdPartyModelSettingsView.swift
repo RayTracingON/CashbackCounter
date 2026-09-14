@@ -280,3 +280,21 @@ struct ThirdPartyModelSettingsView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("自定义 API 设置") {
+    // ⚠️ 这一页限 iOS 27+。模拟器上目前只装了 iOS 26 运行时，画布里会落到下面的兜底，
+    // 真正的表单要在 iOS 27 真机（或装了 27 运行时的模拟器）上预览。
+    if #available(iOS 27.0, *) {
+        NavigationStack {
+            ThirdPartyModelSettingsView()
+        }
+    } else {
+        ContentUnavailableView("需要 iOS 27",
+                               systemImage: "exclamationmark.triangle",
+                               description: Text("第三方模型通道依赖 iOS 27 的 LanguageModel 协议"))
+    }
+}
+#endif

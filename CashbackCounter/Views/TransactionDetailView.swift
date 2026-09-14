@@ -281,3 +281,32 @@ struct DetailRow: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("交易详情") {
+    TransactionDetailView(transaction: PreviewData.transaction)
+        .previewEnvironment()
+}
+
+#Preview("交易详情 · 带收据与报销") {
+    // 收据缩略图（可点开全屏）+ 关联收入两段都有内容
+    TransactionDetailView(transaction: PreviewData.transactionWithReceipt)
+        .previewEnvironment()
+}
+
+#Preview("交易详情 · 外币积分") {
+    // 原币/入账双金额 + 积分而非返现
+    TransactionDetailView(transaction: PreviewData.foreignTransaction)
+        .previewEnvironment()
+}
+
+#Preview("详情行", traits: .sizeThatFitsLayout) {
+    List {
+        DetailRow(title: "消费类别", value: "餐饮美食", icon: "cup.and.saucer.fill")
+        DetailRow(title: "消费方式", value: "Apple Pay", icon: "apple.logo")
+        DetailRow(title: "消费地区", value: "🇨🇳 中国大陆", icon: "globe")
+    }
+}
+#endif

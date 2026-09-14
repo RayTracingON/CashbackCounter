@@ -88,3 +88,17 @@ struct EditIncomeView: View {
     }
 }
 
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("编辑收入") {
+    EditIncomeView(income: PreviewData.incomes[0])
+        .previewEnvironment()
+}
+
+#Preview("编辑收入 · 未入账") {
+    EditIncomeView(income: PreviewData.incomes[1])
+        .previewEnvironment()
+}
+#endif

@@ -96,3 +96,16 @@ struct DeveloperView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("关于开发者") {
+    DeveloperView()
+}
+
+#Preview("关于开发者 · 深色") {
+    DeveloperView()
+        .preferredColorScheme(.dark)
+}
+#endif

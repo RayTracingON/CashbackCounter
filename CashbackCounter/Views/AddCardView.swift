@@ -383,3 +383,43 @@ struct AddCardView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("新建卡片 · 空白") {
+    AddCardView()
+        .previewEnvironment()
+}
+
+#Preview("从模板新建") {
+    // 模板里的费率是百分数，进来后应当被折算成小数填进表单
+    AddCardView(template: PreviewData.cardTemplate)
+        .previewEnvironment()
+}
+
+#Preview("编辑已有卡片") {
+    AddCardView(cardToEdit: PreviewData.cashbackCard)
+        .previewEnvironment()
+}
+
+#Preview("编辑积分卡") {
+    // rewardType = .points 时上限单位、积分计划选择器都会换一套
+    AddCardView(cardToEdit: PreviewData.pointsCard)
+        .previewEnvironment()
+}
+
+#Preview("编辑双币卡") {
+    AddCardView(cardToEdit: PreviewData.dualCurrencyCard)
+        .previewEnvironment()
+}
+
+#Preview("类别输入行", traits: .sizeThatFitsLayout) {
+    @Previewable @State var rate = "5"
+    @Previewable @State var cap = "100"
+    Form {
+        AddCardView.CategoryInputRow(name: "餐饮美食", rate: $rate, cap: $cap, capUnit: "返现")
+        AddCardView.CategoryInputRow(name: "数码产品", rate: $rate, cap: $cap, capUnit: "积分")
+    }
+}
+#endif

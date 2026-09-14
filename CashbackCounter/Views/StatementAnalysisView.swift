@@ -474,3 +474,81 @@ private struct DateBadge: View {
         return formatter
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("结单分析 · 入口（未导入）") {
+    StatementAnalysisEntryView()
+        .previewEnvironment()
+}
+
+#Preview("结单分析 · 已解析") {
+    NavigationStack {
+        StatementAnalysisView(statement: PreviewData.statement)
+    }
+    .previewEnvironment()
+}
+
+#Preview("结单分析 · 本地无交易可对账") {
+    // 对账两侧都空时应给出可理解的结果，而不是一屏"缺失"
+    NavigationStack {
+        StatementAnalysisView(statement: PreviewData.statement)
+    }
+    .previewEmptyEnvironment()
+}
+
+#Preview("结单摘要卡", traits: .sizeThatFitsLayout) {
+    @Previewable @State var selectedCardIndex: Int? = 1
+    StatementSummaryCard(metadata: PreviewData.statement,
+                         report: PreviewData.reconciliationReport,
+                         cards: PreviewData.cards,
+                         selectedCardIndex: $selectedCardIndex,
+                         detectedCardText: "识别到尾号 1234（HSBC HK Red Card）",
+                         isDetectingCard: false,
+                         isAnalyzingTransactions: false,
+                         currencyCode: "HKD")
+        .padding()
+        .background(Color(uiColor: .systemGroupedBackground))
+        .previewEnvironment()
+}
+
+#Preview("结单摘要卡 · 识别中", traits: .sizeThatFitsLayout) {
+    // 两个 loading 标志同时为 true：转圈和"分析中"文案都该出现
+    @Previewable @State var selectedCardIndex: Int? = nil
+    StatementSummaryCard(metadata: PreviewData.statement,
+                         report: PreviewData.reconciliationReport,
+                         cards: PreviewData.cards,
+                         selectedCardIndex: $selectedCardIndex,
+                         detectedCardText: nil,
+                         isDetectingCard: true,
+                         isAnalyzingTransactions: true,
+                         currencyCode: "HKD")
+        .padding()
+        .background(Color(uiColor: .systemGroupedBackground))
+        .previewEnvironment()
+}
+
+#Preview("对账行", traits: .sizeThatFitsLayout) {
+    let items = PreviewData.importedTransactions
+    List {
+        // 缺失：右侧有"添加"按钮
+        ReconciliationRow(transaction: items[0], status: .missing,
+                          onAdd: {}, currencyCode: "HKD")
+        // 已匹配：不给添加入口
+        ReconciliationRow(transaction: items[1], status: .matched,
+                          onAdd: nil, currencyCode: "HKD")
+        // 带外币折算的那笔
+        ReconciliationRow(transaction: items[2], status: .missing,
+                          onAdd: {}, currencyCode: "HKD")
+    }
+}
+
+#Preview("日期徽标", traits: .sizeThatFitsLayout) {
+    HStack(spacing: 12) {
+        DateBadge(date: Date())
+        DateBadge(date: Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? Date())
+    }
+    .padding()
+}
+#endif

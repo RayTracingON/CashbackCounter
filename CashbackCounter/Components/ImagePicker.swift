@@ -47,3 +47,13 @@ struct ImagePicker: UIViewControllerRepresentable {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("系统相册选择器") {
+    // UIImagePickerController 在画布里只出壳；真要走完选图流程得跑模拟器
+    @Previewable @State var image: UIImage?
+    ImagePicker(selectedImage: $image)
+}
+#endif

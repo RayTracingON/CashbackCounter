@@ -83,3 +83,18 @@ struct AddIncomeView: View {
         dismiss()
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("新增收入 / 报销") {
+    AddIncomeView(transaction: PreviewData.transactionWithReceipt)
+        .previewEnvironment()
+}
+
+#Preview("外币交易的收入") {
+    // 地区默认跟随原交易，这条用来确认币种没被写成本币
+    AddIncomeView(transaction: PreviewData.foreignTransaction)
+        .previewEnvironment()
+}
+#endif

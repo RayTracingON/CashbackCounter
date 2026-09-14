@@ -718,3 +718,39 @@ private struct CardPickerSheet: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("银行同步") {
+    // ⚠️ AuthService.isSignedIn 是 private(set)，预览里伪造不了「已登录」，
+    // 所以画布上稳定看到的是登录引导那一屏。账户列表 / 分组 / 左滑删除
+    // 这些分支要在模拟器或真机登录后才看得到 —— 下面两条选卡弹窗不受此限制。
+    NavigationStack {
+        BankSyncView()
+    }
+    .previewEnvironment()
+}
+
+#Preview("银行同步 · 空库") {
+    NavigationStack {
+        BankSyncView()
+    }
+    .previewEmptyEnvironment()
+}
+
+#Preview("选卡弹窗 · 尾号重复") {
+    // isAmbiguous = true：卡包里有多张同尾号的卡，文案是"需要你来确认"
+    CardPickerSheet(account: PreviewData.linkedAccount,
+                    candidates: PreviewData.cards,
+                    isAmbiguous: true) { _ in }
+        .previewEnvironment()
+}
+
+#Preview("选卡弹窗 · 没有同尾号的卡") {
+    CardPickerSheet(account: PreviewData.unmatchedAccount,
+                    candidates: PreviewData.cards,
+                    isAmbiguous: false) { _ in }
+        .previewEnvironment()
+}
+#endif

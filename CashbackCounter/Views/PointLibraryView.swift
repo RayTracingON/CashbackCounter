@@ -168,3 +168,27 @@ struct PointEditorView: View {
         dismiss()
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("积分库") {
+    PointLibraryView()
+        .previewEnvironment()
+}
+
+#Preview("积分库 · 空") {
+    PointLibraryView()
+        .previewEmptyEnvironment()
+}
+
+#Preview("新增积分计划") {
+    PointEditorView()
+        .previewEnvironment()
+}
+
+#Preview("编辑积分计划") {
+    PointEditorView(pointToEdit: PreviewData.point)
+        .previewEnvironment()
+}
+#endif

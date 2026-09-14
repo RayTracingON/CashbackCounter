@@ -85,3 +85,23 @@ struct ContentView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("主界面 · 五个 Tab") {
+    ContentView()
+        .previewEnvironment(onboardingSeen: true)
+}
+
+#Preview("首启 · 带引导页") {
+    // hasSeenOnboarding = false 时引导页会整页盖上来，这条专门看那一侧
+    ContentView()
+        .previewEnvironment(onboardingSeen: false)
+}
+
+#Preview("空数据") {
+    ContentView()
+        .previewEmptyEnvironment()
+}
+#endif

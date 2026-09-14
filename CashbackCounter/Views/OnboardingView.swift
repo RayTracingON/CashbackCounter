@@ -1403,3 +1403,91 @@ private struct Particle {
     let color: Color
 }
 
+
+// MARK: - Previews
+
+#if DEBUG
+private let previewGradient: [Color] = [
+    Color(red: 0.20, green: 0.50, blue: 1.0),
+    Color(red: 0.35, green: 0.65, blue: 1.0)
+]
+
+private let previewFeature = FeatureItem(
+    icon: "camera.viewfinder",
+    title: "智能记账",
+    subtitle: "拍照识别 · 截屏识别",
+    description: "拍照或使用快捷指令截图，快速记录消费。或上传结单 PDF 自动对账。",
+    gradient: previewGradient,
+    animationType: .receiptScan
+)
+
+#Preview("引导页 · 完整三段") {
+    OnboardingView {}
+}
+
+#Preview("① 开屏") {
+    SplashPhaseView(onAdvance: {})
+}
+
+#Preview("② 功能轮播") {
+    FeatureShowcaseView(onAdvance: {})
+}
+
+#Preview("③ 开始使用") {
+    GetStartedPhaseView(onFinish: {})
+}
+
+#Preview("功能卡片", traits: .sizeThatFitsLayout) {
+    FeatureCardView(feature: previewFeature)
+        .padding()
+}
+
+#Preview("动画 · 收据扫描", traits: .sizeThatFitsLayout) {
+    // appeared 控制动画有没有起播，false 那侧是入场前的静止态
+    VStack(spacing: 24) {
+        ReceiptScanAnimationView(gradient: previewGradient, appeared: true)
+        ReceiptScanAnimationView(gradient: previewGradient, appeared: false)
+    }
+    .padding()
+}
+
+#Preview("动画 · 趋势图", traits: .sizeThatFitsLayout) {
+    TrendChartAnimationView(
+        gradient: [Color(red: 0.45, green: 0.30, blue: 0.95),
+                   Color(red: 0.60, green: 0.45, blue: 1.0)],
+        appeared: true
+    )
+    .padding()
+}
+
+#Preview("动画 · 卡包", traits: .sizeThatFitsLayout) {
+    CardWalletAnimationView(
+        gradient: [Color(red: 0.10, green: 0.70, blue: 0.55),
+                   Color(red: 0.20, green: 0.80, blue: 0.65)],
+        appeared: true
+    )
+    .padding()
+}
+
+#Preview("闪光修饰器", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 24) {
+        Text("Shimmer 开")
+            .font(.title2.weight(.bold))
+            .modifier(ShimmerModifier(active: true, duration: 1.5))
+        Text("Shimmer 关")
+            .font(.title2.weight(.bold))
+            .modifier(ShimmerModifier(active: false, duration: 1.5))
+    }
+    .padding(40)
+}
+
+#Preview("浮动粒子背景") {
+    // 粒子是浅色半透明的，衬在深底上才看得见
+    ZStack {
+        LinearGradient(colors: [.black, Color(red: 0.05, green: 0.08, blue: 0.20)],
+                       startPoint: .top, endPoint: .bottom)
+            .ignoresSafeArea()
+        FloatingParticlesView()
+    }
+}
+#endif

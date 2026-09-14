@@ -42,3 +42,19 @@ struct IncomeRow: View {
         try? context.save()
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("收入行", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 10) {
+        // 已入账 / 未入账两种勾选状态
+        ForEach(PreviewData.incomes) { income in
+            IncomeRow(income: income)
+        }
+    }
+    .padding()
+    .background(Color(uiColor: .systemGroupedBackground))
+    .previewEnvironment()
+}
+#endif

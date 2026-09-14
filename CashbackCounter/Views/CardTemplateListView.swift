@@ -108,3 +108,14 @@ struct CardTemplateListView: View {
             .frame(width: 40, height: 40)
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("模板卡列表") {
+    // 模板来自 PreviewData.templateManager（假数据），不会去打远端 JSON
+    @Previewable @State var rootSheet: SheetType? = .template
+    CardTemplateListView(rootSheet: $rootSheet)
+        .previewEnvironment()
+}
+#endif

@@ -179,3 +179,13 @@ struct CameraRecordView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("拍一笔") {
+    // 画布/模拟器都没有摄像头，取景框是黑的；快门、相册入口、拖拽提示层照样能点。
+    CameraRecordView()
+        .previewEnvironment()
+}
+#endif

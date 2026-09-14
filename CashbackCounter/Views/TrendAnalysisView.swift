@@ -577,3 +577,41 @@ struct TrendAnalysisView: View {
         return String(format: "%.0f%%", pct)
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("趋势 · 支出") {
+    TrendAnalysisView(transactions: PreviewData.transactions,
+                      cards: PreviewData.cards,
+                      exchangeRates: PreviewData.exchangeRates,
+                      type: .expense)
+        .previewEnvironment()
+}
+
+#Preview("趋势 · 返现") {
+    TrendAnalysisView(transactions: PreviewData.transactions,
+                      cards: PreviewData.cards,
+                      exchangeRates: PreviewData.exchangeRates,
+                      type: .cashback)
+        .previewEnvironment()
+}
+
+#Preview("趋势 · 无数据") {
+    // 一笔交易都没有时不该画出空坐标系或崩在 min() 上
+    TrendAnalysisView(transactions: [],
+                      cards: [],
+                      exchangeRates: PreviewData.exchangeRates,
+                      type: .expense)
+        .previewEnvironment()
+}
+
+#Preview("趋势 · 缺汇率表") {
+    // 汇率没拉回来时外币交易应按 1.0 兜底，而不是算出 0
+    TrendAnalysisView(transactions: PreviewData.transactions,
+                      cards: PreviewData.cards,
+                      exchangeRates: [:],
+                      type: .expense)
+        .previewEnvironment()
+}
+#endif

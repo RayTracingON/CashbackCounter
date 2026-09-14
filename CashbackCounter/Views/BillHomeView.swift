@@ -351,3 +351,49 @@ struct FilterChip: View {
         .overlay(RoundedRectangle(cornerRadius: DesignConstants.CornerRadius.medium).stroke(Color.blue, lineWidth: 1))
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("账单首页") {
+    BillHomeView()
+        .previewEnvironment()
+}
+
+#Preview("账单首页 · 搜索中") {
+    // 搜索词进 @Query 的 #Predicate，这条验证过滤真的生效（只剩星巴克那笔）
+    @Previewable @State var searchText = "星巴克"
+    @Previewable @State var isSearchPresented = true
+    BillHomeContentView(searchText: $searchText, isSearchPresented: $isSearchPresented)
+        .previewEnvironment()
+}
+
+#Preview("账单首页 · 搜索无结果") {
+    @Previewable @State var searchText = "查无此店"
+    @Previewable @State var isSearchPresented = true
+    BillHomeContentView(searchText: $searchText, isSearchPresented: $isSearchPresented)
+        .previewEnvironment()
+}
+
+#Preview("账单首页 · 空数据") {
+    BillHomeView()
+        .previewEmptyEnvironment()
+}
+
+#Preview("筛选胶囊", traits: .sizeThatFitsLayout) {
+    VStack(spacing: 12) {
+        HStack(spacing: 8) {
+            FilterChip(title: "全部种类", icon: "line.3.horizontal.decrease", isSelected: true)
+            FilterChip(title: "餐饮美食", icon: "cup.and.saucer.fill", isSelected: false)
+            FilterChip(title: "全部卡片", icon: "creditcard", isSelected: false)
+        }
+        // 英文更长，三等分时靠 minimumScaleFactor 兜住
+        HStack(spacing: 8) {
+            FilterChip(title: "All Categories", icon: "line.3.horizontal.decrease", isSelected: true)
+            FilterChip(title: "All Payments", icon: "wave.3.right", isSelected: false)
+            FilterChip(title: "All Cards", icon: "creditcard", isSelected: false)
+        }
+    }
+    .padding()
+}
+#endif

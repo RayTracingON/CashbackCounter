@@ -340,3 +340,22 @@ struct AccountSection: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("登录页") {
+    SignInView()
+}
+
+#Preview("设置里的账号区块") {
+    // AuthService.isSignedIn 是 private(set)，预览里没法伪造成"已登录"，
+    // 所以这里看到的是未登录态；已登录/订阅态要在模拟器或真机上登录后看。
+    NavigationStack {
+        List {
+            AccountSection()
+        }
+    }
+    .previewEnvironment()
+}
+#endif
