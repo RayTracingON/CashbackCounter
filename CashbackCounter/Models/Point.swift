@@ -85,6 +85,9 @@ extension Point {
         PointSeed(bankName: "Hilton", pointName: "Point", pointValue: 0.004, valueCurrencyCode: .us),
         PointSeed(bankName: "Alaska", pointName: "ATMOS", pointValue: 0.016, valueCurrencyCode: .us),
         PointSeed(bankName: "IHG", pointName: "Point", pointValue: 0.005, valueCurrencyCode: .us),
+        PointSeed(bankName: "Capital One", pointName: "Miles", pointValue: 0.016, valueCurrencyCode: .us),
+        PointSeed(bankName: "American Airlines", pointName: "AAdvantage", pointValue: 0.015, valueCurrencyCode: .us),
+        PointSeed(bankName: "Cathay", pointName: "Asia Miles", pointValue: 0.1, valueCurrencyCode: .hk),
 
 
 

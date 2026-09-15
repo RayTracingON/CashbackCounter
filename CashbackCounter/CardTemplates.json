@@ -1235,5 +1235,188 @@
     ],
     "bankName" : "工商银行",
     "defaultRate" : 0
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "dining",
+      8.333333333333332,
+      "travel",
+      8.333333333333332
+    ],
+    "pictureURL" : "sccathay",
+    "type" : "國泰Mastercard",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "cathay|asia miles|hkd",
+    "region" : "香港",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "003B3E",
+      "62968A"
+    ],
+    "foreignCurrencyRate" : 25,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "渣打香港",
+    "defaultRate" : 16.666666666666668
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "travel",
+      300,
+      "other",
+      1100
+    ],
+    "pictureURL" : "citiaaexecutive",
+    "type" : "AAdvantage Executive",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "american airlines|aadvantage|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "383637",
+      "626261"
+    ],
+    "foreignCurrencyRate" : 100,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "Citi",
+    "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "other",
+      800
+    ],
+    "pictureURL" : "CapitalOneVentureX",
+    "type" : "Venture X",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "capital one|miles|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "061932",
+      "1E5B7C"
+    ],
+    "foreignCurrencyRate" : 200,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "Capital One",
+    "defaultRate" : 200
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "dining",
+      200,
+      "travel",
+      200
+    ],
+    "pictureURL" : "amexgreen",
+    "type" : "Green",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "amex us|mr|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "4B806C",
+      "A8CFAE"
+    ],
+    "foreignCurrencyRate" : 100,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "AMEX US",
+    "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "dining",
+      300,
+      "grocery",
+      300,
+      "travel",
+      200
+    ],
+    "pictureURL" : "amexgold",
+    "type" : "Gold",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+      "dining",
+      150000,
+      "grocery",
+      75000
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "amex us|mr|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "A39458",
+      "E0CA79"
+    ],
+    "foreignCurrencyRate" : 100,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "AMEX US",
+    "defaultRate" : 100
   }
 ]
