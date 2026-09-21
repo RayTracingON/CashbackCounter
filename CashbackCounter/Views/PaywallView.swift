@@ -174,7 +174,8 @@ struct PaywallView: View {
                     }
                 }
                 Spacer()
-                Text(product.displayPrice)
+                // 审核要求订阅时长和价格都得看得见，只写 displayPrice 看不出是按月还是按年
+                Text(Self.priceText(product))
                     .font(.body.weight(.semibold))
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(isSelected ? .blue : .secondary)
@@ -230,6 +231,14 @@ struct PaywallView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+
+            // 审核指南 3.1.2(c)：购买流程里必须有能点开的使用条款和隐私政策，
+            // 只在 App Store 元数据里填不算
+            HStack(spacing: 16) {
+                Link("使用条款", destination: AppConfig.termsOfUseURL)
+                Link("隐私政策", destination: AppConfig.privacyPolicyURL)
+            }
+            .font(.caption)
         }
     }
 

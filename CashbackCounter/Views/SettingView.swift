@@ -281,8 +281,22 @@ struct SettingsView: View {
                     }
                     .disabled(viewModel.isExporting) // 导出过程中禁止重复点击
 
-                    NavigationLink(destination: PrivacyPolicyView()) {
-                        Label("隐私政策", systemImage: "hand.raised")
+                    // 隐私政策只维护官网一份：App 内原来那份写着"不上传任何数据"，
+                    // 有了银行同步之后已经不成立，两份并存迟早对不上
+                    Link(destination: AppConfig.privacyPolicyURL) {
+                        Label {
+                            Text("隐私政策").foregroundStyle(.primary)
+                        } icon: {
+                            Image(systemName: "hand.raised")
+                        }
+                    }
+
+                    Link(destination: AppConfig.termsOfUseURL) {
+                        Label {
+                            Text("使用条款").foregroundStyle(.primary)
+                        } icon: {
+                            Image(systemName: "doc.text")
+                        }
                     }
                 }
                 
@@ -340,34 +354,6 @@ struct SettingsView: View {
                 Text("iCloud 数据同步设置已更改。请完全退出应用并重新启动，以使新的同步配置生效。")
             }
         }
-    }
-}
-
-private struct PrivacyPolicyView: View {
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("隐私政策")
-                    .font(.title2.weight(.semibold))
-                    .padding(.bottom, 4)
-
-                Text("我们重视你的隐私。以下为应用当前版本的隐私说明：")
-                    .foregroundColor(.secondary)
-
-                Text("• 数据存储：账单、卡片、积分等数据全部保存在你的设备本地，我们不上传任何个人数据。")
-                Text("• 网络请求：应用可能会为获取汇率、下载卡面等功能访问网络，仅下载必要参数。")
-                Text("• 权限使用：相机、相册、通知等权限仅在对应功能使用时申请，可在系统设置中随时关闭。")
-                Text("• 分享导出：仅当你主动使用导出功能时，数据才会通过系统导出面板离开应用。")
-
-                Text("若你对隐私相关内容有疑问，请联系开发者。")
-                    .foregroundColor(.secondary)
-                    .padding(.top, 4)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-        }
-        .navigationTitle("隐私政策")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -513,12 +499,6 @@ private struct ShortcutGuideView: View {
     SettingsView()
         .previewEnvironment()
         .preferredColorScheme(.dark)
-}
-
-#Preview("隐私政策") {
-    NavigationStack {
-        PrivacyPolicyView()
-    }
 }
 
 #Preview("更新注意事项") {

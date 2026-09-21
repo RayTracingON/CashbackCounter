@@ -2370,6 +2370,22 @@
         }
       }
     },
+    "使用条款" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terms of Use"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用條款"
+          }
+        }
+      }
+    },
     "使用自定义 API 时，小票文字、截图和账单内容会发送到你填写的服务地址。这些数据的处理方式由该服务商决定，不再受 Apple Private Cloud Compute 的隐私保证覆盖。" : {
       "localizations" : {
         "en" : {
@@ -2738,6 +2754,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全部累計"
+          }
+        }
+      }
+    },
+    "全部银行 (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Banks (%lld)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部銀行 (%lld)"
           }
         }
       }
@@ -5085,6 +5117,22 @@
         }
       }
     },
+    "按银行筛选" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter by Bank"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按銀行篩選"
+          }
+        }
+      }
+    },
     "推理模式" : {
       "localizations" : {
         "en" : {
@@ -5777,6 +5825,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "日期"
+          }
+        }
+      }
+    },
+    "显示全部" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show All"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示全部"
           }
         }
       }
@@ -6680,6 +6744,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有尾號 %@ 的卡。你可以先連結到任意一張卡，或者取消後去「卡包」新增。"
+          }
+        }
+      }
+    },
+    "没有该银行的卡模板" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No card templates for this bank"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有該銀行的卡模板"
           }
         }
       }

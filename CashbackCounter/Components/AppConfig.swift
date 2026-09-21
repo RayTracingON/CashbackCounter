@@ -61,6 +61,17 @@ enum AppConfig {
     /// 汇率 API 项目链接
     static let exchangeAPIRepoURL = URL(string: "https://github.com/fawazahmed0/exchange-api")!
 
+    // MARK: - 法律文本
+    //
+    // 审核指南 3.1.2(c)：卖自动续订订阅的 App，购买流程里必须有能点开的
+    // 使用条款和隐私政策。两个链接在 App Store Connect 的元数据里也要各填一份
+    // （隐私政策填「隐私政策网址」，使用条款写进 App 描述）。
+
+    /// 隐私政策，托管在公司官网（ascidean-website 仓库的 src/pages/privacy.astro）
+    static let privacyPolicyURL = URL(string: "https://ascidean.com/privacy")!
+    /// 使用条款：直接用 Apple 标准 EULA，App Store Connect 的 EULA 栏留空即默认适用它
+    static let termsOfUseURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+
     // MARK: - 网络配置
 
     /// 网络请求超时时间（秒）
