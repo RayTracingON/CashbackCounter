@@ -768,7 +768,7 @@
     "specialRate" : [
 
     ],
-    "pictureURL" : "ready",
+    "pictureURL" : "Ready",
     "type" : "Metal",
     "foreignBaseCap" : 0,
     "categoryCaps" : [
@@ -1418,5 +1418,111 @@
     ],
     "bankName" : "AMEX US",
     "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "anapay",
+    "type" : "Pay",
+    "foreignBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "localBaseCap" : 0,
+    "rewardType" : "cashback",
+    "paymentCaps" : [
+
+    ],
+    "region" : "日本",
+    "colors" : [
+      "012284",
+      "02A7EA"
+    ],
+    "foreignCurrencyRate" : 0.5,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "ANA",
+    "defaultRate" : 0.5
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "dining",
+      200,
+      "other",
+      400
+    ],
+    "pictureURL" : "amexusmarriottbusiness",
+    "type" : "Marriott Business",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "marriott|point|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "697D94",
+      "A5AAB6"
+    ],
+    "foreignCurrencyRate" : 200,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "AMEX US",
+    "defaultRate" : 200
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "dining",
+      100,
+      "travel",
+      100,
+      "other",
+      400
+    ],
+    "pictureURL" : "chaserizecard",
+    "type" : "Ritz-Carlton",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "marriott|point|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "1F1B1C",
+      "3D3A3B"
+    ],
+    "foreignCurrencyRate" : 200,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "Chase",
+    "defaultRate" : 200
   }
 ]
