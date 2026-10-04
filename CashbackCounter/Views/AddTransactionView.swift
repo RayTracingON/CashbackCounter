@@ -225,6 +225,8 @@ struct AddTransactionView: View {
                     // 等真正调用解析时省掉冷启动延迟
                     OCRService.prewarmAI()
                     viewModel.applyPrefillCardSelection(cards: cards)
+                    // 带预填金额进来时选中的卡可能没变，onChange 不会触发换汇，这里补算一次入账金额
+                    viewModel.updateBillingAmount(cards: cards)
                     if viewModel.receiptImage != nil && viewModel.amount.isEmpty {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             viewModel.analyzeReceipt(cards: cards)
@@ -238,7 +240,12 @@ struct AddTransactionView: View {
                 viewModel.updateRewardPreview(cards: cards)
             }
             .onChange(of: viewModel.receiptImage) { _, newImage in
-                if newImage != nil { viewModel.analyzeReceipt(cards: cards) }
+                // 只有用户删图/选图会走到这里：选了新图就强制重新识别
+                if newImage != nil {
+                    viewModel.analyzeReceipt(cards: cards, force: true)
+                } else {
+                    viewModel.cancelReceiptAnalysis()
+                }
             }
             .onChange(of: viewModel.amount) {
                 viewModel.updateBillingAmount(cards: cards)

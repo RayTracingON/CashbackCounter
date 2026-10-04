@@ -30,6 +30,7 @@ final class BillHomeViewModel {
     var showImportAlert = false
     var importMessage = ""
     var showStatementAnalysis = false
+    var showBatchReceiptImport = false
     var exportedFileURL: URL? = nil
 
     // MARK: - Data State

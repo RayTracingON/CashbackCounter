@@ -37,6 +37,9 @@ final class AddTransactionViewModel {
     private var originalReceiptData: Data?
     private var originalReceiptImage: UIImage?
 
+    // 进行中的小票识别：删图/换图时取消，避免旧图结果晚到覆盖表单
+    private var analysisTask: Task<Void, Never>?
+
     // MARK: - Nested Types
 
     struct RewardPreview {
@@ -150,13 +153,17 @@ final class AddTransactionViewModel {
 
     // MARK: - AI Analysis
 
-    func analyzeReceipt(cards: [CreditCard]) {
+    /// - Parameter force: 用户主动选了新图时传 true。表单可能已被上一张图的识别结果填过，
+    ///   不能再以"商户/金额非空"为由跳过，否则删图后重新上传不会触发识别
+    func analyzeReceipt(cards: [CreditCard], force: Bool = false) {
         guard let image = receiptImage else { return }
-        if !merchant.isEmpty || !amount.isEmpty { return }
+        if !force && (!merchant.isEmpty || !amount.isEmpty) { return }
+        analysisTask?.cancel()
         isAnalyzing = true
 
-        Task {
+        analysisTask = Task {
             let metadata = await OCRService.analyzeImage(image)
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 isAnalyzing = false
                 if let data = metadata {
@@ -193,6 +200,12 @@ final class AddTransactionViewModel {
                 }
             }
         }
+    }
+
+    func cancelReceiptAnalysis() {
+        analysisTask?.cancel()
+        analysisTask = nil
+        isAnalyzing = false
     }
 
     // MARK: - Reward Preview

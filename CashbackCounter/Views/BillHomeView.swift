@@ -245,6 +245,9 @@ struct BillHomeContentView: View {
                         Button { viewModel.showStatementAnalysis = true } label: {
                             Label("导入结单", systemImage: "chart.bar.doc.horizontal.fill")
                         }
+                        Button { viewModel.showBatchReceiptImport = true } label: {
+                            Label("批量导入收据", systemImage: "photo.stack")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle").font(.system(size: DesignConstants.FontSize.toolbarIcon))
                     }
@@ -301,6 +304,9 @@ struct BillHomeContentView: View {
             }
             .sheet(isPresented: $viewModel.showStatementAnalysis) {
                 StatementAnalysisEntryView()
+            }
+            .sheet(isPresented: $viewModel.showBatchReceiptImport) {
+                BatchReceiptImportView()
             }
         }
         .task {

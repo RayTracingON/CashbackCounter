@@ -10,61 +10,6 @@ import Foundation
 import UIKit
 import ImageIO
 
-// MARK: - Beta 运行时符号探测
-/// SDK（27A5194q）的 swiftinterface 声明了 Dynamic Profile / Attachment 等 iOS 27 符号，
-/// 但旧版 iOS 27 beta 的 FoundationModels 二进制里还没有它们。
-/// 部署目标 26.0 会把这些符号弱链接：运行时缺失时解析为 null，一调用就 EXC_BAD_ACCESS(address=0x0)，
-/// 而 `#available(iOS 27.0, *)` 无法区分同一大版本不同 beta 之间的符号差异。
-/// 因此对每个新符号调用点做一次性 dlsym 探测，缺失即回退。
-/// 设备升级到与 SDK 匹配的 beta 后探测自动通过；iOS 27 正式版发布后可整段删除。
-private enum FoundationModelsRuntime {
-    private static let rtldDefault = UnsafeMutableRawPointer(bitPattern: -2) // RTLD_DEFAULT
-
-    private static func has(_ symbol: String) -> Bool {
-        dlsym(rtldDefault, symbol) != nil
-    }
-
-    /// Dynamic Profile 构建链：DynamicInstructionsBuilder.buildExpression、
-    /// DynamicProfileBuilder.buildBlock / buildEither（body 里 if/else 分支所需）
-    static let dynamicProfileAvailable: Bool = {
-        let ok = has("$s16FoundationModels26DynamicInstructionsBuilderV15buildExpressionyxxAA0cD0RzlFZ")
-            && has("$s16FoundationModels20LanguageModelSessionC21DynamicProfileBuilderV10buildBlockyxxAC0fG0RzlFZ")
-            && has("$s16FoundationModels20LanguageModelSessionC21DynamicProfileBuilderV11buildEither5firstAC011ConditionalfG0Vy_xq_Gx_tAC0fG0RzAcKR_r0_lFZ")
-        if !ok {
-            print("⚠️ 系统 FoundationModels 缺少 Dynamic Profile 符号（beta 低于 SDK），回退传统 session 构造")
-        }
-        return ok
-    }()
-
-    /// 泛型 init(model: some LanguageModel, tools:, instructions:)：云端 session 的传统构造方式，同为 iOS 27 新符号
-    static let cloudSessionInitAvailable: Bool = {
-        let ok = has("$s16FoundationModels20LanguageModelSessionC5model5tools12instructionsACx_SayAA4Tool_pGAA12InstructionsVSgtcAA0cD0RzlufC")
-        if !ok {
-            print("⚠️ 系统 FoundationModels 缺少泛型 session init 符号（beta 低于 SDK），云端模型整体禁用")
-        }
-        return ok
-    }()
-
-    /// Attachment(CGImage, orientation:)：多模态图片直传所需
-    static let imageAttachmentAvailable: Bool = {
-        let ok = has("$s16FoundationModels10AttachmentVA2A05ImageC7ContentVRszrlE_11orientationACyAEGSo10CGImageRefa_So0G19PropertyOrientationVSgtcfC")
-        if !ok {
-            print("⚠️ 系统 FoundationModels 缺少 Attachment 符号（beta 低于 SDK），多模态解析不可用")
-        }
-        return ok
-    }()
-
-    /// DynamicProfile.reasoningLevel 修饰符：这组 API 在 beta 间改过名（早期叫 thinkingEffort），
-    /// 与 builder 符号不一定同批存在，单独探测。缺失时云端会话不带推理档位，其余功能不受影响。
-    static let reasoningModifierAvailable: Bool = {
-        let ok = has("$s16FoundationModels20LanguageModelSessionC14DynamicProfilePAAE14reasoningLevelyQrAA14ContextOptionsV09ReasoningI0OSgF")
-        if !ok {
-            print("⚠️ 系统 FoundationModels 缺少 reasoningLevel 符号（beta 低于 SDK），云端推理档位不生效")
-        }
-        return ok
-    }()
-}
-
 // MARK: - 解析场景
 /// 每个 case 对应一套指令；session 按场景即取即用（iOS 27 走 Dynamic Profile 路由）。
 /// ⚡️ 指令刻意保持精简：端侧模型 prefill 速度有限，指令 token 数直接决定响应延迟
@@ -277,16 +222,11 @@ private struct ReceiptParserProfile: LanguageModelSession.DynamicProfile {
 
     var body: some DynamicProfile {
         if let route {
-            // 云端：带按场景分档的推理（旧 beta 运行时缺 reasoningLevel 符号则不加档位）。
+            // 云端：带按场景分档的推理。
             // 第三方通道会把它映射成各家的推理参数（reasoning_effort / thinking budget）。
-            if FoundationModelsRuntime.reasoningModifierAvailable {
-                Profile { mode.instructions }
-                    .model(route.model)
-                    .reasoningLevel(mode.cloudReasoningLevel)
-            } else {
-                Profile { mode.instructions }
-                    .model(route.model)
-            }
+            Profile { mode.instructions }
+                .model(route.model)
+                .reasoningLevel(mode.cloudReasoningLevel)
         } else {
             Profile { mode.instructions }
         }
@@ -313,13 +253,9 @@ final class ReceiptParser {
 
     /// 云端开关开启且目标通道就绪时返回该通道，否则 nil（调用方回退本地）。
     /// 两条通道都需要 iOS 27+；PCC 另需 com.apple.developer.private-cloud-compute 受管权限。
-    /// beta 运行时缺少泛型 session init 符号时整体禁用云端，避免空符号调用崩溃
-    /// —— 这个符号正是 LanguageModelSession(model: some LanguageModel, ...)，
-    /// 第三方通道同样依赖它。
     @available(iOS 27.0, *)
     nonisolated static func activeCloudRoute() -> CloudRoute? {
-        guard isCloudModelEnabled,
-              FoundationModelsRuntime.cloudSessionInitAvailable else { return nil }
+        guard isCloudModelEnabled else { return nil }
 
         switch ThirdPartyModelStore.backend {
         case .thirdParty:
@@ -333,19 +269,17 @@ final class ReceiptParser {
     }
 
     /// 多模态（图片直传）解析是否可用。
-    /// ⚡️ 本地模型跑图片输入过慢，刻意只在云端就绪时开放多模态；
-    /// 另需系统运行时具备 Attachment 符号（旧 beta 缺失）。
+    /// ⚡️ 本地模型跑图片输入过慢，刻意只在云端就绪时开放多模态。
     nonisolated static var isMultimodalAvailable: Bool {
         if #available(iOS 27.0, *) {
-            return FoundationModelsRuntime.imageAttachmentAvailable
-                && (activeCloudRoute()?.supportsVision ?? false)
+            return activeCloudRoute()?.supportsVision ?? false
         }
         return false
     }
 
     /// 按场景创建 session：
-    /// - iOS 27+ 且运行时具备 Dynamic Profile 符号：声明式选择指令与模型
-    /// - 其余（iOS 26 或旧 beta 运行时）：传统构造；云端走泛型 init，本地走 instructions init
+    /// - iOS 27+ 云端：Dynamic Profile 声明式选择指令与模型
+    /// - 本地（含 iOS 26）：传统 instructions init
     /// 返回 session 及其是否为云端：本地与云端各有验证过的 prompt 配方
     /// （本地裸文本、云端带前导语），调用方据 isCloud 分流。
     private func makeSession(mode: ReceiptParseMode) -> (session: LanguageModelSession, isCloud: Bool) {
@@ -357,10 +291,7 @@ final class ReceiptParser {
             }
             if let route {
                 // Dynamic Profile 只用于云端：它的增量价值只有 reasoningLevel 档位
-                if FoundationModelsRuntime.dynamicProfileAvailable {
-                    return (LanguageModelSession(profile: ReceiptParserProfile(mode: mode, route: route)), true)
-                }
-                return (LanguageModelSession(model: route.model, instructions: mode.instructions), true)
+                return (LanguageModelSession(profile: ReceiptParserProfile(mode: mode, route: route)), true)
             }
         }
         // ⚠️ 本地一律走经典 instructions 构造，不走 Dynamic Profile：
@@ -393,8 +324,7 @@ final class ReceiptParser {
     /// 多模态 session：仅云端 PCC，云端不可用直接抛错（调用方回退 OCR 文本管线）
     @available(iOS 27.0, *)
     private func makeMultimodalSession(mode: ReceiptParseMode) throws -> LanguageModelSession {
-        guard FoundationModelsRuntime.imageAttachmentAvailable,
-              let route = Self.activeCloudRoute(),
+        guard let route = Self.activeCloudRoute(),
               route.supportsVision else {
             throw NSError(
                 domain: "ReceiptParser",
@@ -403,10 +333,7 @@ final class ReceiptParser {
             )
         }
         print("🖼️ \(route.logLabel) —— 多模态直传")
-        if FoundationModelsRuntime.dynamicProfileAvailable {
-            return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, route: route))
-        }
-        return LanguageModelSession(model: route.model, instructions: mode.instructions)
+        return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, route: route))
     }
 
     /// 检查 Apple Intelligence 是否可用；不可用时抛出带用户可读原因的错误。

@@ -520,6 +520,7 @@
       }
     },
     "• 分享导出：仅当你主动使用导出功能时，数据才会通过系统导出面板离开应用。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -568,6 +569,7 @@
       }
     },
     "• 数据存储：账单、卡片、积分等数据全部保存在你的设备本地，我们不上传任何个人数据。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -616,6 +618,7 @@
       }
     },
     "• 权限使用：相机、相册、通知等权限仅在对应功能使用时申请，可在系统设置中随时关闭。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -648,6 +651,7 @@
       }
     },
     "• 网络请求：应用可能会为获取汇率、下载卡面等功能访问网络，仅下载必要参数。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1738,6 +1742,22 @@
         }
       }
     },
+    "一次最多选 %lld 张，AI 会逐张识别生成账单，保存前可以逐条检查修改" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select up to %lld receipts at a time. AI recognizes each one and drafts a transaction you can review before saving."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一次最多選 %lld 張，AI 會逐張識別生成帳單，保存前可以逐條檢查修改"
+          }
+        }
+      }
+    },
     "上传卡面" : {
       "localizations" : {
         "en" : {
@@ -2370,6 +2390,22 @@
         }
       }
     },
+    "使用兑换码" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redeem Code"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用兌換碼"
+          }
+        }
+      }
+    },
     "使用条款" : {
       "localizations" : {
         "en" : {
@@ -2468,6 +2504,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "儲存"
+          }
+        }
+      }
+    },
+    "保存 %lld 笔" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save %lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存 %lld 筆"
+          }
+        }
+      }
+    },
+    "保存中..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saving..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存中..."
           }
         }
       }
@@ -4030,6 +4098,22 @@
         }
       }
     },
+    "小票上没识别出卡号尾号时，记到这张卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used when no card number is found on a receipt."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小票上沒識別出卡號尾號時，記到這張卡"
+          }
+        }
+      }
+    },
     "尚未同步" : {
       "localizations" : {
         "en" : {
@@ -4209,6 +4293,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已從 App 移除"
+          }
+        }
+      }
+    },
+    "已保存 %lld 笔，还有 %lld 张需要手动补充" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved %lld. %lld receipt(s) still need manual input."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存 %lld 筆，還有 %lld 張需要手動補充"
           }
         }
       }
@@ -4655,6 +4755,22 @@
         }
       }
     },
+    "当前为兑换码优惠期，结束后将按原价自动续订，如不需要请在到期前取消。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're on an offer code discount. It will renew at the regular price when it ends; cancel before then if you don't want to continue."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前為兌換碼優惠期，結束後將按原價自動續訂，如不需要請在到期前取消。"
+          }
+        }
+      }
+    },
     "当前版本：v%@" : {
       "localizations" : {
         "en" : {
@@ -4848,6 +4964,7 @@
       }
     },
     "我们重视你的隐私。以下为应用当前版本的隐私说明：" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5011,6 +5128,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手動調整"
+          }
+        }
+      }
+    },
+    "批量导入收据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batch Import Receipts"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "批量導入收據"
           }
         }
       }
@@ -5381,6 +5514,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收據憑證"
+          }
+        }
+      }
+    },
+    "放弃" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放棄"
+          }
+        }
+      }
+    },
+    "放弃未保存的收据？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard unsaved receipts?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放棄未保存的收據？"
           }
         }
       }
@@ -6104,6 +6269,22 @@
         }
       }
     },
+    "有 %lld 张图片无法读取，已跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld image(s) couldn't be read and were skipped."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有 %lld 張圖片無法讀取，已略過"
+          }
+        }
+      }
+    },
     "有账户未匹配到卡片" : {
       "localizations" : {
         "en" : {
@@ -6267,6 +6448,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未設定還款日"
+          }
+        }
+      }
+    },
+    "未识别出金额，点按手动补充" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No amount found. Tap to fill in."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未識別出金額，點按手動補充"
           }
         }
       }
@@ -6614,6 +6811,22 @@
         }
       }
     },
+    "正在识别 %lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognizing %lld/%lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在識別 %lld/%lld"
+          }
+        }
+      }
+    },
     "正在识别结单卡..." : {
       "localizations" : {
         "en" : {
@@ -6626,6 +6839,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在識別結單卡..."
+          }
+        }
+      }
+    },
+    "正在读取图片..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading photos..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在讀取圖片..."
           }
         }
       }
@@ -7178,6 +7407,22 @@
         }
       }
     },
+    "点按可逐条修改，左滑可删除。没识别出金额的收据不会被批量保存，需要点开手动补充。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to edit, swipe left to delete. Receipts without a recognized amount aren't batch-saved — tap them to fill in manually."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點按可逐條修改，左滑可刪除。沒識別出金額的收據不會被批量保存，需要點開手動補充。"
+          }
+        }
+      }
+    },
     "版本" : {
       "localizations" : {
         "en" : {
@@ -7629,6 +7874,22 @@
         }
       }
     },
+    "等待识别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待識別"
+          }
+        }
+      }
+    },
     "简体中文" : {
       "localizations" : {
         "en" : {
@@ -7985,6 +8246,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "繼續"
+          }
+        }
+      }
+    },
+    "继续添加（还可选 %lld 张）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add More (%lld left)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繼續添加（還可選 %lld 張）"
           }
         }
       }
@@ -8357,6 +8634,7 @@
       }
     },
     "若你对隐私相关内容有疑问，请联系开发者。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8707,6 +8985,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "辨識出：%1$@ %2$@%3$@\n將記入 %4$@，是否確認？"
+          }
+        }
+      }
+    },
+    "识别失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognition failed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "識別失敗"
           }
         }
       }
@@ -9658,6 +9952,22 @@
         }
       }
     },
+    "选择收据图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Receipt Photos"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇收據圖片"
+          }
+        }
+      }
+    },
     "选择时间" : {
       "localizations" : {
         "en" : {
@@ -9816,6 +10126,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新上傳"
+          }
+        }
+      }
+    },
+    "重新识别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新識別"
           }
         }
       }
@@ -10154,6 +10480,22 @@
         }
       }
     },
+    "默认信用卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default Card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預設信用卡"
+          }
+        }
+      }
+    },
     "默认记账卡片" : {
       "localizations" : {
         "en" : {
@@ -10166,38 +10508,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預設記帳卡片"
-          }
-        }
-      }
-    },
-    "使用兑换码" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Redeem Code"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用兌換碼"
-          }
-        }
-      }
-    },
-    "当前为兑换码优惠期，结束后将按原价自动续订，如不需要请在到期前取消。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You're on an offer code discount. It will renew at the regular price when it ends; cancel before then if you don't want to continue."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "目前為兌換碼優惠期，結束後將按原價自動續訂，如不需要請在到期前取消。"
           }
         }
       }

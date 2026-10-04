@@ -1524,5 +1524,37 @@
     ],
     "bankName" : "Chase",
     "defaultRate" : 200
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "icbcmc",
+    "type" : "牡丹万事达白金卡",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "cashback",
+    "region" : "中国大陆",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "1C1C1E",
+      "4A4A50"
+    ],
+    "foreignCurrencyRate" : 0,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "工商银行",
+    "defaultRate" : 0
   }
 ]
