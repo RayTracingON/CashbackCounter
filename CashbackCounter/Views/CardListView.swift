@@ -88,6 +88,7 @@ struct CardListView: View {
     
     // ViewModel
     @State private var viewModel = CardListViewModel()
+    @State private var tour = OnboardingTour.shared
 
     @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
 
@@ -366,7 +367,20 @@ struct CardListView: View {
                         }
                         label: {
                             Image(systemName: "ellipsis.circle.fill").font(.system(size: 24))
+                                .tourTarget(.addCardMenu)
                         }
+                    }
+                }
+            }
+            // 导览在 sheet 里点了「跳过」：把模板列表/添加页一起收起来
+            .onChange(of: tour.sheetDismissRequest) {
+                viewModel.activeSheet = nil
+            }
+            // 导览要高亮的是「未选中卡片」时的那个 ⋯，展开着某张卡时菜单是另一套
+            .onChange(of: tour.step) { _, step in
+                if step == .openTemplates, viewModel.selectedCardID != nil {
+                    withAnimation(springAnimation) {
+                        viewModel.selectedCardID = nil
                     }
                 }
             }

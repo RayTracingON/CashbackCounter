@@ -89,9 +89,10 @@ struct CameraRecordView: View {
                             .background(Color.black.opacity(0.5))
                             .clipShape(Circle())
                     }
-                    
+                    .tourTarget(.cameraLibrary)
+
                     Spacer()
-                    
+
                     // 中间：拍照大按钮
                     Button(action: {
                         cameraService.takePhoto()
@@ -105,7 +106,8 @@ struct CameraRecordView: View {
                                 .frame(width: DesignConstants.Size.cameraButtonInner, height: DesignConstants.Size.cameraButtonInner)
                         }
                     }
-                    
+                    .tourTarget(.cameraShutter)
+
                     Spacer()
                     
                     Button(action: {
@@ -122,7 +124,8 @@ struct CameraRecordView: View {
                                 .background(Color.black.opacity(0.5))
                                 .clipShape(Circle())
                         }
-                    
+                        .tourTarget(.cameraManual)
+
                 }
                 .padding(.horizontal, DesignConstants.Spacing.bottomHorizontalPadding)
                 .padding(.bottom, DesignConstants.Spacing.bottomPadding)

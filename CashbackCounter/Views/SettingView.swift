@@ -46,6 +46,7 @@ struct SettingsView: View {
     
     // ViewModel
     @State private var viewModel = SettingsViewModel()
+    @State private var tour = OnboardingTour.shared
 
     // MARK: - 云端通道
 
@@ -80,264 +81,284 @@ struct SettingsView: View {
         // 而不是当前这一列，于是很容易撞上"already presenting"。
         // 这个 Tab 从来就只有一列，NavigationStack 才是它本来的语义。
         NavigationStack {
-            List {
-                // Header Section
-                Section {
-                    VStack(spacing: 8) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue.opacity(0.1))
-                            .frame(width: DesignConstants.Size.settingsIconCircle, height: DesignConstants.Size.settingsIconCircle)
+            ScrollViewReader { scrollProxy in
+                List {
+                    // Header Section
+                    Section {
+                        VStack(spacing: 8) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.1))
+                                .frame(width: DesignConstants.Size.settingsIconCircle, height: DesignConstants.Size.settingsIconCircle)
                             
-                            Image(systemName: "creditcard.fill")
-                                .font(.system(size: DesignConstants.Size.settingsIconFont))
-                                .foregroundColor(.blue)
-                                .offset(x: -5, y: 0)
+                                Image(systemName: "creditcard.fill")
+                                    .font(.system(size: DesignConstants.Size.settingsIconFont))
+                                    .foregroundColor(.blue)
+                                    .offset(x: -5, y: 0)
                             
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.system(size: 24))
-                                .foregroundColor(.green)
-                                .padding(4)
-                                .background(Color(uiColor: .systemGroupedBackground).clipShape(Circle()))
-                                .offset(x: 18, y: 12)
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.green)
+                                    .padding(4)
+                                    .background(Color(uiColor: .systemGroupedBackground).clipShape(Circle()))
+                                    .offset(x: 18, y: 12)
+                            }
+                            .padding(.bottom, 4)
+                        
+                            Text("Cashback Counter")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                        
+                            Text("Version \(appVersion)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
-                        .padding(.bottom, 4)
-                        
-                        Text("Cashback Counter")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                        
-                        Text("Version \(appVersion)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                }
-                .listRowBackground(Color.clear)
+                    .listRowBackground(Color.clear)
 
-                // Account Section —— 登录、退出、删除账号。
-                // 只服务于银行同步；不登录不影响其余任何功能。
-                AccountSection()
+                    // Account Section —— 登录、退出、删除账号。
+                    // 只服务于银行同步；不登录不影响其余任何功能。
+                    AccountSection()
 
-                // Appearance Section
-                Section(header: Text("外观与语言")) {
-                    Picker(selection: $userTheme, label: Label("主题模式", systemImage: "paintpalette")) {
-                        Text("跟随系统").tag(0)
-                        Text("浅色模式").tag(1)
-                        Text("深色模式").tag(2)
-                    }
+                    // Appearance Section
+                    Section(header: Text("外观与语言")) {
+                        Picker(selection: $userTheme, label: Label("主题模式", systemImage: "paintpalette")) {
+                            Text("跟随系统").tag(0)
+                            Text("浅色模式").tag(1)
+                            Text("深色模式").tag(2)
+                        }
                     
-                    Picker(selection: $userLanguage, label: Label("语言设置", systemImage: "globe")) {
-                        Text("跟随系统").tag("system")
-                        Text("简体中文").tag("zh-Hans")
-                        Text("繁體中文").tag("zh-Hant")
-                        Text("English").tag("en")
+                        Picker(selection: $userLanguage, label: Label("语言设置", systemImage: "globe")) {
+                            Text("跟随系统").tag("system")
+                            Text("简体中文").tag("zh-Hans")
+                            Text("繁體中文").tag("zh-Hant")
+                            Text("English").tag("en")
+                        }
                     }
-                }
                 
-                // General Section
-                Section(header: Text("常规")) {
-                    Picker(selection: $mainCurrencyCode, label: Label("主货币", systemImage: "banknote")) {
-                        Text("人民币 (CNY)").tag("CNY")
-                        Text("美元 (USD)").tag("USD")
-                        Text("港币 (HKD)").tag("HKD")
-                        Text("日元 (JPY)").tag("JPY")
-                        Text("澳门币（MOP)").tag("MOP")
-                        Text("欧元（EUR）").tag("EUR")
-                        Text("英镑（GBP）").tag("GBP")
-                        Text("新台币（TWD）").tag("TWD")
-                    }
+                    // General Section
+                    Section(header: Text("常规")) {
+                        Picker(selection: $mainCurrencyCode, label: Label("主货币", systemImage: "banknote")) {
+                            Text("人民币 (CNY)").tag("CNY")
+                            Text("美元 (USD)").tag("USD")
+                            Text("港币 (HKD)").tag("HKD")
+                            Text("日元 (JPY)").tag("JPY")
+                            Text("澳门币（MOP)").tag("MOP")
+                            Text("欧元（EUR）").tag("EUR")
+                            Text("英镑（GBP）").tag("GBP")
+                            Text("新台币（TWD）").tag("TWD")
+                        }
                     
-                    Picker(selection: $defaultCardID, label: Label("默认记账卡片", systemImage: "creditcard.circle")) {
-                        Text("无默认卡片").tag("")
-                        ForEach(cards) { card in
-                            Text("\(card.bankName) (\(card.endNum))").tag("\(card.bankName)|\(card.endNum)")
+                        Picker(selection: $defaultCardID, label: Label("默认记账卡片", systemImage: "creditcard.circle")) {
+                            Text("无默认卡片").tag("")
+                            ForEach(cards) { card in
+                                Text("\(card.bankName) (\(card.endNum))").tag("\(card.bankName)|\(card.endNum)")
+                            }
+                        }
+                    
+                        NavigationLink(destination: NotificationSettingsView()) {
+                            Label("通知提醒", systemImage: "bell")
                         }
                     }
-                    
-                    NavigationLink(destination: NotificationSettingsView()) {
-                        Label("通知提醒", systemImage: "bell")
-                    }
-                }
 
-                // AI Model Section
-                Section {
-                    if #available(iOS 27.0, *) {
-                        Toggle(isOn: $useCloudAIModel) {
+                    // AI Model Section
+                    Section {
+                        if #available(iOS 27.0, *) {
+                            Toggle(isOn: $useCloudAIModel) {
+                                Label {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("使用云端模型")
+                                        Text("识别能力更强，需要网络连接")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                } icon: {
+                                    Image(systemName: "cloud.fill")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+
+                            if useCloudAIModel {
+                                Picker("云端通道", selection: cloudBackend) {
+                                    Text("Apple 私有云计算").tag(AICloudBackend.applePCC)
+                                    Text("自定义 API").tag(AICloudBackend.thirdParty)
+                                }
+
+                                if cloudBackend.wrappedValue == .thirdParty {
+                                    NavigationLink(destination: ThirdPartyModelSettingsView()) {
+                                        Label {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("配置自定义 API")
+                                                Text(thirdPartyStatusText)
+                                                    .font(.caption)
+                                                    .foregroundColor(
+                                                        ThirdPartyModelStore.isReady ? .secondary : .orange
+                                                    )
+                                            }
+                                        } icon: {
+                                            Image(systemName: "key.horizontal.fill")
+                                                .foregroundColor(.purple)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
                             Label {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("使用云端模型")
-                                    Text("识别能力更强，需要网络连接")
+                                    Text("本地模型")
+                                    Text("云端模型需要升级到 iOS 27")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                             } icon: {
-                                Image(systemName: "cloud.fill")
-                                    .foregroundColor(.blue)
-                            }
-                        }
-
-                        if useCloudAIModel {
-                            Picker("云端通道", selection: cloudBackend) {
-                                Text("Apple 私有云计算").tag(AICloudBackend.applePCC)
-                                Text("自定义 API").tag(AICloudBackend.thirdParty)
-                            }
-
-                            if cloudBackend.wrappedValue == .thirdParty {
-                                NavigationLink(destination: ThirdPartyModelSettingsView()) {
-                                    Label {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("配置自定义 API")
-                                            Text(thirdPartyStatusText)
-                                                .font(.caption)
-                                                .foregroundColor(
-                                                    ThirdPartyModelStore.isReady ? .secondary : .orange
-                                                )
-                                        }
-                                    } icon: {
-                                        Image(systemName: "key.horizontal.fill")
-                                            .foregroundColor(.purple)
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        Label {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("本地模型")
-                                Text("云端模型需要升级到 iOS 27")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        } icon: {
-                            Image(systemName: "iphone")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                } header: {
-                    Text("AI 智能识别")
-                } footer: {
-                    Text(cloudBackendFooter)
-                }
-
-                // Shortcuts Section
-                Section(header: Text("自动化与快捷指令")) {
-                    Link(destination: URL(string: "https://www.icloud.com/shortcuts/aceb7bb680d74a99aaee23f2c9005089")!) {
-                        Label {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("获取截屏记账快捷指令")
-                                    .foregroundColor(.primary)
-                                Text("配合操作按钮，一键截屏并自动入账")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        } icon: {
-                            Image(systemName: "camera.viewfinder")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    
-                    NavigationLink(destination: ShortcutGuideView()) {
-                        Label("自动化配置教程", systemImage: "book.pages")
-                    }
-                }
-                
-                // Data Management Section
-                Section(header: Text("数据管理")) {
-                    Toggle(isOn: $iCloudSyncEnabled) {
-                        Label {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("iCloud 数据同步")
-                                Text("在登录相同 Apple ID 的设备间自动同步")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        } icon: {
-                            Image(systemName: "icloud.fill")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .onChange(of: iCloudSyncEnabled) { _, _ in
-                        showSyncChangeAlert = true
-                    }
-
-                    Button {
-                        viewModel.startExportProcess(cards: cards, transactions: transactions)
-                    } label: {
-                        HStack {
-                            Label("全部数据导出", systemImage: "square.and.arrow.up")
-                            Spacer()
-                            
-                            if viewModel.isExporting {
-                                ProgressView()
-                                    .padding(.leading, 5)
-                            } else {
-                                Text("导出卡片与账单")
-                                    .font(.caption)
+                                Image(systemName: "iphone")
                                     .foregroundColor(.gray)
                             }
                         }
-                    }
-                    .disabled(viewModel.isExporting) // 导出过程中禁止重复点击
-
-                    // 隐私政策只维护官网一份：App 内原来那份写着"不上传任何数据"，
-                    // 有了银行同步之后已经不成立，两份并存迟早对不上
-                    Link(destination: AppConfig.privacyPolicyURL) {
-                        Label {
-                            Text("隐私政策").foregroundStyle(.primary)
-                        } icon: {
-                            Image(systemName: "hand.raised")
-                        }
+                    } header: {
+                        Text("AI 智能识别")
+                    } footer: {
+                        Text(cloudBackendFooter)
                     }
 
-                    Link(destination: AppConfig.termsOfUseURL) {
-                        Label {
-                            Text("使用条款").foregroundStyle(.primary)
-                        } icon: {
-                            Image(systemName: "doc.text")
+                    // Shortcuts Section
+                    Section(header: Text("自动化与快捷指令")) {
+                        Link(destination: URL(string: "https://www.icloud.com/shortcuts/aceb7bb680d74a99aaee23f2c9005089")!) {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("获取截屏记账快捷指令")
+                                        .foregroundColor(.primary)
+                                    Text("配合操作按钮，一键截屏并自动入账")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            } icon: {
+                                Image(systemName: "camera.viewfinder")
+                                    .foregroundColor(.blue)
+                            }
                         }
+                        .tourTarget(.screenshotShortcut)
+                        .id(TourTarget.screenshotShortcut)
+
+                        NavigationLink(destination: ShortcutGuideView()) {
+                            Label("自动化配置教程", systemImage: "book.pages")
+                        }
+                        .tourTarget(.shortcutGuide)
                     }
-                }
                 
-                // About Section
-                Section(header: Text("关于 Cashback Counter")) {
-                    HStack {
-                        Label("版本", systemImage: "info.circle")
-                        Spacer()
-                        Text("v\(appVersion)")
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    NavigationLink(destination: DeveloperView()) {
-                        Label("开发者/贡献者", systemImage: "person.crop.circle")
-                    }
-                }
-
-                Section(header: Text("更新说明")) {
-                    NavigationLink(destination: UpdateNotesView(appVersion: appVersion)) {
-                        Label("更新版本注意事项", systemImage: "exclamationmark.triangle")
-                    }
-                }
-                
-                // Reset Section
-                Section {
-                    Button(role: .destructive) {
-                        viewModel.showConfirmClear = true
-                    } label: {
-                        Label("重置所有数据 (慎用)", systemImage: "trash")
-                            .foregroundColor(.red)
-                    }
-                    .confirmationDialog(
-                        "确定要清除所有数据吗？",
-                        isPresented: $viewModel.showConfirmClear,
-                        titleVisibility: .visible
-                    ) {
-                        Button("清除", role: .destructive) {
-                            viewModel.clearAllData(context: context)
+                    // Data Management Section
+                    Section(header: Text("数据管理")) {
+                        Toggle(isOn: $iCloudSyncEnabled) {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("iCloud 数据同步")
+                                    Text("在登录相同 Apple ID 的设备间自动同步")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            } icon: {
+                                Image(systemName: "icloud.fill")
+                                    .foregroundColor(.blue)
+                            }
                         }
-                        Button("取消", role: .cancel) {}
+                        .onChange(of: iCloudSyncEnabled) { _, _ in
+                            showSyncChangeAlert = true
+                        }
+
+                        Button {
+                            viewModel.startExportProcess(cards: cards, transactions: transactions)
+                        } label: {
+                            HStack {
+                                Label("全部数据导出", systemImage: "square.and.arrow.up")
+                                Spacer()
+                            
+                                if viewModel.isExporting {
+                                    ProgressView()
+                                        .padding(.leading, 5)
+                                } else {
+                                    Text("导出卡片与账单")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                        .disabled(viewModel.isExporting) // 导出过程中禁止重复点击
+
+                        // 隐私政策只维护官网一份：App 内原来那份写着"不上传任何数据"，
+                        // 有了银行同步之后已经不成立，两份并存迟早对不上
+                        Link(destination: AppConfig.privacyPolicyURL) {
+                            Label {
+                                Text("隐私政策").foregroundStyle(.primary)
+                            } icon: {
+                                Image(systemName: "hand.raised")
+                            }
+                        }
+
+                        Link(destination: AppConfig.termsOfUseURL) {
+                            Label {
+                                Text("使用条款").foregroundStyle(.primary)
+                            } icon: {
+                                Image(systemName: "doc.text")
+                            }
+                        }
                     }
+                
+                    // About Section
+                    Section(header: Text("关于 Cashback Counter")) {
+                        HStack {
+                            Label("版本", systemImage: "info.circle")
+                            Spacer()
+                            Text("v\(appVersion)")
+                                .foregroundColor(.secondary)
+                        }
+
+                        // 首启导览的重看入口（结束卡片上写着「设置 › 新手导览」，改名要两边一起改）
+                        Button {
+                            tour.start()
+                        } label: {
+                            Label {
+                                Text("新手导览").foregroundStyle(.primary)
+                            } icon: {
+                                Image(systemName: "hand.point.up.left")
+                            }
+                        }
+
+                        NavigationLink(destination: DeveloperView()) {
+                            Label("开发者/贡献者", systemImage: "person.crop.circle")
+                        }
+                    }
+
+                    Section(header: Text("更新说明")) {
+                        NavigationLink(destination: UpdateNotesView(appVersion: appVersion)) {
+                            Label("更新版本注意事项", systemImage: "exclamationmark.triangle")
+                        }
+                    }
+                
+                    // Reset Section
+                    Section {
+                        Button(role: .destructive) {
+                            viewModel.showConfirmClear = true
+                        } label: {
+                            Label("重置所有数据 (慎用)", systemImage: "trash")
+                                .foregroundColor(.red)
+                        }
+                        .confirmationDialog(
+                            "确定要清除所有数据吗？",
+                            isPresented: $viewModel.showConfirmClear,
+                            titleVisibility: .visible
+                        ) {
+                            Button("清除", role: .destructive) {
+                                viewModel.clearAllData(context: context)
+                            }
+                            Button("取消", role: .cancel) {}
+                        }
+                    }
+                }
+                // 导览走到设置页的两步时，把要高亮的那一行滚到屏幕中间
+                .onChange(of: tour.step, initial: true) { _, step in
+                    scrollToTourTarget(of: step, with: scrollProxy)
                 }
             }
             .navigationTitle("设置")
@@ -352,6 +373,19 @@ struct SettingsView: View {
                 Button("好的", role: .cancel) { }
             } message: {
                 Text("iCloud 数据同步设置已更改。请完全退出应用并重新启动，以使新的同步配置生效。")
+            }
+        }
+    }
+
+    /// 导览要高亮的行可能在屏幕外（快捷指令那组在 AI 设置下面，小屏手机一屏放不下），
+    /// 先滚过去，蒙层才有洞可挖
+    private func scrollToTourTarget(of step: TourStep?, with proxy: ScrollViewProxy) {
+        guard let step, step.tab == .settings, let target = step.targets.first else { return }
+        Task {
+            // 导览刚切到设置页时列表还没布局完，立刻滚会落空
+            try? await Task.sleep(for: .milliseconds(150))
+            withAnimation(.easeInOut(duration: 0.35)) {
+                proxy.scrollTo(target, anchor: .center)
             }
         }
     }

@@ -21,7 +21,11 @@ struct CashbackCounterApp: App { // 2. 这个结构体必须遵守 App 协议
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
-        NotificationManager.shared.requestAuthorization()
+        // 首次启动时新手导览直接叠在界面上，这时弹系统通知授权会正好压在欢迎卡片上。
+        // 没看过导览的，等导览结束再问（见 ContentView）
+        if UserDefaults.standard.bool(forKey: OnboardingTour.seenKey) {
+            NotificationManager.shared.requestAuthorization()
+        }
         // 要在任何 await 之前挂上 Transaction.updates 的监听：
         // 续订、退款、别的设备上的购买都只从那个流里来，晚挂就会漏。
         SubscriptionManager.shared.start()

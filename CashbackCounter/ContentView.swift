@@ -6,54 +6,71 @@ struct ContentView: View {
     // 选中的 Tab 索引
     // 用 @AppStorage 而不是 @State：切语言时整棵树会按 id 重建（见 CashbackCounterApp），
     // @State 会被一起丢掉，把刚在设置页操作的用户弹回账单页。
-    @AppStorage("selectedTab") private var selectedTab = 0
+    @AppStorage("selectedTab") private var selectedTab = AppTab.bills.rawValue
     @Environment(\.modelContext) private var context
-    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
-    
+    @AppStorage(OnboardingTour.seenKey) private var hasSeenOnboarding = false
+    @State private var tour = OnboardingTour.shared
+
     var body: some View {
         // TabView 是底部导航栏的核心容器
         TabView(selection: $selectedTab) {
-            
+
             // --- 左边：账单页 ---
             BillHomeView()
                 .tabItem {
-                    Image(systemName: selectedTab == 0 ? "doc.text.image.fill" : "doc.text.image")
+                    Image(systemName: selectedTab == AppTab.bills.rawValue ? "doc.text.image.fill" : "doc.text.image")
                     Text("账单")
                 }
-                .tag(0)
-            
+                .tag(AppTab.bills.rawValue)
+
             CardListView()
                 .tabItem {
-                    Image(systemName: selectedTab == 1 ? "creditcard.fill" : "creditcard")
+                    Image(systemName: selectedTab == AppTab.cards.rawValue ? "creditcard.fill" : "creditcard")
                     Text("卡包")
                 }
-                .tag(1)
-            
+                .tag(AppTab.cards.rawValue)
+
             CameraRecordView()
                 .tabItem {
                     Image(systemName: "camera.circle.fill") // 大圆圈图标
                     Text("拍一笔")
                 }
-                .tag(2)
-            
+                .tag(AppTab.camera.rawValue)
+
             // --- 积分系统页 ---
             PointSystemView()
                 .tabItem {
-                    Image(systemName: selectedTab == 3 ? "star.circle.fill" : "star.circle")
+                    Image(systemName: selectedTab == AppTab.points.rawValue ? "star.circle.fill" : "star.circle")
                     Text("积分")
                 }
-                .tag(3)
-            
+                .tag(AppTab.points.rawValue)
+
             // --- ✨ 新增：设置页 ---
             SettingsView()
                 .tabItem {
                     // 选中时变成实心齿轮
-                    Image(systemName: selectedTab == 4 ? "gearshape.fill" : "gearshape")
+                    Image(systemName: selectedTab == AppTab.settings.rawValue ? "gearshape.fill" : "gearshape")
                     Text("设置")
                 }
-                .tag(4)
+                .tag(AppTab.settings.rawValue)
         }
         .tint(.blue) // 设置底部选中时的颜色 (Apple 蓝)
+        // 新手导览直接叠在真实界面上（盖住 TabBar，导览途中不会误切走）
+        .tourOverlayHost(.main)
+        .onChange(of: tour.step) { _, step in
+            if let tab = step?.tab {
+                selectedTab = tab.rawValue
+            } else if step == nil {
+                // 导览结束（含跳过）才问通知权限，见 CashbackCounterApp.init。
+                // 系统只会弹一次，重看导览后再调是无害的
+                NotificationManager.shared.requestAuthorization()
+            }
+        }
+        .onAppear {
+            if !hasSeenOnboarding {
+                tour.start()
+            }
+        }
         .task {
             do {
                 try Point.syncDefaultPoints(in: context)
@@ -69,20 +86,6 @@ struct ContentView: View {
                 UserDefaults.standard.set(true, forKey: AppConfig.UserDefaultsKey.didMigrateReminderIdentifiers)
             }
         }
-        .fullScreenCover(
-            isPresented: Binding(
-                get: { !hasSeenOnboarding },
-                set: { newValue in
-                    if !newValue {
-                        hasSeenOnboarding = true
-                    }
-                }
-            )
-        ) {
-            OnboardingView {
-                hasSeenOnboarding = true
-            }
-        }
     }
 }
 
@@ -94,8 +97,8 @@ struct ContentView: View {
         .previewEnvironment(onboardingSeen: true)
 }
 
-#Preview("首启 · 带引导页") {
-    // hasSeenOnboarding = false 时引导页会整页盖上来，这条专门看那一侧
+#Preview("首启 · 带新手导览") {
+    // hasSeenOnboarding = false 时导览蒙层会直接叠在真实界面上，这条专门看那一侧
     ContentView()
         .previewEnvironment(onboardingSeen: false)
 }

@@ -1,0 +1,21 @@
+{
+  "name": "cashback-promo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render Promo out/promo.mp4 --codec h264 --crf 16",
+    "still": "remotion still Promo out/still.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.532",
+    "@remotion/transitions": "4.0.532",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.532"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}

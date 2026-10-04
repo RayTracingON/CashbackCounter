@@ -109,6 +109,9 @@ struct CardTemplateListView: View {
                 })
             }
         }
+        .tourOverlayHost(.templateList)
+        .onAppear { OnboardingTour.shared.handle(.templateListAppeared) }
+        .onDisappear { OnboardingTour.shared.handle(.templateListDisappeared) }
     }
 
     // MARK: - 筛选

@@ -246,6 +246,8 @@ struct AccountSection: View {
             } label: {
                 Label("银行同步", systemImage: "building.columns")
             }
+            .tourTarget(.bankSync)
+            .id(TourTarget.bankSync)
 
             if subscriptions.isPremium {
                 VStack(alignment: .leading, spacing: 4) {

@@ -716,6 +716,7 @@
       }
     },
     "+12%" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -979,6 +980,22 @@
         }
       }
     },
+    "① 点上面一行，添加截屏记账快捷指令\n② 打开系统设置 › 操作按钮，选「快捷指令」，再选中它\n③ 在付款成功页长按操作按钮，自动截屏入账" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "① Tap the row above to add the screenshot shortcut\n② In Settings › Action Button, choose Shortcut, then select it\n③ On a payment confirmation, press and hold the Action Button to log it"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "① 點上面一行，添加截圖記帳捷徑\n② 打開系統設定 › 動作按鈕，選「捷徑」，再選中它\n③ 在付款成功頁長按動作按鈕，自動截圖入帳"
+          }
+        }
+      }
+    },
     "AI 分析中..." : {
       "localizations" : {
         "en" : {
@@ -1013,6 +1030,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AI 智慧識別"
+          }
+        }
+      }
+    },
+    "AI 自动识别金额、商户和卡片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI reads the amount, merchant and card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 自動辨識金額、商戶和卡片"
           }
         }
       }
@@ -1727,6 +1760,7 @@
       }
     },
     "一切就绪" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2123,6 +2157,7 @@
       }
     },
     "交易识别" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2327,6 +2362,7 @@
       }
     },
     "你的智能返现计算助手" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2520,6 +2556,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存 %lld 筆"
+          }
+        }
+      }
+    },
+    "保存，就添加好了" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save to add it"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存，就添加好了"
           }
         }
       }
@@ -2946,6 +2998,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "淨變化：%@ 積分"
+          }
+        }
+      }
+    },
+    "准备就绪" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're all set"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "準備就緒"
           }
         }
       }
@@ -3415,6 +3483,22 @@
         }
       }
     },
+    "右上角可以按银行筛选。找不到你的卡？先取消，再用「自定义添加」手动录入。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the filter in the top-right corner to narrow it down by bank. Can’t find your card? Cancel, then use “Add Custom” to enter it yourself."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右上角可以按銀行篩選。找不到你的卡？先取消，再用「自訂添加」手動輸入。"
+          }
+        }
+      }
+    },
     "同本币" : {
       "localizations" : {
         "en" : {
@@ -3593,6 +3677,22 @@
         }
       }
     },
+    "填上卡号后四位" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the last 4 digits"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填上卡號後四位"
+          }
+        }
+      }
+    },
     "填到 /v1 为止，例如 https://api.deepseek.com/v1。兼容任何 OpenAI 格式的服务。" : {
       "localizations" : {
         "en" : {
@@ -3605,6 +3705,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "填到 /v1 為止，例如 https://api.deepseek.com/v1。相容任何 OpenAI 格式的服務。"
+          }
+        }
+      }
+    },
+    "填好银行、卡种、尾号和返现规则，然后点右上角「保存」。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill in the bank, card type, last 4 digits and reward rules, then tap Save in the top-right corner."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填好銀行、卡種、尾號和返現規則，然後點右上角「儲存」。"
           }
         }
       }
@@ -3831,6 +3947,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "金鑰儲存在裝置的鑰匙圈（Keychain）中，不會同步到 iCloud，也不會傳送給本 App 的伺服器。"
+          }
+        }
+      }
+    },
+    "对准小票按快门，AI 会识别商户、金额、日期和类别，并按尾号自动选好卡片。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Point at a receipt and tap the shutter. AI fills in the merchant, amount, date and category, and picks the card by its last 4 digits."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "對準收據按快門，AI 會辨識商戶、金額、日期和類別，並按尾號自動選好卡片。"
           }
         }
       }
@@ -4281,6 +4413,22 @@
         }
       }
     },
+    "左边从相册选小票或付款截图，右边手动记一笔。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the left, pick a receipt or payment screenshot from Photos. On the right, log one by hand."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左邊從相簿選收據或付款截圖，右邊手動記一筆。"
+          }
+        }
+      }
+    },
     "已从 App 移除" : {
       "localizations" : {
         "en" : {
@@ -4519,6 +4667,7 @@
       }
     },
     "已识别" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4535,6 +4684,7 @@
       }
     },
     "已配置" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4739,7 +4889,24 @@
         }
       }
     },
+    "开始导览" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Tour"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開始導覽"
+          }
+        }
+      }
+    },
     "开始管理你的消费与返现吧" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4931,6 +5098,22 @@
         }
       }
     },
+    "想再看一遍，随时到「设置 › 新手导览」。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To see this again, go to Settings › Getting Started Tour."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "想再看一遍，隨時到「設定 › 新手導覽」。"
+          }
+        }
+      }
+    },
     "我们只用 Apple ID 做身份识别，不获取你的通讯录或其他资料。" : {
       "localizations" : {
         "en" : {
@@ -5012,6 +5195,22 @@
         }
       }
     },
+    "截图导入或手动记账" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import a screenshot or log by hand"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截圖匯入或手動記帳"
+          }
+        }
+      }
+    },
     "截屏智能记账" : {
       "localizations" : {
         "en" : {
@@ -5024,6 +5223,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "截圖智能記帳"
+          }
+        }
+      }
+    },
+    "截屏记账" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screenshot Logging"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截圖記帳"
           }
         }
       }
@@ -5170,6 +5385,38 @@
         }
       }
     },
+    "拍小票，自动记一笔" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snap a receipt to log it"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍收據，自動記一筆"
+          }
+        }
+      }
+    },
+    "拍小票记账" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snap a Receipt"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍收據記帳"
+          }
+        }
+      }
+    },
     "指定卡片" : {
       "localizations" : {
         "en" : {
@@ -5266,6 +5513,22 @@
         }
       }
     },
+    "换成你这张卡的后四位。拍小票时会按尾号自动选中它，银行同步也靠它对上账户。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace it with your card’s last 4 digits. Receipts are matched to this card by them, and Bank Sync uses them to find the account."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "換成你這張卡的後四位。拍收據時會按尾號自動選中它，銀行同步也靠它對上帳戶。"
+          }
+        }
+      }
+    },
     "推理模式" : {
       "localizations" : {
         "en" : {
@@ -5294,6 +5557,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜尋商戶"
+          }
+        }
+      }
+    },
+    "操作按钮，一键截屏记账" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log with the Action Button"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "動作按鈕，一鍵截圖記帳"
+          }
+        }
+      }
+    },
+    "操作按钮一键截屏入账" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One press of the Action Button logs it"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "動作按鈕一鍵截圖入帳"
           }
         }
       }
@@ -5417,6 +5712,7 @@
       }
     },
     "支出趋势" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5703,6 +5999,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新增積分返現交易後，這裡會顯示累計積分。"
+          }
+        }
+      }
+    },
+    "新手导览" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting Started Tour"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新手導覽"
           }
         }
       }
@@ -6779,6 +7091,22 @@
         }
       }
     },
+    "欢迎使用 Cashback Counter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to Cashback Counter"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歡迎使用 Cashback Counter"
+          }
+        }
+      }
+    },
     "欧元（EUR）" : {
       "localizations" : {
         "en" : {
@@ -6973,6 +7301,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有尾號 %@ 的卡。你可以先連結到任意一張卡，或者取消後去「卡包」新增。"
+          }
+        }
+      }
+    },
+    "没有操作按钮？可以在系统设置 › 辅助功能 › 触控 › 轻点背面 里绑定。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Action Button? Assign it to Back Tap in Settings › Accessibility › Touch."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有動作按鈕？可以在系統設定 › 輔助使用 › 觸控 › 背面輕點 裡設定。"
           }
         }
       }
@@ -7229,6 +7573,22 @@
         }
       }
     },
+    "添加你的第一张卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add your first card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加你的第一張卡"
+          }
+        }
+      }
+    },
     "添加信用卡" : {
       "localizations" : {
         "en" : {
@@ -7247,6 +7607,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "添加信用卡"
+          }
+        }
+      }
+    },
+    "添加卡片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a Card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加卡片"
           }
         }
       }
@@ -7407,6 +7783,38 @@
         }
       }
     },
+    "点卡片可以查看它的消费记录和返现上限进度，长按可以拖动排序。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a card to see its transactions and cap progress. Touch and hold to reorder."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點卡片可以查看它的消費紀錄和返現上限進度，長按可以拖動排序。"
+          }
+        }
+      }
+    },
+    "点右上角 ⋯，选「从模板添加」。模板已经配好了这张卡的返现和积分规则。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap ⋯ in the top-right corner and choose “Add from Template”. Templates come with the card’s cashback and points rules."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點右上角 ⋯，選「從模板添加」。模板已經配好這張卡的返現和積分規則。"
+          }
+        }
+      }
+    },
     "点按可逐条修改，左滑可删除。没识别出金额的收据不会被批量保存，需要点开手动补充。" : {
       "localizations" : {
         "en" : {
@@ -7419,6 +7827,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "點按可逐條修改，左滑可刪除。沒識別出金額的收據不會被批量保存，需要點開手動補充。"
+          }
+        }
+      }
+    },
+    "点高亮处继续" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the highlight"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點高亮處繼續"
           }
         }
       }
@@ -7474,6 +7898,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "獨立外幣上限"
+          }
+        }
+      }
+    },
+    "用模板一键配好返现规则" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Templates set up the cashback rules for you"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用模板一鍵配好返現規則"
           }
         }
       }
@@ -7842,6 +8282,38 @@
         }
       }
     },
+    "第 %lld 部分，共 %lld 部分" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$lld of %2$lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %1$lld 部分，共 %2$lld 部分"
+          }
+        }
+      }
+    },
+    "第一张卡添加好了" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your first card is added"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第一張卡添加好了"
+          }
+        }
+      }
+    },
     "第三方模型通道暂不支持工具调用" : {
       "localizations" : {
         "en" : {
@@ -8132,6 +8604,22 @@
         }
       }
     },
+    "绑定美国的信用卡或银行账户后，消费会自动同步进来并算好返现。需要登录并订阅，目前仅支持美国的金融机构。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link a US credit card or bank account and purchases sync in with cashback already calculated. Requires sign-in and a subscription; US institutions only for now."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "綁定美國的信用卡或銀行帳戶後，消費會自動同步進來並算好返現。需要登入並訂閱，目前僅支援美國的金融機構。"
+          }
+        }
+      }
+    },
     "绑定美国银行" : {
       "localizations" : {
         "en" : {
@@ -8229,6 +8717,7 @@
       }
     },
     "继续" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8499,6 +8988,22 @@
         }
       }
     },
+    "美国银行交易自动导入" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "US bank transactions come in automatically"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "美國銀行交易自動匯入"
+          }
+        }
+      }
+    },
     "自动（推荐）" : {
       "localizations" : {
         "en" : {
@@ -8595,6 +9100,22 @@
         }
       }
     },
+    "自定义一张卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set up a custom card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂一張卡"
+          }
+        }
+      }
+    },
     "自定义添加" : {
       "localizations" : {
         "en" : {
@@ -8629,6 +9150,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "致謝"
+          }
+        }
+      }
+    },
+    "花一分钟，在真实界面里走一遍核心功能。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a minute to try the key features, right in the app."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "花一分鐘，在真實介面裡走一遍核心功能。"
           }
         }
       }
@@ -9531,6 +10068,22 @@
         }
       }
     },
+    "跳过，我自己逛逛" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip, I’ll look around myself"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳過，我自己逛逛"
+          }
+        }
+      }
+    },
     "近6个月积分变化" : {
       "localizations" : {
         "en" : {
@@ -9592,6 +10145,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "返現分析"
+          }
+        }
+      }
+    },
+    "返现规则已经按模板填好，以后可以在卡包里随时修改。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reward rules are filled in from the template. You can change them anytime in Wallet."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返現規則已經按模板填好，之後可以在卡包裡隨時修改。"
           }
         }
       }
@@ -9812,6 +10381,22 @@
         }
       }
     },
+    "退出导览" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End Tour"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結束導覽"
+          }
+        }
+      }
+    },
     "退出登录" : {
       "localizations" : {
         "en" : {
@@ -9872,6 +10457,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "退款自動抵銷"
+          }
+        }
+      }
+    },
+    "选一张你手上的卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a card you have"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選一張你手上的卡"
           }
         }
       }
@@ -10240,6 +10841,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "銀行一有新交易就推送提醒"
+          }
+        }
+      }
+    },
+    "银行交易自动同步" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync bank transactions automatically"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "銀行交易自動同步"
           }
         }
       }

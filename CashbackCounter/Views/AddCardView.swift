@@ -104,7 +104,11 @@ struct AddCardView: View {
                         .keyboardType(.numberPad)
                         .onChange(of: viewModel.endNum) { oldValue, newValue in
                             if newValue.count > 4 { viewModel.endNum = String(newValue.prefix(4)) }
+                            // 只认「刚打满第 4 位」：模板会预填 8888，在它后面多打一位时
+                            // 会先收到 5 位、再被上面截回 8888，那两次都不算填好了
+                            OnboardingTour.shared.handle(.lastFourChanged(isComplete: oldValue.count < 4 && newValue.count == 4))
                         }
+                        .tourTarget(.cardLastFour)
                     TextField("备注 (可选)", text: $viewModel.memo)
                 }
                 
@@ -293,10 +297,15 @@ struct AddCardView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
                         viewModel.saveCard(cardToEdit: cardToEdit, template: template, points: points, context: context)
+                        // 先于 dismiss 上报：收起 sheet 触发的「消失」不能被当成用户取消
+                        if cardToEdit == nil {
+                            OnboardingTour.shared.handle(.cardSaved)
+                        }
                         dismiss()
                         onSaved?()
                     }
                     .disabled(!viewModel.isFormValid)
+                    .tourTarget(.cardSave)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -311,6 +320,12 @@ struct AddCardView: View {
                 
                 if cardToEdit == nil {
                     viewModel.matchPointProgram(from: points, template: template)
+                    OnboardingTour.shared.handle(.addCardAppeared(fromTemplate: template != nil))
+                }
+            }
+            .onDisappear {
+                if cardToEdit == nil {
+                    OnboardingTour.shared.handle(.addCardDisappeared)
                 }
             }
             // 2. 监听下载完成，将图片转为 Data
@@ -344,6 +359,7 @@ struct AddCardView: View {
                 }
             }
         }
+        .tourOverlayHost(.addCard)
     }
     
     struct CategoryInputRow: View {
