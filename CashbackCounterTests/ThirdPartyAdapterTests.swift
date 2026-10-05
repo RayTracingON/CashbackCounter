@@ -10,13 +10,13 @@ final class ThirdPartyAdapterTests: XCTestCase {
     // MARK: - Fixtures
 
     private func config(
-        _ provider: ThirdPartyProvider,
+        _ provider: ThirdPartyAPIFormat,
         baseURL: String,
         vision: Bool = false,
         reasoning: Bool = false
     ) -> ThirdPartyModelConfig {
         var config = ThirdPartyModelConfig()
-        config.provider = provider
+        config.apiFormat = provider
         config.baseURL = baseURL
         config.modelName = "test-model"
         config.supportsVision = vision

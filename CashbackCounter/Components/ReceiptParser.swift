@@ -5,6 +5,7 @@
 //  Created by Junhao Huang on 11/24/25.
 //
 import FoundationModels
+import ClaudeForFoundationModels
 import Observation // 苹果的新状态管理框架
 import Foundation
 import UIKit
@@ -180,33 +181,56 @@ enum ReceiptParseMode {
 // MARK: - 云端通道
 
 /// 「使用云端模型」打开后实际接上的那个远端模型。
-/// 两条通道都实现了 iOS 27 的 LanguageModel 协议，所以对 session 构造而言完全等价：
+/// 各通道都实现了 iOS 27 的 LanguageModel 协议，所以对 session 构造而言完全等价：
 /// - Apple PCC：系统内置，端到端加密，无需配置
-/// - 第三方：用户自带 endpoint 和密钥（见 Services/ThirdPartyModel/）
+/// - 第三方：用户选中的服务商（见 Services/ThirdPartyModel/），按协议走手写 adapter
+/// - Claude：内置 Claude 服务商，走 Anthropic 官方 ClaudeForFoundationModels 包
 @available(iOS 27.0, *)
-enum CloudRoute {
+nonisolated enum CloudRoute {
     case applePCC(PrivateCloudComputeLanguageModel)
     case thirdParty(ThirdPartyLanguageModel)
+    case claude(ClaudeLanguageModel)
+
+    /// 当前选中的第三方服务商；没选、没配全、缺密钥都返回 nil（调用方回退本地，不偷偷改走 PCC）
+    static func activeThirdParty() -> CloudRoute? {
+        guard let provider = ThirdPartyModelStore.activeProvider,
+              provider.isComplete,
+              let apiKey = ThirdPartyModelStore.apiKey(for: provider.id),
+              !apiKey.isEmpty else { return nil }
+
+        if provider.preset == .claude {
+            return ClaudeModelCatalog.languageModel(for: provider, apiKey: apiKey).map(CloudRoute.claude)
+        }
+        return .thirdParty(ThirdPartyLanguageModel(
+            config: provider.config,
+            apiKey: apiKey,
+            displayName: provider.displayName
+        ))
+    }
 
     var model: any LanguageModel {
         switch self {
         case .applePCC(let model):    return model
         case .thirdParty(let model):  return model
+        case .claude(let model):      return model
         }
     }
 
-    /// 是否可以走图片直传。PCC 一定支持；第三方取决于用户给自己的模型勾了没有。
+    /// 是否可以走图片直传。PCC 一定支持；第三方取决于用户给自己的模型勾了没有；
+    /// Claude 由官方包的模型能力表决定。
     var supportsVision: Bool {
         switch self {
         case .applePCC:               return true
         case .thirdParty(let model):  return model.config.supportsVision
+        case .claude(let model):      return model.model.capabilities.imageInput
         }
     }
 
     var logLabel: String {
         switch self {
         case .applePCC:               return "☁️ 使用云端模型 (Private Cloud Compute)"
-        case .thirdParty(let model):  return "🔌 使用第三方模型 (\(model.config.provider.displayName) / \(model.config.modelName))"
+        case .thirdParty(let model):  return "🔌 使用第三方模型 (\(model.displayName) / \(model.config.modelName))"
+        case .claude(let model):      return "🔌 使用第三方模型 (Claude / \(model.model.id))"
         }
     }
 }
@@ -261,7 +285,7 @@ final class ReceiptParser {
         case .thirdParty:
             // 第三方没配全就回退本地，不再偷偷走 PCC：
             // 用户明确选了自己的服务，静默换成别家会让「数据发去哪」变得不可预期
-            return ThirdPartyLanguageModel.current().map(CloudRoute.thirdParty)
+            return CloudRoute.activeThirdParty()
         case .applePCC:
             let model = PrivateCloudComputeLanguageModel()
             return model.isAvailable ? .applePCC(model) : nil
@@ -319,6 +343,19 @@ final class ReceiptParser {
         let junk = CharacterSet(charactersIn: "\"“”„'‘’｢｣「」,，、 \t\n")
         let cleaned = value.trimmingCharacters(in: junk)
         return cleaned.isEmpty ? nil : cleaned
+    }
+
+    /// 本地小模型见 ¥ 常猜 JPY（CNY/JPY 混淆）：全文没有任何日本迹象、关键词又指向中国大陆时纠正为 CNY。
+    /// 只用于本地模型——云端 / 第三方模型的币种判断可靠，不能拿界面用语去推翻它。
+    static func correctingLocalYenGuess(_ metadata: ReceiptMetadata, text: String) -> ReceiptMetadata {
+        guard let currency = metadata.currency,
+              Region.from(currencyText: currency) == .jp,
+              !OCRService.hasJapaneseEvidence(in: text),
+              OCRService.simpleInferRegion(from: text) == .cn else { return metadata }
+        print("🧰 本地模型 ¥ 纠偏: \(currency) → CNY")
+        var result = metadata
+        result.currency = Region.cn.currencyCode
+        return result
     }
 
     /// 多模态 session：仅云端 PCC，云端不可用直接抛错（调用方回退 OCR 文本管线）
@@ -412,7 +449,8 @@ final class ReceiptParser {
                 }.content
             }
 
-        let cleaned = Self.sanitized(metadata)
+        var cleaned = Self.sanitized(metadata)
+        if !isCloud { cleaned = Self.correctingLocalYenGuess(cleaned, text: text) }
         Self.logReceiptFields(cleaned, label: "OCR")
         return cleaned
     }
@@ -439,7 +477,8 @@ final class ReceiptParser {
             }.content
         }
 
-        let cleaned = Self.sanitized(metadata)
+        var cleaned = Self.sanitized(metadata)
+        if !isCloud { cleaned = Self.correctingLocalYenGuess(cleaned, text: text) }
         Self.logReceiptFields(cleaned, label: "Screenshot OCR")
         return cleaned
     }
@@ -466,7 +505,8 @@ final class ReceiptParser {
                 }.content
             }
 
-        let cleaned = Self.sanitized(metadata)
+        var cleaned = Self.sanitized(metadata)
+        if !isCloud { cleaned = Self.correctingLocalYenGuess(cleaned, text: text) }
         Self.logReceiptFields(cleaned, label: "SMS")
         return cleaned
         }

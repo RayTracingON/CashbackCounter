@@ -205,32 +205,62 @@ struct OCRService {
         aiParser.prewarm()
     }
     
+    // MARK: - 🌍 交易地区
+    /// 以模型给出的币种为准——币种和金额出自同一次抽取，说的是同一个数；
+    /// 模型没给出可识别的币种时才用全文关键词推断。
+    /// ⚠️ 不能反过来让关键词推翻模型：中文界面的支付截图里处处是「交易 / 金额」，
+    /// 那只说明 App 界面是中文，不代表消费币种——日本消费的截图曾因此被记成中国大陆。
+    /// 本地小模型「见 ¥ 就猜 JPY」的老毛病在 ReceiptParser 的本地分支里单独纠正。
+    static func resolveRegion(currency: String?, rawText: String) -> Region? {
+        if let currency, let region = Region.from(currencyText: currency) { return region }
+        return simpleInferRegion(from: rawText)
+    }
+
     // MARK: - 🕵️‍♂️ 本地侦探：根据文字猜地区
     // 这是一个纯字符串匹配方法，速度极快
     static func simpleInferRegion(from text: String) -> Region? {
         let upperText = text.uppercased()
-        
-        // 1. 强特征：直接看货币代码 (ISO Code)
-        if upperText.contains("JPY") || text.contains("円") { return .jp }
-        if upperText.contains("HKD") || text.contains("HK$") { return .hk }
-        if upperText.contains("TWD") || upperText.contains("NT$") { return .tw }
-        if upperText.contains("NZD") { return .nz }
-        if upperText.contains("CN¥") || upperText.contains("RMB") || text.contains("人民币"){ return .cn }
-        if upperText.contains("USD") { return .us }
-        if upperText.contains("MOP") || upperText.contains("MACAU") { return .mo }
-        if upperText.contains("EUR") || upperText.contains("EURO") || upperText.contains("€"){ return .other }
-        if upperText.contains("GBP") || upperText.contains("UK") || upperText.contains("£") { return .uk }
-        
-        // 2. 弱特征：看地名或特殊符号 (如果货币没找到)
-        if upperText.contains("合計") || upperText.contains("料金") { return .jp }
+
+        // 1. 强特征：明确的币种标记（ISO 代码 / 带地区前缀的符号 / 中文币种名），按固定优先级取第一个
+        let markerPriority: [Region] = [.jp, .hk, .tw, .nz, .cn, .us, .mo, .other, .uk]
+        if let region = markerPriority.first(where: { $0.hasCurrencyMarker(in: upperText) }) {
+            return region
+        }
+
+        // 2. 弱特征：看文字和地名 (如果货币没找到)
+        // 假名是日文独有的；中文界面里显示日本商户名（コーナン）时也能据此认出日本
+        if containsJapaneseKana(text) { return .jp }
         if upperText.contains("HONG KONG") { return .hk }
-        if upperText.contains("TAIPEI") || text.contains("台灣") { return .tw }
-        if upperText.contains("USA") || upperText.contains("US$") { return .us }
-        
-        // 3. 符号特征 (¥ 比较难办，中日都用，默认不处理或按概率给一个)
+        if Region.containsMarker("TAIPEI", in: upperText) || text.contains("台灣") { return .tw }
+        if Region.containsMarker("MACAU", in: upperText) || Region.containsMarker("MACAO", in: upperText) { return .mo }
+        if Region.containsMarker("USA", in: upperText) { return .us }
+        if Region.containsMarker("UK", in: upperText) { return .uk }
+        // 合計 港台繁体也用，必须排在港台地名之后
+        if text.contains("合計") || text.contains("料金") { return .jp }
+
+        // 3. 简体界面用语：只说明 App 界面是简体中文，不代表消费币种，所以排最后
+        // (¥ 比较难办，中日都用，不单独作为依据)
         if text.contains("金额") || text.contains("交易") { return .cn }
-        
+
         return nil
+    }
+
+    /// 是否含日文假名（平假名 / 片假名 / 半角片假名）。
+    /// 刻意不算长音符 ー 和中点 ・：中文文本偶尔也会出现这两个符号。
+    static func containsJapaneseKana(_ text: String) -> Bool {
+        text.unicodeScalars.contains { scalar in
+            switch scalar.value {
+            case 0x3041...0x3096, 0x30A1...0x30FA, 0xFF66...0xFF9D: return true
+            default: return false
+            }
+        }
+    }
+
+    /// 文本里有没有任何指向日本的迹象：日元标记、假名、日文常用词
+    static func hasJapaneseEvidence(in text: String) -> Bool {
+        Region.jp.hasCurrencyMarker(in: text.uppercased())
+            || containsJapaneseKana(text)
+            || text.contains("合計") || text.contains("料金")
     }
     
     // 获取各地区的最佳语言优先级

@@ -116,27 +116,7 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
             return formatter.date(from: dateStr) ?? Date()
         }()
 
-            // 5. 使用本地推断获取 Region，若失败则根据 currency 推断
-            let region: Region
-            if let inferredRegion = OCRService.simpleInferRegion(from: rawText) {
-                region = inferredRegion
-                print("[AddTransactionFromScreenshotIntent] 🌍 本地推断地区成功: \(region.rawValue)")
-            } else {
-                switch metadata.currency {
-                case let code where code?.contains("CNY") == true: region = .cn
-                case let code where code?.contains("USD") == true: region = .us
-                case let code where code?.contains("HKD") == true: region = .hk
-                case let code where code?.contains("JPY") == true: region = .jp
-                case let code where code?.contains("NZD") == true: region = .nz
-                case let code where code?.contains("TWD") == true: region = .tw
-                case let code where code?.contains("GBP") == true: region = .uk
-                case let code where code?.contains("MOP") == true: region = .mo
-                default:                                            region = .cn
-                }
-                print("[AddTransactionFromScreenshotIntent] 🌍 AI 推断地区: \(region.rawValue)")
-            }
-
-            // 6. 尝试匹配信用卡
+            // 5. 尝试匹配信用卡（排在地区之前：识别不出币种时要按卡的发卡地区兜底）
         let availableCards = try modelContext.fetch(FetchDescriptor<CreditCard>())
         let selectedCard: CreditCard? = {
             if let last4 = metadata.cardLast4 {
@@ -158,11 +138,24 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
             return nil
         }()
 
+            // 6. 地区：以模型给出的币种为准，没有才看全文关键词（见 OCRService.resolveRegion），
+            // 再没有就按所选卡的发卡地区（与批量导入一致）
+            let region: Region
+            if let resolved = OCRService.resolveRegion(currency: metadata.currency, rawText: rawText) {
+                region = resolved
+                print("[AddTransactionFromScreenshotIntent] 🌍 地区: \(region.rawValue)（币种 \(metadata.currency ?? "nil")）")
+            } else {
+                region = selectedCard?.issueRegion ?? .cn
+                print("[AddTransactionFromScreenshotIntent] 🌍 未识别出币种，按卡片发卡地区: \(region.rawValue)")
+            }
+
         // 7. 计算入账金额和返现
         // TODO: billingAmount 未做换汇，异币种消费的原始金额会直接进入以卡币种计价的上限统计
         let billingAmount = amount
         var cashback: Double = 0.0
         var pointsEarned: Int = 0
+        // 奖励计算与保存必须用同一个支付方式，否则日后编辑这笔交易时奖励会被重算成另一个数
+        let paymentMethod: PaymentMethod = .online
 
         if let card = selectedCard {
             if card.rewardType == .points {
@@ -175,7 +168,7 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                     category: category,
                     location: region,
                     date: date,
-                    paymentMethod: .offline,
+                    paymentMethod: paymentMethod,
                     pointValueInCardCurrency: pointValue
                 )
                 cashback = result.value
@@ -186,7 +179,7 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                     category: category,
                     location: region,
                     date: date,
-                    paymentMethod: .online
+                    paymentMethod: paymentMethod
                 )
             }
         }
@@ -213,7 +206,7 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                 billingAmount: billingAmount,
                 cashbackAmount: cashback,
                 pointsEarned: pointsEarned,
-                paymentMethod: .online,
+                paymentMethod: paymentMethod,
                 // billingAmount 即原币金额，入账币种如实记为消费地币种
                 billingCurrencyCode: region.currencyCode
             )

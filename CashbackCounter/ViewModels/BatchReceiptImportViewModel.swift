@@ -49,8 +49,6 @@ final class BatchReceiptImportViewModel {
     var isLoadingImages = false
     var isSaving = false
     var unreadableCount = 0
-    /// 小票上没识别出卡号尾号时使用的卡
-    var defaultCardIndex = 0
 
     var editingDraft: Draft?
     private(set) var editingImage: UIImage?
@@ -67,33 +65,27 @@ final class BatchReceiptImportViewModel {
         drafts.contains { $0.status == .pending || $0.status == .analyzing }
     }
 
-    var readyCount: Int { drafts.filter { $0.status == .recognized }.count }
-    var failedCount: Int { drafts.filter { $0.status == .failed }.count }
-    var finishedCount: Int { readyCount + failedCount }
+    var finishedCount: Int { drafts.filter { $0.status == .recognized || $0.status == .failed }.count }
     var remainingSlots: Int { max(Self.maxCount - drafts.count, 0) }
 
+    /// 只按小票上识别出的卡号尾号匹配，不回落到任何默认卡：
+    /// 一批收据可能来自不同的卡，猜错卡会让返现记到别的卡上
     func card(for draft: Draft, cards: [CreditCard]) -> CreditCard? {
-        if let last4 = draft.cardLast4, let matched = cards.first(where: { $0.endNum == last4 }) {
-            return matched
-        }
-        return cards.indices.contains(defaultCardIndex) ? cards[defaultCardIndex] : nil
+        guard let last4 = draft.cardLast4, !last4.isEmpty else { return nil }
+        return cards.first { $0.endNum == last4 }
+    }
+
+    /// 金额识别出来且匹配到了卡，才能不经确认直接批量保存
+    func isReady(_ draft: Draft, cards: [CreditCard]) -> Bool {
+        draft.status == .recognized && card(for: draft, cards: cards) != nil
+    }
+
+    func readyCount(cards: [CreditCard]) -> Int {
+        drafts.filter { isReady($0, cards: cards) }.count
     }
 
     func region(for draft: Draft, cards: [CreditCard]) -> Region {
         draft.location ?? card(for: draft, cards: cards)?.issueRegion ?? .cn
-    }
-
-    // MARK: - Card Selection
-
-    func applyDefaultCardSelection(cards: [CreditCard]) {
-        let defaultCardID = UserDefaults.standard.string(forKey: "defaultCardID") ?? ""
-        let parts = defaultCardID.split(separator: "|")
-        if parts.count == 2,
-           let index = cards.firstIndex(where: { $0.bankName == String(parts[0]) && $0.endNum == String(parts[1]) }) {
-            defaultCardIndex = index
-        } else if !cards.indices.contains(defaultCardIndex) {
-            defaultCardIndex = 0
-        }
     }
 
     // MARK: - Loading
@@ -169,14 +161,9 @@ final class BatchReceiptImportViewModel {
         // 模型偶尔把年份认错成未来日期，账单日期不能晚于今天
         if let dateString = metadata.dateString { draft.date = min(dateString.toDate(), Date()) }
         draft.category = metadata.category ?? .other
-        draft.location = metadata.currency.flatMap(Self.region(fromCurrency:))
+        draft.location = metadata.currency.flatMap(Region.from(currencyText:))
         draft.cardLast4 = metadata.cardLast4?.filter(\.isNumber)
         draft.status = draft.amount == nil ? .failed : .recognized
-    }
-
-    private static func region(fromCurrency currency: String) -> Region? {
-        let upper = currency.uppercased()
-        return Region.allCases.first { upper.contains($0.currencyCode) }
     }
 
     // MARK: - Editing
@@ -193,14 +180,14 @@ final class BatchReceiptImportViewModel {
 
     // MARK: - Save
 
-    /// 保存所有已识别的收据，返回成功条数。没识别出金额的留在列表里等用户手动补充。
+    /// 保存所有识别出金额且匹配到卡的收据，返回成功条数。其余的留在列表里等用户点开补充。
     @MainActor
     func saveRecognized(cards: [CreditCard], context: ModelContext) async -> Int {
         isSaving = true
         defer { isSaving = false }
 
         var savedIDs: [Draft.ID] = []
-        for draft in drafts where draft.status == .recognized {
+        for draft in drafts where isReady(draft, cards: cards) {
             guard let amount = draft.amount,
                   let card = card(for: draft, cards: cards),
                   let cardIndex = cards.firstIndex(of: card),

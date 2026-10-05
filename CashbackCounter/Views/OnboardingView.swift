@@ -11,6 +11,7 @@
 //    挂 `.tourOverlayHost(.xxx)`，蒙层就画在那一层上。
 //
 
+import SwiftData
 import SwiftUI
 
 extension View {
@@ -24,6 +25,24 @@ extension View {
     /// 只挂在界面根部：同一个视图层级里挂两个宿主，会叠出两层蒙层。
     func tourOverlayHost(_ host: TourHost) -> some View {
         overlay { TourOverlay(host: host) }
+    }
+
+    /// 挂在每个标签页的内容上，告诉导览 TabBar 的顶边在哪（见 `OnboardingTour.tabBarTop`）。
+    ///
+    /// 标签页内容的安全区底边正好就是 TabBar 的顶边：底部对齐的 overlay 默认守安全区，
+    /// 不管内容本身是铺满全屏（NavigationStack）还是只占安全区（拍一笔页），量到的都是同一条线。
+    func tourTabContent() -> some View {
+        overlay(alignment: .bottom) {
+            Color.clear
+                .frame(height: 0)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.frame(in: .global).minY
+                } action: { y in
+                    OnboardingTour.shared.updateTabBarTop(y)
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
     }
 }
 
@@ -63,11 +82,38 @@ private struct TourOverlay: View {
 
     var body: some View {
         ZStack {
+            if host == .main {
+                CardPresenceReporter()
+            }
             if let step = tour.step, step.host == host {
                 TourStepLayer(step: step, tour: tour, host: host)
                     .transition(.opacity)
             }
         }
+    }
+}
+
+/// 把「卡包里有没有卡」实时告诉导览（见 `OnboardingTour.hasCards`）。
+///
+/// 放在主界面宿主里而不是 ContentView 上：只取一条的 @Query 很便宜，
+/// 挂在 ContentView 上的话，任何一张卡变动都会让整个 TabView 重算一遍 body。
+private struct CardPresenceReporter: View {
+    @Query private var cards: [CreditCard]
+
+    init() {
+        var descriptor = FetchDescriptor<CreditCard>()
+        descriptor.fetchLimit = 1
+        _cards = Query(descriptor)
+    }
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
+            // iCloud 同步可能在欢迎卡片亮着的时候才把卡带回来，所以要一直跟着变
+            .onChange(of: cards.isEmpty, initial: true) { _, isEmpty in
+                OnboardingTour.shared.hasCards = !isEmpty
+            }
     }
 }
 
@@ -100,7 +146,7 @@ private struct TourStepLayer: View {
 
                 switch step.style {
                 case .card:
-                    cardLayer
+                    cardLayer(insets: insets)
 
                 case .hint:
                     VStack {
@@ -108,7 +154,7 @@ private struct TourStepLayer: View {
                         bubble(arrow: nil)
                             .frame(maxWidth: 420)
                             .padding(.horizontal, 16)
-                            .padding(.bottom, insets.bottom + hintBottomClearance)
+                            .padding(.bottom, hintBottomPadding(in: proxy, insets: insets))
                     }
                     .frame(width: size.width, height: size.height)
 
@@ -118,7 +164,8 @@ private struct TourStepLayer: View {
                         SpotlightDimming(holes: holes, size: size) { nudge += 1 }
 
                         if let anchor = holes.map(\.rect).reduce(nil, { $0?.union($1) ?? $1 }) {
-                            positionedBubble(pointingAt: anchor, size: size, insets: insets)
+                            // 两个分开的洞（相册 + 手动记账）时，箭头指向两者中点会正好戳在没高亮的快门上
+                            positionedBubble(pointingAt: anchor, showsArrow: holes.count == 1, size: size, insets: insets)
                         } else if showsFallback {
                             bubble(arrow: nil)
                                 .frame(maxWidth: 420)
@@ -138,10 +185,18 @@ private struct TourStepLayer: View {
         }
     }
 
-    /// 主界面底部压着 TabBar（叠在 TabView 上的蒙层量不到它）：提示卡得让出它的高度，
-    /// 不然会把标签栏盖住。iOS 26 的浮动标签栏顶边在安全区底边往上约 50pt
-    private var hintBottomClearance: CGFloat {
-        host == .main ? 60 : 12
+    /// 提示卡离（铺满全屏的）宿主底边的距离。
+    ///
+    /// 主界面底部压着 TabBar，得让出它的高度，不然会把标签栏盖住。
+    /// 不能按「安全区 + 固定值」估：有 Home 键的机型安全区是 0，TabBar 却一样高。
+    private func hintBottomPadding(in proxy: GeometryProxy, insets: EdgeInsets) -> CGFloat {
+        let gap: CGFloat = 12
+        guard host == .main else { return insets.bottom + gap }
+        guard let tabBarTop = tour.tabBarTop else {
+            // 还没量到 TabBar（理论上标签页一出现就有了），按全面屏的 TabBar 高度估
+            return insets.bottom + 60
+        }
+        return max(proxy.frame(in: .global).maxY - tabBarTop, insets.bottom) + gap
     }
 
     // MARK: 挖空
@@ -195,7 +250,7 @@ private struct TourStepLayer: View {
     }
 
     /// 气泡放在高亮处上方还是下方：哪边地方大放哪边，除非这一步指定了
-    private func positionedBubble(pointingAt anchor: CGRect, size: CGSize, insets: EdgeInsets) -> some View {
+    private func positionedBubble(pointingAt anchor: CGRect, showsArrow: Bool, size: CGSize, insets: EdgeInsets) -> some View {
         let bubbleWidth = min(size.width - 32, 420)
         let leading = (size.width - bubbleWidth) / 2
         let arrowX = min(max(anchor.midX - leading, 32), bubbleWidth - 32)
@@ -203,27 +258,30 @@ private struct TourStepLayer: View {
         let spaceAbove = anchor.minY - insets.top
         let spaceBelow = size.height - insets.bottom - anchor.maxY
         let placeAbove = step.placement == .above || spaceAbove > spaceBelow
-        let gap: CGFloat = 6
+        // 没有箭头时把箭头那截高度补进间距，气泡和高亮处的距离保持一致
+        let gap: CGFloat = 6 + (showsArrow ? 0 : BubbleShape.arrowSize.height)
 
         return VStack(spacing: 0) {
             if placeAbove {
                 Spacer(minLength: insets.top + 8)
-                bubble(arrow: BubbleArrow(edge: .bottom, x: arrowX))
+                bubble(arrow: showsArrow ? BubbleArrow(edge: .bottom, x: arrowX) : nil)
                     .frame(width: bubbleWidth)
                 Color.clear.frame(height: max(size.height - anchor.minY + gap, 0))
             } else {
                 Color.clear.frame(height: max(anchor.maxY + gap, 0))
-                bubble(arrow: BubbleArrow(edge: .top, x: arrowX))
+                bubble(arrow: showsArrow ? BubbleArrow(edge: .top, x: arrowX) : nil)
                     .frame(width: bubbleWidth)
                 Spacer(minLength: insets.bottom + 8)
             }
         }
-        .frame(width: size.width, height: size.height)
+        // 气泡实在放不下时（超大字号），宁可盖住一点高亮处，也别让它出屏：
+        // 放上面的保住顶部不钻进状态栏，放下面的保住底部的按钮还点得到
+        .frame(width: size.width, height: size.height, alignment: placeAbove ? .top : .bottom)
     }
 
     // MARK: 居中卡片
 
-    private var cardLayer: some View {
+    private func cardLayer(insets: EdgeInsets) -> some View {
         ZStack {
             // 开始/结束页不挖洞，蒙层把触摸全拦下
             Rectangle()
@@ -232,15 +290,36 @@ private struct TourStepLayer: View {
                 .onTapGesture {}
                 .accessibilityHidden(true)
 
-            TourCard(
-                step: step,
-                onPrimary: tour.advance,
-                onDismiss: tour.end
-            )
+            // 欢迎卡片在 SE 这种小屏上已经差不多占满一屏，字号再调大就放不下了：放不下时改成可滚动
+            ViewThatFits(in: .vertical) {
+                tourCard
+                ScrollView(showsIndicators: false) {
+                    tourCard
+                }
+            }
             .padding(.horizontal, 24)
+            .padding(.top, insets.top + 12)
+            .padding(.bottom, insets.bottom + 12)
             .transition(.scale(scale: 0.92).combined(with: .opacity))
         }
     }
+
+    private var tourCard: some View {
+        TourCard(
+            step: step,
+            completedChapters: tour.hasCards ? [.addCard] : [],
+            onPrimary: tour.advance,
+            onDismiss: tour.end
+        )
+    }
+}
+
+extension Color {
+    /// 气泡和卡片的底色：浅色下是白；深色下比分组背景再亮一档 ——
+    /// 深色界面压暗后几乎还是黑的，#1C1C1E 的气泡叠在上面不够显眼
+    fileprivate static let tourSurface = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? .tertiarySystemGroupedBackground : .secondarySystemGroupedBackground
+    })
 }
 
 // MARK: - 蒙层
@@ -286,7 +365,7 @@ private struct SpotlightDimming: View {
     }
 }
 
-/// 洞边上一圈往外扩散的光环
+/// 洞边上的描边：一圈常驻的细边，加一圈往外扩散的光环
 private struct PulseRing: View {
     let hole: TourHole
 
@@ -294,18 +373,22 @@ private struct PulseRing: View {
     @State private var expanded = false
 
     var body: some View {
-        RoundedRectangle(cornerRadius: hole.cornerRadius, style: .continuous)
-            .stroke(.white, lineWidth: 2)
-            .frame(width: hole.rect.width, height: hole.rect.height)
-            .scaleEffect(expanded ? 1.12 : 1)
-            .opacity(reduceMotion ? 0.7 : (expanded ? 0 : 0.85))
-            .position(x: hole.rect.midX, y: hole.rect.midY)
-            .onAppear {
-                guard !reduceMotion else { return }
-                withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) {
-                    expanded = true
-                }
+        let shape = RoundedRectangle(cornerRadius: hole.cornerRadius, style: .continuous)
+        ZStack {
+            // 深色界面压暗后几乎还是黑的，看不出哪里亮着 —— 全靠这圈常驻的边把高亮处框出来
+            shape.stroke(.white.opacity(0.6), lineWidth: 1.5)
+            shape.stroke(.white, lineWidth: 2)
+                .scaleEffect(expanded ? 1.12 : 1)
+                .opacity(reduceMotion || expanded ? 0 : 0.85)
+        }
+        .frame(width: hole.rect.width, height: hole.rect.height)
+        .position(x: hole.rect.midX, y: hole.rect.midY)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) {
+                expanded = true
             }
+        }
     }
 }
 
@@ -358,7 +441,7 @@ private struct TourBubble: View {
         .padding(arrow?.edge == .top ? .top : .bottom, arrow == nil ? 0 : BubbleShape.arrowSize.height)
         .background {
             BubbleShape(arrow: arrow)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                .fill(Color.tourSurface)
                 .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
         }
         .task(id: step) {
@@ -498,6 +581,8 @@ private struct BubbleShape: Shape {
 
 private struct TourCard: View {
     let step: TourStep
+    /// 欢迎卡片上打勾、导览会直接跳过的章节（目前只有「已经有卡」时的添加卡片）
+    var completedChapters: Set<TourChapter> = []
     let onPrimary: () -> Void
     let onDismiss: () -> Void
 
@@ -561,7 +646,7 @@ private struct TourCard: View {
         .frame(maxWidth: 420)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                .fill(Color.tourSurface)
                 .shadow(color: .black.opacity(0.3), radius: 24, y: 10)
         )
         .task(id: step) {
@@ -601,6 +686,7 @@ private struct TourCard: View {
     private var chapterList: some View {
         VStack(alignment: .leading, spacing: 14) {
             ForEach(TourChapter.allCases, id: \.self) { chapter in
+                let isDone = completedChapters.contains(chapter)
                 HStack(spacing: 12) {
                     Image(systemName: chapter.systemImage)
                         .font(.system(size: 15, weight: .semibold))
@@ -619,7 +705,16 @@ private struct TourCard: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+
+                    if isDone {
+                        Spacer(minLength: 8)
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.green)
+                            .accessibilityLabel(Text("已完成"))
+                    }
                 }
+                .opacity(isDone ? 0.6 : 1)
                 .accessibilityElement(children: .combine)
             }
         }
@@ -640,6 +735,15 @@ private struct TourCard: View {
     ZStack {
         Color.black.opacity(0.55).ignoresSafeArea()
         TourCard(step: .welcome, onPrimary: {}, onDismiss: {})
+            .padding(.horizontal, 24)
+    }
+}
+
+#Preview("欢迎卡片 · 已经有卡") {
+    // 换机/重装后卡片从 iCloud 同步回来：添加卡片那章打勾，开始导览后直接跳到拍小票
+    ZStack {
+        Color.black.opacity(0.55).ignoresSafeArea()
+        TourCard(step: .welcome, completedChapters: [.addCard], onPrimary: {}, onDismiss: {})
             .padding(.horizontal, 24)
     }
 }

@@ -18,7 +18,8 @@ import Foundation
 
 /// 第三方 API 的线上协议格式。三家的请求体、鉴权头、结构化输出机制都不同，
 /// 各由一个 adapter 负责（见 ThirdPartyChatAdapter）。
-nonisolated enum ThirdPartyProvider: String, Codable, CaseIterable, Sendable, Identifiable {
+/// 注意和「服务商」（ModelProvider）区分：DeepSeek 是服务商，它说的是 OpenAI 兼容协议。
+nonisolated enum ThirdPartyAPIFormat: String, Codable, CaseIterable, Sendable, Identifiable {
     /// OpenAI Chat Completions 格式。事实标准，兼容 DeepSeek / Kimi / 通义千问兼容模式 /
     /// 智谱 / SiliconFlow / OpenRouter / Ollama / LM Studio / vLLM 等绝大多数服务。
     case openAICompatible
@@ -46,11 +47,12 @@ nonisolated enum ThirdPartyProvider: String, Codable, CaseIterable, Sendable, Id
         }
     }
 
+    /// 自定义服务商「模型名称」输入框的占位示例
     var defaultModelName: String {
         switch self {
-        case .openAICompatible: return "gpt-4.1-mini"
-        case .anthropic:        return "claude-sonnet-4-5"
-        case .gemini:           return "gemini-2.5-flash"
+        case .openAICompatible: return "gpt-6-luna"
+        case .anthropic:        return "claude-sonnet-5-5"
+        case .gemini:           return "gemini-3.5-flash-lite"
         }
     }
 
@@ -58,7 +60,7 @@ nonisolated enum ThirdPartyProvider: String, Codable, CaseIterable, Sendable, Id
     var hint: String {
         switch self {
         case .openAICompatible:
-            return String.loc("填到 /v1 为止，例如 https://api.deepseek.com/v1。兼容任何 OpenAI 格式的服务。")
+            return String.loc("填到 /v1 为止，例如 https://openrouter.ai/api/v1。兼容任何 OpenAI 格式的服务。")
         case .anthropic:
             return String.loc("填服务根地址，例如 https://api.anthropic.com，路径由 App 补全。")
         case .gemini:
@@ -92,12 +94,32 @@ nonisolated enum StructuredOutputMode: String, Codable, CaseIterable, Sendable {
     }
 }
 
+// MARK: - 思考开关
+
+/// OpenAI 兼容协议里「显式开关思考」的方言。
+/// 标准 OpenAI 只有 reasoning_effort，不开就是不思考；但 DeepSeek（以及智谱 GLM）
+/// 默认就开着思考，必须显式发 `thinking: {type: "disabled"}` 才能关——
+/// 不关的话每张小票都要白跑一轮高强度推理，又慢又贵。
+nonisolated enum ThinkingSwitch: String, Codable, CaseIterable, Sendable {
+    /// 不发思考开关，只在需要推理时带 reasoning_effort（OpenAI 及多数兼容服务）
+    case none
+    /// 总是发 `thinking: {type: "enabled" | "disabled"}`（DeepSeek、智谱 GLM）
+    case thinkingType
+
+    var displayName: String {
+        switch self {
+        case .none:         return String.loc("不发送")
+        case .thinkingType: return String.loc("thinking.type（DeepSeek、智谱）")
+        }
+    }
+}
+
 // MARK: - 配置
 
 nonisolated struct ThirdPartyModelConfig: Codable, Hashable, Sendable {
-    var provider: ThirdPartyProvider = .openAICompatible
+    var apiFormat: ThirdPartyAPIFormat = .openAICompatible
     /// 服务根地址；不含具体路径，由 adapter 拼接
-    var baseURL: String = ThirdPartyProvider.openAICompatible.defaultBaseURL
+    var baseURL: String = ThirdPartyAPIFormat.openAICompatible.defaultBaseURL
     var modelName: String = ""
     /// 是否声明 .vision 能力。开启后小票/截图会走原图直传，绕开本地 OCR。
     /// 模型不支持视觉却打开会导致请求报错，所以默认关，由用户按自己的模型确认。
@@ -107,6 +129,34 @@ nonisolated struct ThirdPartyModelConfig: Codable, Hashable, Sendable {
     var structuredOutputMode: StructuredOutputMode = .auto
     /// 单次请求超时（秒）。推理模型慢，默认给足。
     var timeout: Double = 90
+    /// 仅 OpenAI 兼容协议使用
+    var thinkingSwitch: ThinkingSwitch = .none
+
+    /// apiFormat 早期叫 provider，持久化的键名保持不变，老配置才读得回来
+    private enum CodingKeys: String, CodingKey {
+        case apiFormat = "provider"
+        case baseURL, modelName, supportsVision, supportsReasoning
+        case structuredOutputMode, timeout, thinkingSwitch
+    }
+
+    init() {}
+
+    /// 手写解码：合成的 Codable 遇到缺失的键会直接抛错，而不是用属性默认值。
+    /// 旧版本存下的配置没有后来新增的字段（如 thinkingSwitch），
+    /// 一抛错就会被当成「没配置」，用户填过的东西全丢。
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = ThirdPartyModelConfig()
+        apiFormat = try container.decodeIfPresent(ThirdPartyAPIFormat.self, forKey: .apiFormat) ?? defaults.apiFormat
+        baseURL = try container.decodeIfPresent(String.self, forKey: .baseURL) ?? defaults.baseURL
+        modelName = try container.decodeIfPresent(String.self, forKey: .modelName) ?? defaults.modelName
+        supportsVision = try container.decodeIfPresent(Bool.self, forKey: .supportsVision) ?? defaults.supportsVision
+        supportsReasoning = try container.decodeIfPresent(Bool.self, forKey: .supportsReasoning) ?? defaults.supportsReasoning
+        structuredOutputMode = try container.decodeIfPresent(StructuredOutputMode.self, forKey: .structuredOutputMode)
+            ?? defaults.structuredOutputMode
+        timeout = try container.decodeIfPresent(Double.self, forKey: .timeout) ?? defaults.timeout
+        thinkingSwitch = try container.decodeIfPresent(ThinkingSwitch.self, forKey: .thinkingSwitch) ?? defaults.thinkingSwitch
+    }
 
     /// 配置是否填全到可以发请求。API Key 单独存 Keychain，不在这里判断。
     var isComplete: Bool {
@@ -127,7 +177,7 @@ nonisolated struct ThirdPartyModelConfig: Codable, Hashable, Sendable {
 
     /// 用于给「自动降级」的探测结果做缓存键：endpoint 或模型一变就重新探测
     var probeCacheKey: String {
-        "\(provider.rawValue)|\(normalizedBaseURL?.absoluteString ?? "")|\(modelName.trimmed)"
+        "\(apiFormat.rawValue)|\(normalizedBaseURL?.absoluteString ?? "")|\(modelName.trimmed)"
     }
 }
 
@@ -143,80 +193,4 @@ nonisolated enum AICloudBackend: String, CaseIterable, Sendable {
     case applePCC
     /// 用户自带的第三方 API
     case thirdParty
-}
-
-// MARK: - 持久化
-
-/// 配置读写。刻意做成 nonisolated 静态方法：ReceiptParser 的模型选择路径
-/// （activeCloudModel / isMultimodalAvailable）本身就是 nonisolated 的。
-enum ThirdPartyModelStore {
-
-    private static let configKey = "thirdPartyModelConfig"
-    private static let backendKey = "aiCloudBackend"
-    private static let probeModeKey = "thirdPartyResolvedStructuredMode"
-    private static let probeKeyKey = "thirdPartyResolvedStructuredModeFor"
-
-    // MARK: 配置
-
-    static var config: ThirdPartyModelConfig {
-        get {
-            guard let data = UserDefaults.standard.data(forKey: configKey),
-                  let decoded = try? JSONDecoder().decode(ThirdPartyModelConfig.self, from: data) else {
-                return ThirdPartyModelConfig()
-            }
-            return decoded
-        }
-        set {
-            guard let data = try? JSONEncoder().encode(newValue) else { return }
-            UserDefaults.standard.set(data, forKey: configKey)
-        }
-    }
-
-    // MARK: 后端选择
-
-    static var backend: AICloudBackend {
-        get { AICloudBackend(rawValue: UserDefaults.standard.string(forKey: backendKey) ?? "") ?? .applePCC }
-        set { UserDefaults.standard.set(newValue.rawValue, forKey: backendKey) }
-    }
-
-    // MARK: API Key（Keychain）
-
-    static var apiKey: String? {
-        get { KeychainStore.read(.thirdPartyAPIKey) }
-        set {
-            if let newValue, !newValue.isEmpty {
-                KeychainStore.save(newValue, for: .thirdPartyAPIKey)
-            } else {
-                KeychainStore.delete(.thirdPartyAPIKey)
-            }
-        }
-    }
-
-    static var hasAPIKey: Bool {
-        !(apiKey?.isEmpty ?? true)
-    }
-
-    /// 第三方通道是否配置齐全、可以真的发请求
-    static var isReady: Bool {
-        config.isComplete && hasAPIKey
-    }
-
-    // MARK: 结构化输出降级探测结果
-
-    /// 读取 .auto 模式下已探明的可用档位；换了 endpoint/模型则失效
-    static func cachedStructuredMode(for config: ThirdPartyModelConfig) -> StructuredOutputMode? {
-        guard UserDefaults.standard.string(forKey: probeKeyKey) == config.probeCacheKey,
-              let raw = UserDefaults.standard.string(forKey: probeModeKey) else { return nil }
-        return StructuredOutputMode(rawValue: raw)
-    }
-
-    static func cacheStructuredMode(_ mode: StructuredOutputMode, for config: ThirdPartyModelConfig) {
-        UserDefaults.standard.set(config.probeCacheKey, forKey: probeKeyKey)
-        UserDefaults.standard.set(mode.rawValue, forKey: probeModeKey)
-    }
-
-    static func clearStructuredModeCache() {
-        UserDefaults.standard.removeObject(forKey: probeKeyKey)
-        UserDefaults.standard.removeObject(forKey: probeModeKey)
-    }
 }

@@ -171,7 +171,7 @@ final class ThirdPartyModelTests: XCTestCase {
         XCTAssertNotEqual(a.probeCacheKey, b.probeCacheKey)
 
         var c = a
-        c.provider = .anthropic
+        c.apiFormat = .anthropic
         XCTAssertNotEqual(a.probeCacheKey, c.probeCacheKey)
     }
 

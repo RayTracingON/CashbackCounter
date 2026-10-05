@@ -17,6 +17,7 @@ struct ContentView: View {
 
             // --- 左边：账单页 ---
             BillHomeView()
+                .tourTabContent()
                 .tabItem {
                     Image(systemName: selectedTab == AppTab.bills.rawValue ? "doc.text.image.fill" : "doc.text.image")
                     Text("账单")
@@ -24,6 +25,7 @@ struct ContentView: View {
                 .tag(AppTab.bills.rawValue)
 
             CardListView()
+                .tourTabContent()
                 .tabItem {
                     Image(systemName: selectedTab == AppTab.cards.rawValue ? "creditcard.fill" : "creditcard")
                     Text("卡包")
@@ -31,6 +33,7 @@ struct ContentView: View {
                 .tag(AppTab.cards.rawValue)
 
             CameraRecordView()
+                .tourTabContent()
                 .tabItem {
                     Image(systemName: "camera.circle.fill") // 大圆圈图标
                     Text("拍一笔")
@@ -39,6 +42,7 @@ struct ContentView: View {
 
             // --- 积分系统页 ---
             PointSystemView()
+                .tourTabContent()
                 .tabItem {
                     Image(systemName: selectedTab == AppTab.points.rawValue ? "star.circle.fill" : "star.circle")
                     Text("积分")
@@ -47,6 +51,7 @@ struct ContentView: View {
 
             // --- ✨ 新增：设置页 ---
             SettingsView()
+                .tourTabContent()
                 .tabItem {
                     // 选中时变成实心齿轮
                     Image(systemName: selectedTab == AppTab.settings.rawValue ? "gearshape.fill" : "gearshape")

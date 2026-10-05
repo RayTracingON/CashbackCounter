@@ -6,18 +6,22 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct CameraRecordView: View {
     // 1. 引入刚才写的相机引擎
     @StateObject var cameraService = CameraService()
-    
+
     // 2. 控制跳转
     @State private var showAddSheet = false      // 跳转去记账页
     @State private var showPhotoLibrary = false  // 打开相册
-    
+    @State private var showBatchImport = false   // 相册多选 → 批量导入
+
     // 3. 选中的图片 (无论是拍的还是相册选的)
     @State private var selectedImage: UIImage?
     @State private var isTargeted = false
+    @State private var pickedItems: [PhotosPickerItem] = []
+    @State private var batchItems: [PhotosPickerItem] = []
     
     var body: some View {
         ZStack {
@@ -159,9 +163,33 @@ struct CameraRecordView: View {
                 self.selectedImage = img
             }
         }
-        // 弹窗 1：相册
-        .sheet(isPresented: $showPhotoLibrary) {
-            ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
+        // 弹窗 1：相册（可多选）
+        .photosPicker(
+            isPresented: $showPhotoLibrary,
+            selection: $pickedItems,
+            maxSelectionCount: BatchReceiptImportViewModel.maxCount,
+            selectionBehavior: .ordered,
+            matching: .images
+        )
+        // 选 1 张走原来的单张记账；选多张进批量导入，每张各自识别、按小票卡号匹配卡片
+        .onChange(of: pickedItems) { _, items in
+            guard !items.isEmpty else { return }
+            pickedItems = []
+            if items.count == 1 {
+                Task {
+                    if let data = try? await items[0].loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        selectedImage = image
+                    }
+                }
+            } else {
+                batchItems = items
+                showBatchImport = true
+            }
+        }
+        .sheet(isPresented: $showBatchImport) {
+            BatchReceiptImportView(initialItems: batchItems)
+                .onDisappear { batchItems = [] }
         }
         // 监听：统一跳转入口（无论拍照/相册/拖拽，都经这里）
         .onChange(of: selectedImage) { oldValue, newImage in

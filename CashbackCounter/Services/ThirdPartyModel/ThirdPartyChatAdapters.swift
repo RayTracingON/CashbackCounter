@@ -73,7 +73,7 @@ extension ThirdPartyChatAdapter {
     }
 }
 
-extension ThirdPartyProvider {
+extension ThirdPartyAPIFormat {
     var adapter: any ThirdPartyChatAdapter {
         switch self {
         case .openAICompatible: return OpenAICompatibleAdapter()
@@ -95,9 +95,29 @@ enum ThirdPartyHTTP {
     ) async throws -> [String: Any] {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.timeoutInterval = timeout
         request.httpBody = body.jsonData
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        return try await send(request, headers: headers, timeout: timeout)
+    }
+
+    static func get(
+        url: URL,
+        headers: [String: String],
+        timeout: Double
+    ) async throws -> [String: Any] {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        return try await send(request, headers: headers, timeout: timeout)
+    }
+
+    /// 发请求并把各类 HTTP 失败翻译成 ThirdPartyModelError；成功时要求响应体是 JSON 对象
+    private static func send(
+        _ request: URLRequest,
+        headers: [String: String],
+        timeout: Double
+    ) async throws -> [String: Any] {
+        var request = request
+        request.timeoutInterval = timeout
         for (field, value) in headers {
             request.setValue(value, forHTTPHeaderField: field)
         }
@@ -197,15 +217,30 @@ struct OpenAICompatibleAdapter: ThirdPartyChatAdapter {
             body.append(("response_format", obj([("type", .str("json_object"))])))
         }
 
-        if config.supportsReasoning, let level = tuning.reasoning {
-            body.append(("reasoning_effort", .str(Self.effort(for: level))))
+        let reasoning = config.supportsReasoning ? tuning.reasoning : nil
+        switch config.thinkingSwitch {
+        case .none:
+            if let reasoning {
+                body.append(("reasoning_effort", .str(Self.effort(for: reasoning))))
+            }
+        case .thinkingType:
+            // DeepSeek / 智谱默认开着思考，不想要推理时必须显式关掉，不能只是「不发 reasoning_effort」
+            body.append(("thinking", obj([("type", .str(reasoning == nil ? "disabled" : "enabled"))])))
+            if let reasoning {
+                body.append(("reasoning_effort", .str(Self.effort(for: reasoning))))
+            }
         }
 
         return ChatHTTPRequest(
             url: base.appending(path: "chat/completions"),
-            headers: ["Authorization": "Bearer \(apiKey)"],
+            headers: Self.authHeaders(apiKey: apiKey),
             body: obj(body)
         )
+    }
+
+    /// 聊天请求和拉模型列表共用。Ollama / LM Studio 这类本地服务不要密钥，空串就不带鉴权头
+    static func authHeaders(apiKey: String) -> [String: String] {
+        apiKey.isEmpty ? [:] : ["Authorization": "Bearer \(apiKey)"]
     }
 
     /// 单纯文本的 content 用字符串；带图才展开成 parts 数组
@@ -327,9 +362,15 @@ struct AnthropicAdapter: ThirdPartyChatAdapter {
 
         return ChatHTTPRequest(
             url: base.appending(path: "v1/messages"),
-            headers: ["x-api-key": apiKey, "anthropic-version": "2023-06-01"],
+            headers: Self.authHeaders(apiKey: apiKey),
             body: obj(body)
         )
+    }
+
+    static func authHeaders(apiKey: String) -> [String: String] {
+        var headers = ["anthropic-version": "2023-06-01"]
+        if !apiKey.isEmpty { headers["x-api-key"] = apiKey }
+        return headers
     }
 
     private static func encode(_ message: ChatMessage) -> SchemaJSON {
@@ -442,9 +483,14 @@ struct GeminiAdapter: ThirdPartyChatAdapter {
         let model = config.modelName.trimmed
         return ChatHTTPRequest(
             url: base.appending(path: "v1beta/models/\(model):generateContent"),
-            headers: ["x-goog-api-key": apiKey],
+            headers: Self.authHeaders(apiKey: apiKey),
             body: obj(body)
         )
+    }
+
+    /// 密钥走请求头而不是 ?key= 查询参数（原因见 makeRequest）
+    static func authHeaders(apiKey: String) -> [String: String] {
+        apiKey.isEmpty ? [:] : ["x-goog-api-key": apiKey]
     }
 
     private static func encode(_ message: ChatMessage) -> SchemaJSON {

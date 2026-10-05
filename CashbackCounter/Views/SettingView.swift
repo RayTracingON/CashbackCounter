@@ -30,6 +30,8 @@ struct SettingsView: View {
     @AppStorage("useCloudAIModel") private var useCloudAIModel: Bool = false
     // key 与 ThirdPartyModelStore.backend 保持一致
     @AppStorage("aiCloudBackend") private var cloudBackendRaw: String = AICloudBackend.applePCC.rawValue
+    // 服务商配置/密钥一变就 +1；靠它让下面的状态文字跟着刷新
+    @AppStorage(ThirdPartyModelStore.revisionKey) private var thirdPartyRevision = 0
     @State private var showSyncChangeAlert = false
     
     @Environment(\.modelContext) var context
@@ -59,11 +61,19 @@ struct SettingsView: View {
     }
 
     private var thirdPartyStatusText: String {
-        guard ThirdPartyModelStore.isReady else {
-            return String.loc("尚未配置，当前仍使用本地模型")
+        _ = thirdPartyRevision
+        guard let provider = ThirdPartyModelStore.activeProvider else {
+            return String.loc("尚未选择，当前仍使用本地模型")
         }
-        let config = ThirdPartyModelStore.config
-        return "\(config.provider.displayName) · \(config.modelName)"
+        guard ThirdPartyModelStore.isReady(provider) else {
+            return String.loc("\(provider.displayName) 尚未配置完整，当前仍使用本地模型")
+        }
+        return "\(provider.displayName) · \(provider.config.modelName.trimmed)"
+    }
+
+    private var thirdPartyIsReady: Bool {
+        _ = thirdPartyRevision
+        return ThirdPartyModelStore.isReady
     }
 
     private var cloudBackendFooter: String {
@@ -183,18 +193,18 @@ struct SettingsView: View {
                             if useCloudAIModel {
                                 Picker("云端通道", selection: cloudBackend) {
                                     Text("Apple 私有云计算").tag(AICloudBackend.applePCC)
-                                    Text("自定义 API").tag(AICloudBackend.thirdParty)
+                                    Text("第三方服务商").tag(AICloudBackend.thirdParty)
                                 }
 
                                 if cloudBackend.wrappedValue == .thirdParty {
-                                    NavigationLink(destination: ThirdPartyModelSettingsView()) {
+                                    NavigationLink(destination: ThirdPartyProvidersView()) {
                                         Label {
                                             VStack(alignment: .leading, spacing: 2) {
-                                                Text("配置自定义 API")
+                                                Text("选择服务商")
                                                 Text(thirdPartyStatusText)
                                                     .font(.caption)
                                                     .foregroundColor(
-                                                        ThirdPartyModelStore.isReady ? .secondary : .orange
+                                                        thirdPartyIsReady ? .secondary : .orange
                                                     )
                                             }
                                         } icon: {
@@ -246,6 +256,7 @@ struct SettingsView: View {
                             Label("自动化配置教程", systemImage: "book.pages")
                         }
                         .tourTarget(.shortcutGuide)
+                        .id(TourTarget.shortcutGuide)
                     }
                 
                     // Data Management Section
@@ -378,14 +389,19 @@ struct SettingsView: View {
     }
 
     /// 导览要高亮的行可能在屏幕外（快捷指令那组在 AI 设置下面，小屏手机一屏放不下），
-    /// 先滚过去，蒙层才有洞可挖
+    /// 先滚过去，蒙层才有洞可挖。
+    ///
+    /// 被高亮的每一行除了 `.tourTarget` 还得挂 `.id(TourTarget.xxx)`：scrollTo 靠 id 找行，
+    /// 而 List 不会创建屏幕外的行，不滚过去它连位置都报不上来。
     private func scrollToTourTarget(of step: TourStep?, with proxy: ScrollViewProxy) {
-        guard let step, step.tab == .settings, let target = step.targets.first else { return }
+        guard let step, step.tab == .settings, let target = step.targets.last else { return }
         Task {
             // 导览刚切到设置页时列表还没布局完，立刻滚会落空
             try? await Task.sleep(for: .milliseconds(150))
             withAnimation(.easeInOut(duration: 0.35)) {
-                proxy.scrollTo(target, anchor: .center)
+                // 把高亮的最后一行贴到底部，上面整块留给气泡：小屏 + 英文时那段说明有十来行。
+                // 试过 UnitPoint(y: 0.72) 想停在偏下的位置，实测在 List 上和 .center 效果一样
+                proxy.scrollTo(target, anchor: .bottom)
             }
         }
     }

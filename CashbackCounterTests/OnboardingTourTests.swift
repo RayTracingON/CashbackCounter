@@ -53,6 +53,26 @@ final class OnboardingTourTests: XCTestCase {
         XCTAssertTrue(defaults.bool(forKey: OnboardingTour.seenKey))
     }
 
+    func testWelcome_SkipsAddCardChapter_WhenCardsAlreadyExist() {
+        // 换机/重装：卡片从 iCloud 同步回来了，但「看过导览」不跟着同步，导览会再跑一遍
+        tour.hasCards = true
+        tour.start()
+
+        tour.advance()
+
+        XCTAssertEqual(tour.step, .cameraShutter, "已经有卡了，不该再让人「添加你的第一张卡」")
+    }
+
+    func testWelcome_HasCardsIsReadWhenLeavingWelcome_NotAtStart() {
+        // 同步可能在欢迎卡片亮着的时候才把卡带回来
+        tour.start()
+        tour.hasCards = true
+
+        tour.advance()
+
+        XCTAssertEqual(tour.step, .cameraShutter)
+    }
+
     func testEventsAreIgnoredWhenTourIsNotRunning() {
         tour.handle(.templateListAppeared)
         tour.handle(.addCardAppeared(fromTemplate: true))

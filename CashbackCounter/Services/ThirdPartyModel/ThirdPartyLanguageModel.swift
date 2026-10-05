@@ -22,6 +22,8 @@ struct ThirdPartyLanguageModel: LanguageModel {
 
     let config: ThirdPartyModelConfig
     let apiKey: String
+    /// 服务商名，仅用于日志
+    var displayName: String = ""
 
     var capabilities: LanguageModelCapabilities {
         var list: [LanguageModelCapabilities.Capability] = [.guidedGeneration]
@@ -34,15 +36,6 @@ struct ThirdPartyLanguageModel: LanguageModel {
 
     var executorConfiguration: ThirdPartyModelExecutor.Configuration {
         .init(config: config, apiKey: apiKey)
-    }
-
-    /// 按当前设置构造；未配置齐全（缺 endpoint / 模型名 / 密钥）时返回 nil，调用方回退别的通道
-    static func current() -> ThirdPartyLanguageModel? {
-        let config = ThirdPartyModelStore.config
-        guard config.isComplete, let apiKey = ThirdPartyModelStore.apiKey, !apiKey.isEmpty else {
-            return nil
-        }
-        return ThirdPartyLanguageModel(config: config, apiKey: apiKey)
     }
 }
 
@@ -202,23 +195,33 @@ enum ThirdPartyChatClient {
         config: ThirdPartyModelConfig,
         apiKey: String
     ) async throws -> ChatCompletion {
-        let adapter = config.provider.adapter
+        let adapter = config.apiFormat.adapter
+
+        func send(_ mode: StructuredOutputMode, schema: SchemaJSON?) async throws -> ChatCompletion {
+            do {
+                return try await adapter.complete(
+                    prompt: prompt, schema: schema, schemaName: schemaName,
+                    tuning: tuning, config: config, apiKey: apiKey, mode: mode
+                )
+            } catch ThirdPartyModelError.emptyResponse {
+                // DeepSeek 文档明说 JSON 模式「偶尔返回空内容」，别家中转也常见；
+                // 原样再发一次的成功率很高，比直接把失败抛给用户划算
+                print("⚠️ 第三方模型返回空内容，重试一次")
+                return try await adapter.complete(
+                    prompt: prompt, schema: schema, schemaName: schemaName,
+                    tuning: tuning, config: config, apiKey: apiKey, mode: mode
+                )
+            }
+        }
 
         // 没有 schema 就无所谓降级，直接发
         guard schema != nil else {
-            return try await adapter.complete(
-                prompt: prompt, schema: nil, schemaName: schemaName,
-                tuning: tuning, config: config, apiKey: apiKey, mode: .promptOnly
-            )
+            return try await send(.promptOnly, schema: nil)
         }
 
         // 用户显式指定了档位就不自动降级——他知道自己的服务是什么样
         guard config.structuredOutputMode == .auto else {
-            return try await adapter.complete(
-                prompt: prompt, schema: schema, schemaName: schemaName,
-                tuning: tuning, config: config, apiKey: apiKey,
-                mode: config.structuredOutputMode
-            )
+            return try await send(config.structuredOutputMode, schema: schema)
         }
 
         let ladder: [StructuredOutputMode] = [.jsonSchema, .jsonObject, .promptOnly]
@@ -228,10 +231,7 @@ enum ThirdPartyChatClient {
         var lastError: Error?
         for mode in ladder[start...] {
             do {
-                let result = try await adapter.complete(
-                    prompt: prompt, schema: schema, schemaName: schemaName,
-                    tuning: tuning, config: config, apiKey: apiKey, mode: mode
-                )
+                let result = try await send(mode, schema: schema)
                 ThirdPartyModelStore.cacheStructuredMode(mode, for: config)
                 return result
             } catch let error where isSchemaRejection(error) {

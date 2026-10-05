@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CCFF0000000000000000AA03 /* ClaudeForFoundationModels in Frameworks */ = {isa = PBXBuildFile; productRef = CCFF0000000000000000AA02 /* ClaudeForFoundationModels */; };
 		F842143B2EDC9BE7007B75D5 /* CashbackShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842143A2EDC9BE7007B75D5 /* CashbackShortcutsProvider.swift */; };
 		F8B31CD62EEC750E00F1FB86 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F8B31CD52EEC750E00F1FB86 /* ZIPFoundation */; };
 		F8E14D652EDA0AE3007C22B0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F8E14D642EDA0AE3007C22B0 /* Localizable.xcstrings */; };
@@ -64,6 +65,7 @@
 			files = (
 				F8B31CD62EEC750E00F1FB86 /* ZIPFoundation in Frameworks */,
 				FADD0000000000000000AA03 /* LinkKit in Frameworks */,
+				CCFF0000000000000000AA03 /* ClaudeForFoundationModels in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +127,7 @@
 			packageProductDependencies = (
 				F8B31CD52EEC750E00F1FB86 /* ZIPFoundation */,
 				FADD0000000000000000AA02 /* LinkKit */,
+				CCFF0000000000000000AA02 /* ClaudeForFoundationModels */,
 			);
 			productName = CashbackCounter;
 			productReference = F8B569D62ED2E4A400CCC7D6 /* CashbackCounter.app */;
@@ -184,6 +187,7 @@
 			packageReferences = (
 				F8B31CD42EEC750E00F1FB86 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				FADD0000000000000000AA01 /* XCRemoteSwiftPackageReference "plaid-link-ios" */,
+				CCFF0000000000000000AA01 /* XCLocalSwiftPackageReference "Packages/ClaudeForFoundationModels" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F8B569D72ED2E4A400CCC7D6 /* Products */;
@@ -536,6 +540,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		CCFF0000000000000000AA01 /* XCLocalSwiftPackageReference "Packages/ClaudeForFoundationModels" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/ClaudeForFoundationModels;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		F8B31CD42EEC750E00F1FB86 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -556,6 +567,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		CCFF0000000000000000AA02 /* ClaudeForFoundationModels */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCFF0000000000000000AA01 /* XCLocalSwiftPackageReference "Packages/ClaudeForFoundationModels" */;
+			productName = ClaudeForFoundationModels;
+		};
 		F8B31CD52EEC750E00F1FB86 /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F8B31CD42EEC750E00F1FB86 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;

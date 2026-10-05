@@ -68,46 +68,60 @@ final class BatchReceiptImportViewModelTests: XCTestCase {
 
     // MARK: - Card Resolution
 
-    func testCardResolution_PrefersRecognizedLast4ThenDefaultCard() {
+    /// 每张收据只按自己小票上的卡号尾号匹配，对不上就不猜
+    func testCardResolution_MatchesEachReceiptByItsOwnLast4() {
         let cards = [makeCard(endNum: "1111"), makeCard(endNum: "2222")]
         let vm = BatchReceiptImportViewModel()
-        vm.defaultCardIndex = 1
 
         XCTAssertEqual(vm.card(for: makeDraft(cardLast4: "1111"), cards: cards)?.endNum, "1111")
-        XCTAssertEqual(vm.card(for: makeDraft(cardLast4: "9999"), cards: cards)?.endNum, "2222", "尾号对不上卡时回落到默认卡")
-        XCTAssertEqual(vm.card(for: makeDraft(cardLast4: nil), cards: cards)?.endNum, "2222")
+        XCTAssertEqual(vm.card(for: makeDraft(cardLast4: "2222"), cards: cards)?.endNum, "2222")
+        XCTAssertNil(vm.card(for: makeDraft(cardLast4: "9999"), cards: cards), "尾号对不上卡包里的卡时不回落到任何卡")
+        XCTAssertNil(vm.card(for: makeDraft(cardLast4: nil), cards: cards), "没识别出尾号时不回落到任何卡")
+    }
+
+    func testReadyCount_ExcludesUnmatchedAndFailed() {
+        let cards = [makeCard(endNum: "1111")]
+        let vm = BatchReceiptImportViewModel(drafts: [
+            makeDraft(cardLast4: "1111"),
+            makeDraft(cardLast4: "9999"),
+            makeDraft(status: .failed, amount: nil, cardLast4: "1111")
+        ])
+
+        XCTAssertEqual(vm.readyCount(cards: cards), 1)
     }
 
     func testRegion_FallsBackToCardIssueRegionWhenCurrencyUnknown() {
         let cards = [makeCard(endNum: "1111", issueRegion: .jp)]
         let vm = BatchReceiptImportViewModel()
 
-        XCTAssertEqual(vm.region(for: makeDraft(location: nil), cards: cards), .jp)
+        XCTAssertEqual(vm.region(for: makeDraft(location: nil, cardLast4: "1111"), cards: cards), .jp)
         XCTAssertEqual(vm.region(for: makeDraft(location: .us), cards: cards), .us)
     }
 
     // MARK: - Save
 
-    func testSaveRecognized_SavesRecognizedAndKeepsFailedDrafts() async throws {
+    func testSaveRecognized_SavesMatchedAndKeepsUnmatchedOrFailedDrafts() async throws {
         let cards = [makeCard(endNum: "1111"), makeCard(endNum: "2222")]
+        let unmatched = makeDraft(merchant: "Unmatched", amount: 300, cardLast4: "9999")
         let failed = makeDraft(status: .failed, amount: nil)
         let vm = BatchReceiptImportViewModel(drafts: [
             makeDraft(merchant: "Matched", amount: 100, cardLast4: "2222"),
-            makeDraft(merchant: "", amount: 200),
+            makeDraft(merchant: "", amount: 200, cardLast4: "1111"),
+            unmatched,
             failed
         ])
 
         let saved = await vm.saveRecognized(cards: cards, context: context)
 
         XCTAssertEqual(saved, 2)
-        XCTAssertEqual(vm.drafts.map(\.id), [failed.id], "没识别出金额的留在列表里等手动补充")
+        XCTAssertEqual(vm.drafts.map(\.id), [unmatched.id, failed.id], "没匹配到卡、没识别出金额的都留在列表里等手动补充")
 
         let transactions = try fetchTransactions()
         XCTAssertEqual(transactions.count, 2)
         XCTAssertEqual(transactions[0].merchant, "Matched")
         XCTAssertEqual(transactions[0].card?.endNum, "2222")
         XCTAssertEqual(transactions[1].merchant, String.loc("未知商户"), "没识别出商户时用占位名")
-        XCTAssertEqual(transactions[1].card?.endNum, "1111", "没识别出尾号时记到默认卡")
+        XCTAssertEqual(transactions[1].card?.endNum, "1111")
         XCTAssertNotNil(transactions[0].receiptData, "收据图片要随账单保存")
         XCTAssertEqual(transactions[0].cashbackamount, 1, accuracy: 0.0001)
     }
@@ -116,8 +130,8 @@ final class BatchReceiptImportViewModelTests: XCTestCase {
     func testSaveRecognized_AppliesCapAcrossBatch() async throws {
         let card = makeCard(endNum: "1111", localBaseCap: 10)
         let vm = BatchReceiptImportViewModel(drafts: [
-            makeDraft(amount: 600),
-            makeDraft(amount: 700)
+            makeDraft(amount: 600, cardLast4: "1111"),
+            makeDraft(amount: 700, cardLast4: "1111")
         ])
 
         _ = await vm.saveRecognized(cards: [card], context: context)
@@ -129,7 +143,7 @@ final class BatchReceiptImportViewModelTests: XCTestCase {
     }
 
     func testSaveRecognized_NoCardsSavesNothing() async throws {
-        let vm = BatchReceiptImportViewModel(drafts: [makeDraft()])
+        let vm = BatchReceiptImportViewModel(drafts: [makeDraft(cardLast4: "1111")])
 
         let saved = await vm.saveRecognized(cards: [], context: context)
 

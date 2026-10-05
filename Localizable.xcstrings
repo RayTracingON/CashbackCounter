@@ -240,6 +240,22 @@
         }
       }
     },
+    "%@ 尚未配置完整，当前仍使用本地模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ isn't fully set up — still using the on-device model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 尚未設定完整，目前仍使用本機模型"
+          }
+        }
+      }
+    },
     "%@ 已被锁定，请用设备密码解锁一次后重试。" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -715,23 +731,6 @@
         }
       }
     },
-    "+12%" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+12%"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+12%"
-          }
-        }
-      }
-    },
     "✅ 已添加：%@ – %@%@" : {
       "localizations" : {
         "en" : {
@@ -980,18 +979,18 @@
         }
       }
     },
-    "① 点上面一行，添加截屏记账快捷指令\n② 打开系统设置 › 操作按钮，选「快捷指令」，再选中它\n③ 在付款成功页长按操作按钮，自动截屏入账" : {
+    "① 点高亮的这一行，添加截屏记账快捷指令\n② 打开系统设置 › 操作按钮，选「快捷指令」，再选中它\n③ 在付款成功页长按操作按钮，自动截屏入账" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "① Tap the row above to add the screenshot shortcut\n② In Settings › Action Button, choose Shortcut, then select it\n③ On a payment confirmation, press and hold the Action Button to log it"
+            "value" : "① Tap the highlighted row to add the screenshot shortcut\n② In Settings › Action Button, choose Shortcut, then select it\n③ On a payment confirmation, press and hold the Action Button to log it"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "① 點上面一行，添加截圖記帳捷徑\n② 打開系統設定 › 動作按鈕，選「捷徑」，再選中它\n③ 在付款成功頁長按動作按鈕，自動截圖入帳"
+            "value" : "① 點高亮的這一行，添加截圖記帳捷徑\n② 打開系統設定 › 動作按鈕，選「捷徑」，再選中它\n③ 在付款成功頁長按動作按鈕，自動截圖入帳"
           }
         }
       }
@@ -1282,6 +1281,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cashback Counter 倉庫"
+          }
+        }
+      }
+    },
+    "Claude 通过 Anthropic 官方的 Foundation Models 接入包调用，模型能力由官方包自动识别，无需手动设置。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude runs through Anthropic's official Foundation Models package, which detects the model's capabilities automatically. No manual setup needed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude 透過 Anthropic 官方的 Foundation Models 接入套件呼叫，模型能力由官方套件自動識別，無需手動設定。"
           }
         }
       }
@@ -1660,6 +1675,22 @@
         }
       }
     },
+    "thinking.type（DeepSeek、智谱）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "thinking.type (DeepSeek, Zhipu)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "thinking.type（DeepSeek、智譜）"
+          }
+        }
+      }
+    },
     "trend.expense" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1755,23 +1786,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Year"
-          }
-        }
-      }
-    },
-    "一切就绪" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All set"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "一切就緒"
           }
         }
       }
@@ -1954,6 +1968,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下載截圖記帳捷徑"
+          }
+        }
+      }
+    },
+    "不发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't Send"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不傳送"
+          }
+        }
+      }
+    },
+    "不支持" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Supported"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不支援"
           }
         }
       }
@@ -2156,23 +2202,6 @@
         }
       }
     },
-    "交易识别" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transaction Recognition"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "交易識別"
-          }
-        }
-      }
-    },
     "交易详情" : {
       "localizations" : {
         "en" : {
@@ -2285,6 +2314,22 @@
         }
       }
     },
+    "从服务获取模型列表" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetch Model List"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從服務取得模型列表"
+          }
+        }
+      }
+    },
     "从模板添加" : {
       "localizations" : {
         "en" : {
@@ -2361,19 +2406,34 @@
         }
       }
     },
-    "你的智能返现计算助手" : {
-      "extractionState" : "stale",
+    "你填写的服务地址" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your smart cashback assistant"
+            "value" : "the endpoint you entered"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的智慧回贈計算助手"
+            "value" : "你填寫的服務位址"
+          }
+        }
+      }
+    },
+    "使用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用"
           }
         }
       }
@@ -2390,6 +2450,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用 Apple ID 登入"
+          }
+        }
+      }
+    },
+    "使用「%@」时，小票文字、截图和账单内容会发送到 %@。这些数据的处理方式由该服务商决定，不再受 Apple 私有云计算的隐私保证覆盖。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With \"%1$@\", receipt text, screenshots, and statement contents are sent to %2$@. How that data is handled is up to that provider, and it is no longer covered by Apple Private Cloud Compute's privacy guarantees."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用「%1$@」時，小票文字、截圖和帳單內容會傳送到 %2$@。這些資料的處理方式由該服務商決定，不再受 Apple 私有雲端運算的隱私保證涵蓋。"
+          }
+        }
+      }
+    },
+    "使用中" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Use"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用中"
           }
         }
       }
@@ -2458,7 +2550,24 @@
         }
       }
     },
+    "使用此服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use This Provider"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用此服務商"
+          }
+        }
+      }
+    },
     "使用自定义 API 时，小票文字、截图和账单内容会发送到你填写的服务地址。这些数据的处理方式由该服务商决定，不再受 Apple Private Cloud Compute 的隐私保证覆盖。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2486,6 +2595,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "例如：兌換機票"
+          }
+        }
+      }
+    },
+    "例如：公司中转" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. Company Relay"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如：公司中轉"
           }
         }
       }
@@ -2588,6 +2713,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存中..."
+          }
+        }
+      }
+    },
+    "保存在钥匙串里的 API 密钥会一并删除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The API key saved in the Keychain will be deleted too."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存在鑰匙圈中的 API 金鑰也會一併刪除。"
           }
         }
       }
@@ -2894,6 +3035,22 @@
         }
       }
     },
+    "共 %lld 个模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld models"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共 %lld 個模型"
+          }
+        }
+      }
+    },
     "关于 Cashback Counter" : {
       "localizations" : {
         "en" : {
@@ -2970,6 +3127,22 @@
         }
       }
     },
+    "兼容 OpenAI、Anthropic 或 Gemini 协议的任意服务都可以添加，比如自建中转、OpenRouter、硅基流动、Ollama。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add any service that speaks the OpenAI, Anthropic, or Gemini protocol — a self-hosted relay, OpenRouter, SiliconFlow, Ollama, and so on."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相容 OpenAI、Anthropic 或 Gemini 協定的任何服務都可以新增，例如自建中轉、OpenRouter、矽基流動、Ollama。"
+          }
+        }
+      }
+    },
     "内容被服务商的安全策略拦截：%@" : {
       "localizations" : {
         "en" : {
@@ -2982,6 +3155,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "內容被服務商的安全政策攔截：%@"
+          }
+        }
+      }
+    },
+    "内置服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built-in Providers"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "內建服務商"
+          }
+        }
+      }
+    },
+    "最强，较慢较贵" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most capable, slower and pricier"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最強，較慢較貴"
+          }
+        }
+      }
+    },
+    "最强（预览版）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most capable (preview)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最強（預覽版）"
+          }
+        }
+      }
+    },
+    "最快最省" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fastest and cheapest"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最快最省"
           }
         }
       }
@@ -3052,6 +3289,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刪除"
+          }
+        }
+      }
+    },
+    "删除「%@」？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete \"%@\"?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除「%@」？"
           }
         }
       }
@@ -3139,6 +3392,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刪除並撤銷銀行授權"
+          }
+        }
+      }
+    },
+    "删除服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Provider"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除服務商"
           }
         }
       }
@@ -3483,6 +3752,22 @@
         }
       }
     },
+    "可以从服务获取可用模型，也可以直接填写模型名。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetch the available models from the service, or type a model name directly."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可以從服務取得可用模型，也可以直接填寫模型名稱。"
+          }
+        }
+      }
+    },
     "右上角可以按银行筛选。找不到你的卡？先取消，再用「自定义添加」手动录入。" : {
       "localizations" : {
         "en" : {
@@ -3549,6 +3834,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同步設定已更改"
+          }
+        }
+      }
+    },
+    "名称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名稱"
           }
         }
       }
@@ -3655,6 +3956,38 @@
         }
       }
     },
+    "均衡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balanced"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "均衡"
+          }
+        }
+      }
+    },
+    "均衡，推荐" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balanced, recommended"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "均衡，推薦"
+          }
+        }
+      }
+    },
     "基本信息" : {
       "localizations" : {
         "en" : {
@@ -3694,6 +4027,7 @@
       }
     },
     "填到 /v1 为止，例如 https://api.deepseek.com/v1。兼容任何 OpenAI 格式的服务。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3705,6 +4039,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "填到 /v1 為止，例如 https://api.deepseek.com/v1。相容任何 OpenAI 格式的服務。"
+          }
+        }
+      }
+    },
+    "填到 /v1 为止，例如 https://openrouter.ai/api/v1。兼容任何 OpenAI 格式的服务。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the URL up to /v1, e.g. https://openrouter.ai/api/v1. Works with any OpenAI-format service."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填到 /v1 為止，例如 https://openrouter.ai/api/v1。相容任何 OpenAI 格式的服務。"
+          }
+        }
+      }
+    },
+    "填好模型和 API 密钥后才能使用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill in the model and API key to use this provider."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填好模型和 API 金鑰後才能使用。"
           }
         }
       }
@@ -4230,22 +4596,6 @@
         }
       }
     },
-    "小票上没识别出卡号尾号时，记到这张卡" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Used when no card number is found on a receipt."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "小票上沒識別出卡號尾號時，記到這張卡"
-          }
-        }
-      }
-    },
     "尚未同步" : {
       "localizations" : {
         "en" : {
@@ -4311,7 +4661,24 @@
         }
       }
     },
+    "尚未选择，当前仍使用本地模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None selected — still using the on-device model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未選擇，目前仍使用本機模型"
+          }
+        }
+      }
+    },
     "尚未配置，当前仍使用本地模型" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4532,7 +4899,24 @@
         }
       }
     },
+    "已完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
+    },
     "已成功添加账单：%@ – ¥%lf" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4662,40 +5046,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已訂閱"
-          }
-        }
-      }
-    },
-    "已识别" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recognized"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已識別"
-          }
-        }
-      }
-    },
-    "已配置" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configured"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已設定"
           }
         }
       }
@@ -4905,23 +5255,6 @@
         }
       }
     },
-    "开始管理你的消费与返现吧" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start tracking your spending and cashback"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開始管理你的消費與回贈吧"
-          }
-        }
-      }
-    },
     "当前为兑换码优惠期，结束后将按原价自动续订，如不需要请在到期前取消。" : {
       "localizations" : {
         "en" : {
@@ -5002,6 +5335,22 @@
         }
       }
     },
+    "快，支持图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast, supports images"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快，支援圖片"
+          }
+        }
+      }
+    },
     "快捷指令截取的屏幕截图" : {
       "localizations" : {
         "en" : {
@@ -5014,6 +5363,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "捷徑截取的螢幕截圖"
+          }
+        }
+      }
+    },
+    "思考开关" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thinking Toggle"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "思考開關"
           }
         }
       }
@@ -5449,6 +5814,22 @@
         }
       }
     },
+    "按场景自动调节" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjusted per Task"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "依情境自動調整"
+          }
+        }
+      }
+    },
     "按场景自动调节思考强度，账单和图片解析更准，但更慢更贵" : {
       "localizations" : {
         "en" : {
@@ -5529,6 +5910,22 @@
         }
       }
     },
+    "推理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reasoning"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推理"
+          }
+        }
+      }
+    },
     "推理模式" : {
       "localizations" : {
         "en" : {
@@ -5557,6 +5954,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜尋商戶"
+          }
+        }
+      }
+    },
+    "搜索模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Models"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜尋模型"
           }
         }
       }
@@ -5711,19 +6124,34 @@
         }
       }
     },
-    "支出趋势" : {
-      "extractionState" : "stale",
+    "支持" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spending Trends"
+            "value" : "Supported"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "支出趨勢"
+            "value" : "支援"
+          }
+        }
+      }
+    },
+    "支持图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports images"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援圖片"
           }
         }
       }
@@ -6226,6 +6654,22 @@
         }
       }
     },
+    "无法识别的 Claude 模型：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unrecognized Claude model: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法識別的 Claude 模型：%@"
+          }
+        }
+      }
+    },
     "无法读取图片数据" : {
       "localizations" : {
         "en" : {
@@ -6479,6 +6923,22 @@
         }
       }
     },
+    "更强，不支持图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More capable, no image input"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更強，不支援圖片"
+          }
+        }
+      }
+    },
     "更新注意事项" : {
       "localizations" : {
         "en" : {
@@ -6645,6 +7105,22 @@
         }
       }
     },
+    "服务没有返回可用的模型，请直接填写模型名。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service didn't return any usable models. Type a model name directly."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服務沒有回傳可用的模型，請直接填寫模型名稱。"
+          }
+        }
+      }
+    },
     "服务返回错误 %lld：%@" : {
       "localizations" : {
         "en" : {
@@ -6695,6 +7171,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未分類"
+          }
+        }
+      }
+    },
+    "未匹配到卡片，点按选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching card. Tap to choose."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未匹配到卡片，點按選擇"
+          }
+        }
+      }
+    },
+    "未命名服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unnamed Provider"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未命名服務商"
+          }
+        }
+      }
+    },
+    "未填写 API 地址" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API endpoint missing"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未填寫 API 位址"
+          }
+        }
+      }
+    },
+    "未填写 API 密钥" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API key missing"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未填寫 API 金鑰"
           }
         }
       }
@@ -6798,6 +7338,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未選擇"
+          }
+        }
+      }
+    },
+    "未选择模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No model selected"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未選擇模型"
           }
         }
       }
@@ -7043,6 +7599,22 @@
         }
       }
     },
+    "模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型"
+          }
+        }
+      }
+    },
     "模型名称" : {
       "localizations" : {
         "en" : {
@@ -7135,6 +7707,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在下載卡面..."
+          }
+        }
+      }
+    },
+    "正在使用此服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currently in Use"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在使用此服務商"
+          }
+        }
+      }
+    },
+    "正在获取…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在取得…"
           }
         }
       }
@@ -7237,6 +7841,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每天自動匯入，也可隨時手動重新整理"
+          }
+        }
+      }
+    },
+    "每张收据按小票上的卡号尾号匹配卡片。点按可逐条修改，左滑可删除；没识别出金额或没匹配到卡片的不会被批量保存，需要点开手动补充。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each receipt is matched to a card by the last digits printed on it. Tap to edit, swipe left to delete. Receipts without a recognized amount or matching card aren't batch-saved — tap them to fill in manually."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每張收據按小票上的卡號尾號匹配卡片。點按可逐條修改，左滑可刪除；沒識別出金額或沒匹配到卡片的不會被批量保存，需要點開手動補充。"
           }
         }
       }
@@ -7659,6 +8279,22 @@
         }
       }
     },
+    "添加自定义服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Custom Provider"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增自訂服務商"
+          }
+        }
+      }
+    },
     "添加银行" : {
       "localizations" : {
         "en" : {
@@ -7815,18 +8451,18 @@
         }
       }
     },
-    "点按可逐条修改，左滑可删除。没识别出金额的收据不会被批量保存，需要点开手动补充。" : {
+    "点选推荐模型会同时按它的能力设置图像识别；也可以直接填写其他模型名。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap to edit, swipe left to delete. Receipts without a recognized amount aren't batch-saved — tap them to fill in manually."
+            "value" : "Picking a recommended model also sets Image Recognition to match it. You can type any other model name too."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "點按可逐條修改，左滑可刪除。沒識別出金額的收據不會被批量保存，需要點開手動補充。"
+            "value" : "點選推薦模型會同時依其能力設定影像辨識；也可以直接填寫其他模型名稱。"
           }
         }
       }
@@ -8314,6 +8950,22 @@
         }
       }
     },
+    "第三方服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Third-Party Providers"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第三方服務商"
+          }
+        }
+      }
+    },
     "第三方模型通道暂不支持工具调用" : {
       "localizations" : {
         "en" : {
@@ -8716,29 +9368,6 @@
         }
       }
     },
-    "继续" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "继续"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "繼續"
-          }
-        }
-      }
-    },
     "继续添加（还可选 %lld 张）" : {
       "localizations" : {
         "en" : {
@@ -9085,6 +9714,7 @@
       }
     },
     "自定义 API" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9112,6 +9742,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自訂一張卡"
+          }
+        }
+      }
+    },
+    "自定义服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Providers"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂服務商"
           }
         }
       }
@@ -9199,6 +9845,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "英鎊（GBP）"
+          }
+        }
+      }
+    },
+    "获取 API 密钥" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get an API Key"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取得 API 金鑰"
           }
         }
       }
@@ -9570,6 +10232,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "識別能力更強，需要網絡連線"
+          }
+        }
+      }
+    },
+    "该服务没有提供模型列表接口，请直接填写模型名。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This service doesn't offer a model list. Type a model name directly."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此服務沒有提供模型列表介面，請直接填寫模型名稱。"
           }
         }
       }
@@ -10213,6 +10891,22 @@
         }
       }
     },
+    "还没有选择服务商，当前仍使用本地模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No provider selected — still using the on-device model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "還沒有選擇服務商，目前仍使用本機模型"
+          }
+        }
+      }
+    },
     "这台设备没有设置密码。绑定银行账户前请先在「设置 → 面容 ID 与密码」中设置设备密码。" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10343,6 +11037,22 @@
         }
       }
     },
+    "连接成功，但返回的不是预期的 JSON" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected, but the response wasn't the expected JSON"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線成功，但回傳的不是預期的 JSON"
+          }
+        }
+      }
+    },
     "连接成功，但返回的不是预期的 JSON：%@" : {
       "localizations" : {
         "en" : {
@@ -10355,6 +11065,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "連線成功，但回傳的不是預期的 JSON：%@"
+          }
+        }
+      }
+    },
+    "连接正常，%@ 已返回结构化结果。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection OK — %@ returned a structured result."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線正常，%@ 已回傳結構化結果。"
           }
         }
       }
@@ -10591,6 +11317,38 @@
         }
       }
     },
+    "选择服务商" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Provider"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇服務商"
+          }
+        }
+      }
+    },
+    "选择模型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇模型"
+          }
+        }
+      }
+    },
     "选择积分计划" : {
       "localizations" : {
         "en" : {
@@ -10700,6 +11458,7 @@
       }
     },
     "配置自定义 API" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -11093,22 +11852,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "進階"
-          }
-        }
-      }
-    },
-    "默认信用卡" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Default Card"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "預設信用卡"
           }
         }
       }

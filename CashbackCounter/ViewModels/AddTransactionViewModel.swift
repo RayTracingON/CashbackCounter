@@ -186,16 +186,8 @@ final class AddTransactionViewModel {
                         }
                     }
                     if let cat = data.category { self.selectedCategory = cat }
-                    if let currency = data.currency {
-                        if currency.contains("CNY") { self.location = .cn }
-                        else if currency.contains("USD") { self.location = .us }
-                        else if currency.contains("HKD") { self.location = .hk }
-                        else if currency.contains("JPY") { self.location = .jp }
-                        else if currency.contains("TWD") { self.location = .tw }
-                        else if currency.contains("NZD") { self.location = .nz }
-                        else if currency.contains("EUR") { self.location = .other }
-                        else if currency.contains("GBP") { self.location = .uk }
-                        else if currency.contains("MOP") { self.location = .mo }
+                    if let currency = data.currency, let region = Region.from(currencyText: currency) {
+                        self.location = region
                     }
                 }
             }

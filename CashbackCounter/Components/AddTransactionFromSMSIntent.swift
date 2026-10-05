@@ -43,7 +43,6 @@ struct AddTransactionFromSMSIntent: AppIntent {
         // 核心字段检查
         guard let merchant = metadata.merchant,
               let amount = metadata.totalAmount,
-              let detectedRegion = metadata.currency,
               let category = metadata.category else {
             throw NSError(domain: "AddTransactionFromSMSIntent", code: 1, userInfo: [NSLocalizedDescriptionKey: "缺少商户、金额或类别信息"])
         }
@@ -56,23 +55,6 @@ struct AddTransactionFromSMSIntent: AppIntent {
             formatter.locale = Locale(identifier: "en_US_POSIX")
             return formatter.date(from: dateStr) ?? Date()
         }()
-
-        // 使用本地推断获取 Region，若失败则根据 currency 推断
-        let region: Region
-        if let inferredRegion = OCRService.simpleInferRegion(from: textToParse) {
-            region = inferredRegion
-        } else {
-            switch metadata.currency {
-            case let code where code?.contains("CNY") == true: region = .cn
-            case let code where code?.contains("USD") == true: region = .us
-            case let code where code?.contains("HKD") == true: region = .hk
-            case let code where code?.contains("JPY") == true: region = .jp
-            case let code where code?.contains("NZD") == true: region = .nz
-            case let code where code?.contains("TWD") == true: region = .tw
-            case let code where code?.contains("GBP") == true: region = .uk
-            default:                                          region = .other
-            }
-        }
 
         let availableCards = try modelContext.fetch(FetchDescriptor<CreditCard>())
         @AppStorage("defaultCardID") var defaultCardID: String = ""
@@ -95,6 +77,12 @@ struct AddTransactionFromSMSIntent: AppIntent {
             }
             return nil
         }()
+
+        // 地区：以模型给出的币种为准，没有才看全文关键词（见 OCRService.resolveRegion）；
+        // 短信没写币种时多半就是发卡行本币，按所选卡的发卡地区兜底
+        let region = OCRService.resolveRegion(currency: metadata.currency, rawText: textToParse)
+            ?? selectedCard?.issueRegion
+            ?? .cn
 
         // 计算入账金额和返现
         // TODO: billingAmount 未做换汇，异币种消费的原始金额会直接进入以卡币种计价的上限统计
@@ -143,7 +131,8 @@ struct AddTransactionFromSMSIntent: AppIntent {
         modelContext.insert(newTransaction)
         try modelContext.save()
         // 返回意图执行结果，系统会在快捷指令中显示“完成”
-        return .result(dialog: "已成功添加账单：\(merchant) – ¥\(amount)")
+        // 与截图记账共用同一条已翻译的文案；旧文案写死了 ¥ 且金额按 %lf 显示成 6 位小数
+        return .result(dialog: "✅ 已添加：\(merchant) – \(region.currencySymbol)\(String(format: "%.2f", amount))")
     }
 
     private func resolvePointValueInCardCurrency(pointProgram: Point?, cardCurrency: String) async -> Double {

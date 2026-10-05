@@ -236,7 +236,8 @@ enum TourStep: Hashable, CaseIterable {
         case .cameraImport:
             "左边从相册选小票或付款截图，右边手动记一笔。"
         case .screenshotShortcut:
-            "① 点上面一行，添加截屏记账快捷指令\n② 打开系统设置 › 操作按钮，选「快捷指令」，再选中它\n③ 在付款成功页长按操作按钮，自动截屏入账"
+            // 气泡在高亮处上方还是下方是自动排的，文案里别写「上面/下面」
+            "① 点高亮的这一行，添加截屏记账快捷指令\n② 打开系统设置 › 操作按钮，选「快捷指令」，再选中它\n③ 在付款成功页长按操作按钮，自动截屏入账"
         case .bankSync:
             "绑定美国的信用卡或银行账户后，消费会自动同步进来并算好返现。需要登录并订阅，目前仅支持美国的金融机构。"
         case .finish:
@@ -302,6 +303,19 @@ final class OnboardingTour {
 
     /// 每加一，卡包页就收起添加卡片的 sheet（在 sheet 里点了跳过时用）
     private(set) var sheetDismissRequest = 0
+
+    /// 卡包里是否已经有卡。由主界面的蒙层宿主按 SwiftData 实时更新（见 OnboardingView）。
+    ///
+    /// 换机或重装的用户，卡片会从 iCloud 同步回来，但「看过导览」记在 UserDefaults 里、不跟着同步，
+    /// 导览会再跑一遍 —— 这时再让人「添加你的第一张卡」就不对了，直接跳过这一章。
+    /// 中途杀掉 App、下次从头开始的情况同理。
+    var hasCards = false
+
+    /// TabBar 顶边在窗口里的 y 坐标，由 `.tourTabContent()` 上报；还没量到时为 nil。
+    ///
+    /// 叠在 TabView 上的蒙层量不到 TabBar：它的安全区只算 Home 条，而有 Home 键的机型
+    /// Home 条安全区是 0，浮动 TabBar 却照样占着底部八十多点。
+    private(set) var tabBarTop: CGFloat?
 
     /// 模板列表是否开着 —— 添加页取消后该退回哪一步取决于它
     private var isTemplateListPresented = false
@@ -372,7 +386,7 @@ final class OnboardingTour {
     /// 主按钮通往的下一步；nil = 这一步没有主按钮，或者主按钮是「结束」
     private func nextStep(after step: TourStep) -> TourStep? {
         switch step {
-        case .welcome: .openTemplates
+        case .welcome: hasCards ? .cameraShutter : .openTemplates
         case .enterLastFour: .saveCard
         case .cardAdded: .cameraShutter
         case .cameraShutter: .cameraImport
@@ -430,6 +444,10 @@ final class OnboardingTour {
 
     func updateFrame(_ frame: CGRect, for target: TourTarget) {
         frames[target] = frame
+    }
+
+    func updateTabBarTop(_ y: CGFloat) {
+        tabBarTop = y
     }
 
     func setVisible(_ visible: Bool, target: TourTarget) {

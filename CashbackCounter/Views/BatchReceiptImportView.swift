@@ -12,20 +12,30 @@ struct BatchReceiptImportView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var cards: [CreditCard]
 
+    /// 从「拍一笔」相册多选进来时已经选好的图片，进入页面后直接开始识别
+    private let initialItems: [PhotosPickerItem]
+
     @State private var viewModel: BatchReceiptImportViewModel
     @State private var showPicker = false
     @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var didLoadInitialItems = false
     @State private var showDiscardConfirm = false
     @State private var resultMessage: String?
 
-    init(viewModel: BatchReceiptImportViewModel = BatchReceiptImportViewModel()) {
+    init(initialItems: [PhotosPickerItem] = [],
+         viewModel: BatchReceiptImportViewModel = BatchReceiptImportViewModel()) {
+        self.initialItems = initialItems
         _viewModel = State(initialValue: viewModel)
     }
+
+    private var readyCount: Int { viewModel.readyCount(cards: cards) }
 
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.drafts.isEmpty && !viewModel.isLoadingImages {
+                // 带图进来时，读图开始前的那一帧不能闪出空状态
+                if viewModel.drafts.isEmpty && !viewModel.isLoadingImages
+                    && (initialItems.isEmpty || didLoadInitialItems) {
                     emptyState
                 } else {
                     draftList
@@ -48,9 +58,9 @@ struct BatchReceiptImportView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存 \(viewModel.readyCount) 笔") { saveRecognized() }
-                        .disabled(viewModel.readyCount == 0 || viewModel.isAnalyzing || viewModel.isLoadingImages
-                                  || viewModel.isSaving || cards.isEmpty)
+                    Button("保存 \(readyCount) 笔") { saveRecognized() }
+                        .disabled(readyCount == 0 || viewModel.isAnalyzing || viewModel.isLoadingImages
+                                  || viewModel.isSaving)
                 }
             }
         }
@@ -75,12 +85,12 @@ struct BatchReceiptImportView: View {
         .onChange(of: pickerItems) { _, items in
             guard !items.isEmpty else { return }
             pickerItems = []
-            Task {
-                await viewModel.addImages(from: items)
-                if viewModel.unreadableCount > 0 {
-                    resultMessage = String.loc("有 \(viewModel.unreadableCount) 张图片无法读取，已跳过")
-                }
-            }
+            Task { await addImages(items) }
+        }
+        .task {
+            guard !initialItems.isEmpty, !didLoadInitialItems else { return }
+            didLoadInitialItems = true
+            await addImages(initialItems)
         }
         .sheet(item: $viewModel.editingDraft, onDismiss: viewModel.endEditing) { draft in
             AddTransactionView(
@@ -96,10 +106,6 @@ struct BatchReceiptImportView: View {
         }
         .onAppear {
             OCRService.prewarmAI()
-            viewModel.applyDefaultCardSelection(cards: cards)
-        }
-        .onChange(of: cards.count) { _, _ in
-            viewModel.applyDefaultCardSelection(cards: cards)
         }
         .onDisappear {
             viewModel.cancelAnalysis()
@@ -124,16 +130,6 @@ struct BatchReceiptImportView: View {
             if cards.isEmpty {
                 Section {
                     Text("请先添加信用卡").foregroundColor(.secondary)
-                }
-            } else {
-                Section {
-                    Picker("默认信用卡", selection: $viewModel.defaultCardIndex) {
-                        ForEach(cards.indices, id: \.self) { index in
-                            Text(cards[index].bankName + " " + cards[index].type).tag(index)
-                        }
-                    }
-                } footer: {
-                    Text("小票上没识别出卡号尾号时，记到这张卡")
                 }
             }
 
@@ -185,12 +181,19 @@ struct BatchReceiptImportView: View {
                     .disabled(viewModel.isLoadingImages)
                 }
             } footer: {
-                Text("点按可逐条修改，左滑可删除。没识别出金额的收据不会被批量保存，需要点开手动补充。")
+                Text("每张收据按小票上的卡号尾号匹配卡片。点按可逐条修改，左滑可删除；没识别出金额或没匹配到卡片的不会被批量保存，需要点开手动补充。")
             }
         }
     }
 
     // MARK: - Actions
+
+    private func addImages(_ items: [PhotosPickerItem]) async {
+        await viewModel.addImages(from: items)
+        if viewModel.unreadableCount > 0 {
+            resultMessage = String.loc("有 \(viewModel.unreadableCount) 张图片无法读取，已跳过")
+        }
+    }
 
     private func saveRecognized() {
         Task {
@@ -225,7 +228,7 @@ private struct DraftRow: View {
                     .foregroundColor(draft.merchant.isEmpty ? .secondary : .primary)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundColor(draft.status == .failed ? .orange : .secondary)
+                    .foregroundColor(draft.status == .failed || needsCard ? .orange : .secondary)
                     .lineLimit(1)
             }
 
@@ -235,6 +238,9 @@ private struct DraftRow: View {
         }
         .padding(.vertical, 2)
     }
+
+    /// 金额识别出来了，但小票上的卡号尾号没对上卡包里的任何一张卡
+    private var needsCard: Bool { draft.status == .recognized && card == nil }
 
     private var title: String {
         switch draft.status {
@@ -252,12 +258,12 @@ private struct DraftRow: View {
         case .failed:
             return String.loc("未识别出金额，点按手动补充")
         case .recognized:
-            var parts = [
+            guard let card else { return String.loc("未匹配到卡片，点按选择") }
+            return [
                 draft.date.formatted(.dateTime.month().day().locale(AppLanguage.locale)),
-                draft.category.displayName
-            ]
-            if let card { parts.append(card.bankName + " " + card.type) }
-            return parts.joined(separator: " · ")
+                draft.category.displayName,
+                card.bankName + " " + card.type
+            ].joined(separator: " · ")
         }
     }
 
@@ -286,18 +292,20 @@ extension BatchReceiptImportViewModel {
     static var preview: BatchReceiptImportViewModel {
         let data = PreviewData.receiptImage.jpegData(compressionQuality: 0.8) ?? Data()
         func draft(_ status: DraftStatus, merchant: String = "", amount: Double? = nil,
-                   category: Category = .other, location: Region? = nil) -> Draft {
+                   category: Category = .other, location: Region? = nil, cardLast4: String? = nil) -> Draft {
             var draft = Draft(imageData: data, thumbnail: PreviewData.receiptImage)
             draft.status = status
             draft.merchant = merchant
             draft.amount = amount
             draft.category = category
             draft.location = location
+            draft.cardLast4 = cardLast4
             return draft
         }
         return BatchReceiptImportViewModel(drafts: [
-            draft(.recognized, merchant: "山姆会员店", amount: 486.5, category: .grocery, location: .cn),
-            draft(.recognized, merchant: "Lawson", amount: 1_280, category: .dining, location: .jp),
+            draft(.recognized, merchant: "山姆会员店", amount: 486.5, category: .grocery, location: .cn, cardLast4: "6688"),
+            // 小票上的尾号对不上卡包里的卡：提示点开选卡，不进批量保存
+            draft(.recognized, merchant: "Lawson", amount: 1_280, category: .dining, location: .jp, cardLast4: "0000"),
             draft(.failed),
             draft(.analyzing),
             draft(.pending)
@@ -311,7 +319,7 @@ extension BatchReceiptImportViewModel {
 }
 
 #Preview("批量导入 · 识别中") {
-    // 已识别 / 识别失败 / 识别中 / 排队 四种状态各一行
+    // 已识别 / 未匹配到卡 / 识别失败 / 识别中 / 排队 各一行
     BatchReceiptImportView(viewModel: .preview)
         .previewEnvironment()
 }
