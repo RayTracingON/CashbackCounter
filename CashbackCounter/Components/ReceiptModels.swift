@@ -20,19 +20,19 @@ struct ReceiptMetadata {
     var category: Category?
 
     @Guide(description: "The last 4 digits of the credit card used.")
-    var cardLast4: String?   // ✅ 加上问号
+    var cardLast4: String?
 
     @Guide(description: "The date of transaction in YYYY-MM-DD format.")
-    var dateString: String?  // ✅ 加上问号
+    var dateString: String?
 
     @Guide(description: "The currency code, one of: CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR.")
-    var currency: String?    // ✅ 加上问号
+    var currency: String?
 
     @Guide(description: "The final paid amount.")
-    var totalAmount: Double? // ✅ 加上问号
+    var totalAmount: Double?
 
     @Guide(description: "The name of the store or merchant.")
-    var merchant: String?  // ✅ 加上问号
+    var merchant: String?
 }
 
 /// ☁️ 云端（PCC）专用 schema：字段保持旧顺序（merchant 打头）。
@@ -118,24 +118,6 @@ struct CloudPaymentMetadata {
         metadata.category = category
         return metadata
     }
-}
-
-@Generable
-struct SMSMetadata {
-    @Guide(description: "The name of the store or merchant.")
-    var merchant: String?  // ✅ 加上问号
-    
-    @Guide(description: "The total amount paid (not contain deduction).")
-    var totalAmount: Double? // ✅ 加上问号
-    
-    @Guide(description: "The currency code (choice from those, CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR).")
-    var currency: String?
-    
-    @Guide(description: "The last 4 digits of the credit card used.")
-    var cardLast4: String?   // ✅ 加上问号
-    
-    @Guide(description: "Classify the receipt into one of the categories based on the merchant and items")
-    var category: Category?
 }
 
 @Generable

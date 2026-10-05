@@ -1,12 +1,11 @@
 //
-//  AppleIntelligenceService.swift
+//  ReceiptParser.swift
 //  CashbackCounter
 //
 //  Created by Junhao Huang on 11/24/25.
 //
 import FoundationModels
 import ClaudeForFoundationModels
-import Observation // 苹果的新状态管理框架
 import Foundation
 import UIKit
 import ImageIO
@@ -25,14 +24,29 @@ enum ReceiptParseMode {
     case statementCard
     /// 账单单笔交易分类
     case statementTransaction
-    /// 账单单个交易块提取
-    case statementRow
     /// 账单批量表格提取
     case statementBulk
     /// 小票原图直传（多模态，仅云端 PCC：本地模型图片推理过慢）
     case receiptImage
     /// 支付截图原图直传（多模态，仅云端 PCC）
     case screenshotImage
+
+    // MARK: 多个场景共用的指令行
+    // 逐字共享：改一处所有场景同步生效，不会出现某个场景漏改。
+    // ⚠️ 这些是真机验证过的原文，改动等于改 prompt，要上真机复验（本地 / 云端两套配方都要）
+    private static let rowAligned = "The text is aligned row by row; items on the same row are related."
+    private static let receiptMerchant = "MERCHANT: usually near the top; may be Chinese, Japanese, or English."
+    private static let paymentMerchant = "MERCHANT: may be Chinese, Japanese, or English."
+    private static let receiptFinalAmount = "- Extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/Total/Grand Total/Amount Due."
+    private static let receiptDiscount = "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum numbers yourself."
+    private static let screenshotFirstAmount = "- Use the FIRST amount shown on the screen — it is the total billing amount."
+    private static let screenshotDiscount = "- IGNORE discounts (立减/优惠/碰一下立减/Discount) below it and any total-without-discount. DO NOT subtract discounts."
+    private static let jpyThousands = "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
+    private static let cardRule = "CARD: extract last-4 digits ONLY from an explicit card number (卡号/カードNo/**** masked). Register, table, or receipt numbers are NOT card numbers; if no card number, return nil."
+    private static let categoryRule = "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
+    private static let currencyInference = "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
+    private static let preferTextValue = "Prefer extracting a value that is present in the text; only return nil when the field truly does not appear."
+    private static let preferImageValue = "Prefer extracting a value that is present in the image; only return nil when the field truly does not appear."
 
     var instructions: Instructions {
         switch self {
@@ -42,30 +56,30 @@ enum ReceiptParseMode {
             return Instructions {
                 "You are an expert receipt data extractor."
                 "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the OCR text."
-                "The text is aligned row by row; items on the same row are related."
-                "MERCHANT: usually near the top; may be Chinese, Japanese, or English."
+                Self.rowAligned
+                Self.receiptMerchant
                 "AMOUNT rules:"
-                "- Extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/Total/Grand Total/Amount Due."
-                "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum numbers yourself."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
-                "CARD: extract last-4 digits ONLY from an explicit card number (卡号/カードNo/**** masked). Register, table, or receipt numbers are NOT card numbers; if no card number, return nil."
-                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
-                "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "Prefer extracting a value that is present in the text; only return nil when the field truly does not appear."
+                Self.receiptFinalAmount
+                Self.receiptDiscount
+                Self.jpyThousands
+                Self.cardRule
+                Self.categoryRule
+                Self.currencyInference
+                Self.preferTextValue
             }
         case .receiptImage:
             return Instructions {
                 "You are an expert receipt data extractor."
                 "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the receipt image."
-                "MERCHANT: usually near the top; may be Chinese, Japanese, or English."
+                Self.receiptMerchant
                 "AMOUNT rules:"
-                "- Extract the FINAL PAID amount. Keywords: 实付/已支付/合计/合計/お支払い/請求金額/Total/Grand Total/Amount Due."
-                "- If there are discounts (立减/优惠/Discount), use the amount AFTER discount, NOT the subtotal (原价/小计). NEVER sum numbers yourself."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
-                "CARD: extract last-4 digits ONLY from an explicit card number (卡号/カードNo/**** masked). Register, table, or receipt numbers are NOT card numbers; if no card number, return nil."
-                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
-                "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "Prefer extracting a value that is present in the image; only return nil when the field truly does not appear."
+                Self.receiptFinalAmount
+                Self.receiptDiscount
+                Self.jpyThousands
+                Self.cardRule
+                Self.categoryRule
+                Self.currencyInference
+                Self.preferImageValue
             }
         // ⚡️ 精简版；"Today is..." 在 prompt 里按调用时刻生成，
         // 避免长驻单例（OCRService.aiParser）持有过期日期
@@ -73,39 +87,39 @@ enum ReceiptParseMode {
             return Instructions {
                 "You are an expert receipt data extractor for payment screen captures."
                 "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the OCR text."
-                "The text is aligned row by row; items on the same row are related."
-                "MERCHANT: may be Chinese, Japanese, or English."
+                Self.rowAligned
+                Self.paymentMerchant
                 "AMOUNT rules:"
-                "- Use the FIRST amount shown on the screen — it is the total billing amount."
-                "- IGNORE discounts (立减/优惠/碰一下立减/Discount) below it and any total-without-discount. DO NOT subtract discounts."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
-                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
-                "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "Prefer extracting a value that is present in the text; only return nil when the field truly does not appear."
+                Self.screenshotFirstAmount
+                Self.screenshotDiscount
+                Self.jpyThousands
+                Self.categoryRule
+                Self.currencyInference
+                Self.preferTextValue
             }
         case .screenshotImage:
             return Instructions {
                 "You are an expert receipt data extractor for payment screen captures."
                 "Extract exact values for: merchant, total amount, currency, date, card last-4 digits, and category from the screenshot image."
-                "MERCHANT: may be Chinese, Japanese, or English."
+                Self.paymentMerchant
                 "AMOUNT rules:"
-                "- Use the FIRST amount shown on the screen — it is the total billing amount."
-                "- IGNORE discounts (立减/优惠/碰一下立减/Discount) below it and any total-without-discount. DO NOT subtract discounts."
-                "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('74.405' -> 74405)."
-                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
-                "Infer currency from symbols (¥, $, JPY) or location (e.g. Tokyo -> JPY)."
-                "Prefer extracting a value that is present in the image; only return nil when the field truly does not appear."
+                Self.screenshotFirstAmount
+                Self.screenshotDiscount
+                Self.jpyThousands
+                Self.categoryRule
+                Self.currencyInference
+                Self.preferImageValue
             }
         // ⚡️ 精简版：短信文本很短，指令是 prefill 的大头
         case .sms:
             return Instructions {
                 "You are an expert transaction extractor for bank SMS notifications."
                 "Extract exact values for: merchant, total amount, currency, card last-4 digits, and category from the SMS text."
-                "MERCHANT: may be Chinese, Japanese, or English."
+                Self.paymentMerchant
                 "AMOUNT: the FINAL PAID amount (实付金额/合计/Total)."
                 "- JPY has no decimals: a dot inside a JPY number is a thousands separator ('1.100' -> 1100)."
-                "CATEGORY: dining=restaurants/cafes/izakaya(居酒屋)/ramen; grocery=supermarkets/7-Eleven/Lawson/FamilyMart/discount stores(ドン・キホーテ); travel=Uber/taxi/flights/hotels/Suica/Shinkansen; digital=electronics/Apple Store/Yodobashi/Bic Camera; anime=anime/manga/game goods(Animate/Melonbooks); streaming=Spotify/Netflix/Disney+/subscriptions; other=anything else."
-                "Prefer extracting a value that is present in the text; only return nil when the field truly does not appear."
+                Self.categoryRule
+                Self.preferTextValue
             }
         case .statementCard:
             return Instructions {
@@ -139,19 +153,6 @@ enum ReceiptParseMode {
                 "- NEVER copy the billing amount into foreignAmount. If unsure, return nil."
                 "If unsure about any field, return nil."
             }
-        case .statementRow:
-            return Instructions {
-                "You are an expert credit card statement transaction extractor."
-                "You will be given a single transaction block from OCR."
-                "Extract at most one transaction from this block."
-                "Only return merchant with alphabet characters or necessary numbers."
-                "Ignore blocks that are not transactions (headers, balances, payments, totals, interest, fees)."
-                "For the transaction return: transactionDate, merchant, billingAmount, foreignAmount, foreignCurrency."
-                "Dates must be in YYYY-MM-DD. If only one date is present, use it for both transactionDate."
-                "billingAmount is the settled amount in statement currency."
-                "Using the foreignCurrency to confirm foreign amount and billing amount"
-                "Do not guess. If unsure, return nil for the field."
-            }
         case .statementBulk:
             return Instructions {
                 "Extract transactions from the markdown table."
@@ -172,7 +173,7 @@ enum ReceiptParseMode {
         switch self {
         case .statementTransaction, .statementBulk, .receiptImage:
             return .moderate
-        case .receipt, .screenshot, .sms, .statementCard, .statementRow, .screenshotImage:
+        case .receipt, .screenshot, .sms, .statementCard, .screenshotImage:
             return .light
         }
     }
@@ -258,7 +259,6 @@ private struct ReceiptParserProfile: LanguageModelSession.DynamicProfile {
 }
 
 @MainActor
-@Observable
 final class ReceiptParser {
 
     init() {}
@@ -301,12 +301,12 @@ final class ReceiptParser {
         return false
     }
 
-    /// 按场景创建 session：
+    /// 按场景创建 session（每次解析都新建一个，没有历史包袱）：
     /// - iOS 27+ 云端：Dynamic Profile 声明式选择指令与模型
-    /// - 本地（含 iOS 26）：传统 instructions init
+    /// - 本地（含 iOS 26）：传统 instructions init；端侧模型不可用时抛出带原因的错误
     /// 返回 session 及其是否为云端：本地与云端各有验证过的 prompt 配方
     /// （本地裸文本、云端带前导语），调用方据 isCloud 分流。
-    private func makeSession(mode: ReceiptParseMode) -> (session: LanguageModelSession, isCloud: Bool) {
+    private func makeSession(mode: ReceiptParseMode) throws -> (session: LanguageModelSession, isCloud: Bool) {
         if #available(iOS 27.0, *) {
             let route = Self.activeCloudRoute()
             if Self.isCloudModelEnabled {
@@ -321,6 +321,7 @@ final class ReceiptParser {
         // ⚠️ 本地一律走经典 instructions 构造，不走 Dynamic Profile：
         // profile 路由在本地没有任何增量功能，且属于"本地字段连环 nil"故障的
         // 排查变量之一（beta 端侧 profile 会话的指令注入行为未经验证）
+        try Self.ensureLocalModelAvailable()
         return (LanguageModelSession(instructions: mode.instructions), false)
     }
 
@@ -374,14 +375,9 @@ final class ReceiptParser {
         return LanguageModelSession(profile: ReceiptParserProfile(mode: mode, route: route))
     }
 
-    /// 检查 Apple Intelligence 是否可用；不可用时抛出带用户可读原因的错误。
-    /// 所有 parse 方法调用模型前统一走这里，避免在不支持的设备上静默失败。
-    nonisolated static func ensureModelAvailable() throws {
-        // 云端模式且通道可用时直接放行（makeSession 会选择云端模型）；
-        // 否则继续检查本地模型作为兜底路径
-        if #available(iOS 27.0, *), activeCloudRoute() != nil {
-            return
-        }
+    /// 检查端侧 Apple Intelligence 是否可用；不可用时抛出带用户可读原因的错误，
+    /// 避免在不支持的设备上静默失败。云端通道就绪时 makeSession 不会走到这里。
+    nonisolated private static func ensureLocalModelAvailable() throws {
         switch SystemLanguageModel.default.availability {
         case .available:
             return
@@ -426,29 +422,25 @@ final class ReceiptParser {
     // MARK: - 文本解析（OCR / 短信 / 账单）
 
     func parse(text: String) async throws -> ReceiptMetadata {
-            try Self.ensureModelAvailable()
+        let (session, isCloud) = try makeSession(mode: .receipt)
 
-            // 👇👇👇 核心修改：每次调用 parse 时，创建一个全新的 session！
-            // 这样每次都是“第一次”，没有历史包袱
-            let (session, isCloud) = makeSession(mode: .receipt)
-
-            // ⚠️ prompt 按模型分流（各用各的真机验证配方）：
-            // - 本地：只放小票文本。旧前导语会让 iOS 27 beta 本地模型
-            //   对判断型字段连环输出 nil（四探针诊断证实）
-            // - 云端：保留前导语+分隔标记，云端一直用它工作良好
-            let metadata: ReceiptMetadata
-            if isCloud {
-                metadata = try await session.respond(generating: CloudReceiptMetadata.self) {
-                    Self.cloudPreamble
-                    "=== START OF RECEIPT DATA ==="
-                    text
-                    "=== END OF RECEIPT DATA ==="
-                }.content.asReceiptMetadata
-            } else {
-                metadata = try await session.respond(generating: ReceiptMetadata.self) {
-                    text
-                }.content
-            }
+        // ⚠️ prompt 按模型分流（各用各的真机验证配方）：
+        // - 本地：只放小票文本。旧前导语会让 iOS 27 beta 本地模型
+        //   对判断型字段连环输出 nil（四探针诊断证实）
+        // - 云端：保留前导语+分隔标记，云端一直用它工作良好
+        let metadata: ReceiptMetadata
+        if isCloud {
+            metadata = try await session.respond(generating: CloudReceiptMetadata.self) {
+                Self.cloudPreamble
+                "=== START OF RECEIPT DATA ==="
+                text
+                "=== END OF RECEIPT DATA ==="
+            }.content.asReceiptMetadata
+        } else {
+            metadata = try await session.respond(generating: ReceiptMetadata.self) {
+                text
+            }.content
+        }
 
         var cleaned = Self.sanitized(metadata)
         if !isCloud { cleaned = Self.correctingLocalYenGuess(cleaned, text: text) }
@@ -458,8 +450,7 @@ final class ReceiptParser {
 
     /// 支付截图 OCR 文本解析。云端额外返回模型标出的原币 / 入账两侧（同屏两种币种时），本地恒为 nil
     func parseScreenshot(text: String) async throws -> (metadata: ReceiptMetadata, conversion: CurrencyConversion?) {
-        try Self.ensureModelAvailable()
-        let (session, isCloud) = makeSession(mode: .screenshot)
+        let (session, isCloud) = try makeSession(mode: .screenshot)
         let today = Date().formatted(date: .abbreviated, time: .omitted)
 
         // 同 parse()：prompt 按模型分流；日期提示两边都保留。
@@ -492,36 +483,32 @@ final class ReceiptParser {
 
     /// 银行短信解析。云端额外返回模型标出的原币 / 入账两侧（「消费HKD8.60，折合人民币7.33元」），本地恒为 nil
     func SMSparse(text: String) async throws -> (metadata: ReceiptMetadata, conversion: CurrencyConversion?) {
-            try Self.ensureModelAvailable()
+        let (session, isCloud) = try makeSession(mode: .sms)
 
-            // 👇👇👇 核心修改：每次调用 parse 时，创建一个全新的 session！
-            // 这样每次都是“第一次”，没有历史包袱
-            let (session, isCloud) = makeSession(mode: .sms)
-
-            // 同 parse()：prompt 按模型分流
-            let metadata: ReceiptMetadata
-            var conversion: CurrencyConversion?
-            if isCloud {
-                let content = try await session.respond(generating: CloudPaymentMetadata.self) {
-                    Self.cloudPreamble
-                    "=== START OF SMS DATA ==="
-                    text
-                    "=== END OF SMS DATA ==="
-                }.content
-                metadata = content.asReceiptMetadata
-                conversion = Self.conversion(from: content)
-            } else {
-                metadata = try await session.respond(generating: ReceiptMetadata.self) {
-                    text
-                }.content
-            }
+        // 同 parse()：prompt 按模型分流
+        let metadata: ReceiptMetadata
+        var conversion: CurrencyConversion?
+        if isCloud {
+            let content = try await session.respond(generating: CloudPaymentMetadata.self) {
+                Self.cloudPreamble
+                "=== START OF SMS DATA ==="
+                text
+                "=== END OF SMS DATA ==="
+            }.content
+            metadata = content.asReceiptMetadata
+            conversion = Self.conversion(from: content)
+        } else {
+            metadata = try await session.respond(generating: ReceiptMetadata.self) {
+                text
+            }.content
+        }
 
         var cleaned = Self.sanitized(metadata)
         if !isCloud { cleaned = Self.correctingLocalYenGuess(cleaned, text: text) }
         Self.logReceiptFields(cleaned, label: "SMS")
         Self.logConversion(conversion, label: "SMS")
         return (cleaned, conversion)
-        }
+    }
 
     /// 云端模型标出的原币 / 入账两侧 → CurrencyConversion；金额缺失或币种认不出的一侧当没有
     static func conversion(from content: CloudPaymentMetadata) -> CurrencyConversion? {
@@ -612,8 +599,7 @@ final class ReceiptParser {
     // MARK: - 账单解析
 
     func parseStatementCard(text: String) async throws -> StatementCardMetadata {
-        try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementCard).session
+        let session = try makeSession(mode: .statementCard).session
         let response = try await session.respond(
             generating: StatementCardMetadata.self
         ) {
@@ -628,8 +614,7 @@ final class ReceiptParser {
     }
 
     func parseStatementTransaction(text: String) async throws -> StatementTransactionMetadata {
-        try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementTransaction).session
+        let session = try makeSession(mode: .statementTransaction).session
         let response = try await session.respond(
             generating: StatementTransactionMetadata.self
         ) {
@@ -638,28 +623,13 @@ final class ReceiptParser {
         }
 
         let metadata = response.content
-        print("TEXT",text)
         let foreignAmountText = metadata.foreignAmount.map { String(format: "%.2f", $0) } ?? "nil"
         print("Statement OCR fields: foreignAmount=\(foreignAmountText), payment=\(metadata.paymentMethod?.rawValue ?? "nil"), category=\(metadata.category?.rawValue ?? "nil")")
         return metadata
     }
 
-    func parseStatementTransactionBlock(text: String) async throws -> StatementRowTransaction {
-        try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementRow).session
-        let response = try await session.respond(
-            generating: StatementRowTransaction.self
-        ) {
-            "Analyze this statement block:"
-            text
-        }
-
-        return response.content
-    }
-
     func parseStatementTransactionsBatch(text: String) async throws -> StatementRowTransactionList {
-        try Self.ensureModelAvailable()
-        let session = makeSession(mode: .statementBulk).session
+        let session = try makeSession(mode: .statementBulk).session
         let response = try await session.respond(
             generating: StatementRowTransactionList.self
         ) {

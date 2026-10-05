@@ -25,7 +25,7 @@ struct SettingsView: View {
     @AppStorage("userLanguage") private var userLanguage: String = "system"
     @AppStorage("mainCurrencyCode") private var mainCurrencyCode: String = "CNY"
     @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled: Bool = true
-    @AppStorage("defaultCardID") private var defaultCardID: String = ""
+    @AppStorage(CreditCard.defaultCardDefaultsKey) private var defaultCardID: String = ""
     // key 与 ReceiptParser.cloudModelDefaultsKey 保持一致
     @AppStorage("useCloudAIModel") private var useCloudAIModel: Bool = false
     // key 与 ThirdPartyModelStore.backend 保持一致

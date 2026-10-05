@@ -46,7 +46,6 @@ struct CurrencyService {
     // --- 🚀 智能入口：获取汇率 ---
     // View 层只调用这个方法，不需要关心内部逻辑
     static func getRates(base: String = "CNY") async -> [String: Double] {
-        print(base)
         // 1. 检查：今天是不是已经更新过了？并且基准币种一致？
         if
             let lastDate = UserDefaults.standard.object(forKey: kDateKey) as? Date,

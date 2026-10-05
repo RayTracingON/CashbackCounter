@@ -98,28 +98,6 @@ final class OCRServiceTests: XCTestCase {
         XCTAssertNil(OCRService.simpleInferRegion(from: text))
     }
 
-    // MARK: - getLanguages Tests
-
-    func testGetLanguages() {
-        // JP
-        let jpLangs = OCRService.getLanguages(for: .jp)
-        XCTAssertEqual(jpLangs.first, "ja-JP")
-        
-        // CN
-        let cnLangs = OCRService.getLanguages(for: .cn)
-        XCTAssertEqual(cnLangs.first, "zh-Hans")
-        
-        // US
-        let usLangs = OCRService.getLanguages(for: .us)
-        XCTAssertEqual(usLangs.first, "en-US")
-        
-        // HK / TW / MO
-        let hkLangs = OCRService.getLanguages(for: .hk)
-        XCTAssertEqual(hkLangs.first, "zh-Hant")
-        let twLangs = OCRService.getLanguages(for: .tw)
-        XCTAssertEqual(twLangs.first, "zh-Hant")
-    }
-
     // MARK: - cgImageOrientation Tests
 
     func testCGImageOrientation() {

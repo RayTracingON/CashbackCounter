@@ -457,6 +457,66 @@ class CreditCard: Identifiable {
 
 }
 
+// MARK: - 记账时的公共计算（手动记账 / 快捷指令 / Plaid 同步共用）
+
+extension CreditCard {
+
+    /// 一点积分折算成**发卡币种**的价值。
+    ///
+    /// 积分计划的估值币种和卡的发卡地可以不同（比如 Amex HK 的积分按 HKD 估值，
+    /// 但卡是美国发的），这时要按汇率换算一次，否则算出来的返现价值差一个汇率倍数。
+    /// v1 近似：副币种入账的交易也按发卡币种估值。
+    func pointValueInCardCurrency() async -> Double {
+        guard let pointProgram else { return 0 }
+
+        let pointRegion = pointProgram.valueCurrencyCode
+        if pointRegion == issueRegion {
+            return pointProgram.pointValue
+        }
+
+        let rates = await CurrencyService.getRates(base: pointRegion.currencyCode)
+        if let rate = rates[issueRegion.currencyCode], rate > 0 {
+            return pointProgram.pointValue * rate
+        }
+        // 拿不到汇率时退回未换算的值：偏差好过算出 0
+        return pointProgram.pointValue
+    }
+
+    /// 这一笔（含上限）的奖励：返现卡给返现金额，积分卡给积分数和折算价值。amount 是入账金额
+    func cappedReward(
+        amount: Double,
+        category: Category,
+        location: Region,
+        date: Date,
+        paymentMethod: PaymentMethod,
+        transactionToExclude: Transaction? = nil
+    ) async -> (value: Double, points: Int) {
+        guard rewardType == .points else {
+            let cashback = calculateCappedCashback(
+                amount: amount, category: category, location: location, date: date,
+                paymentMethod: paymentMethod, transactionToExclude: transactionToExclude
+            )
+            return (cashback, 0)
+        }
+        let result = calculateCappedPoints(
+            amount: amount, category: category, location: location, date: date,
+            paymentMethod: paymentMethod, pointValueInCardCurrency: await pointValueInCardCurrency(),
+            transactionToExclude: transactionToExclude
+        )
+        return (result.value, result.points)
+    }
+
+    /// 设置页「默认记账卡片」的存储 key，值是「银行名|尾号」
+    static let defaultCardDefaultsKey = "defaultCardID"
+
+    /// 设置里选的默认记账卡；没设、或那张卡已经删了时返回 nil
+    static func defaultCard(in cards: [CreditCard]) -> CreditCard? {
+        let parts = (UserDefaults.standard.string(forKey: defaultCardDefaultsKey) ?? "").split(separator: "|")
+        guard parts.count == 2 else { return nil }
+        return cards.first { $0.bankName == String(parts[0]) && $0.endNum == String(parts[1]) }
+    }
+}
+
 
 // 👇 必须加这个 Extension 才能让颜色和字符串互转
 extension Color {

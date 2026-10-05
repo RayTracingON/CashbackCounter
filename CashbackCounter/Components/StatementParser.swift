@@ -87,7 +87,6 @@ struct StatementParser {
             allRowsText += "\n"
         }
 
-        print("fulltest:\n", fullDocumentText)
         let totalBalance = extractTotalBalance(from: fullDocumentText)
         let statementDate = extractStatementDate(from: fullDocumentText)
         
@@ -266,46 +265,6 @@ struct StatementParser {
         }
 
         return chunks
-    }
-
-    private func groupRowsIntoTransactionBlocks(
-        _ rows: [RecognizedRow],
-        statementDate: Date?
-    ) -> [[RecognizedRow]] {
-        var results: [[RecognizedRow]] = []
-        var current: [RecognizedRow] = []
-
-        for row in rows {
-            if isBlockStart(row.text, statementDate: statementDate) {
-                if !current.isEmpty {
-                    results.append(current)
-                }
-                current = [row]
-            } else if !current.isEmpty {
-                current.append(row)
-            }
-        }
-
-        if !current.isEmpty {
-            results.append(current)
-        }
-
-        return results
-    }
-
-    private func isBlockStart(_ line: String, statementDate: Date?) -> Bool {
-        if isTransactionStart(line, statementDate: statementDate) {
-            return true
-        }
-        return startsWithDate(line, statementDate: statementDate)
-    }
-
-    private func startsWithDate(_ line: String, statementDate: Date?) -> Bool {
-        let tokens = line.split(whereSeparator: { $0.isWhitespace })
-        guard let (_, indexAfter) = consumeDate(from: tokens, startingAt: 0, statementDate: statementDate) else {
-            return false
-        }
-        return indexAfter > 0
     }
 
     private func buildImportedTransactions(

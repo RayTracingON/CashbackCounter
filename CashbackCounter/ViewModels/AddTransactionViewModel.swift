@@ -137,17 +137,8 @@ final class AddTransactionViewModel {
             selectedCardIndex = index
             return
         }
-        
-        let defaultCardID = UserDefaults.standard.string(forKey: "defaultCardID") ?? ""
-        if !defaultCardID.isEmpty {
-            let parts = defaultCardID.split(separator: "|")
-            if parts.count == 2 {
-                let bank = String(parts[0])
-                let end = String(parts[1])
-                if let index = cards.firstIndex(where: { $0.bankName == bank && $0.endNum == end }) {
-                    selectedCardIndex = index
-                }
-            }
+        if let card = CreditCard.defaultCard(in: cards), let index = cards.firstIndex(of: card) {
+            selectedCardIndex = index
         }
     }
 
@@ -172,18 +163,8 @@ final class AddTransactionViewModel {
                     if let dateStr = data.dateString { self.date = dateStr.toDate() }
                     if let last4 = data.cardLast4, let index = cards.firstIndex(where: { $0.endNum == last4 }) {
                         self.selectedCardIndex = index
-                    } else {
-                        let defaultCardID = UserDefaults.standard.string(forKey: "defaultCardID") ?? ""
-                        if !defaultCardID.isEmpty {
-                            let parts = defaultCardID.split(separator: "|")
-                            if parts.count == 2 {
-                                let bank = String(parts[0])
-                                let end = String(parts[1])
-                                if let index = cards.firstIndex(where: { $0.bankName == bank && $0.endNum == end }) {
-                                    self.selectedCardIndex = index
-                                }
-                            }
-                        }
+                    } else if let card = CreditCard.defaultCard(in: cards), let index = cards.firstIndex(of: card) {
+                        self.selectedCardIndex = index
                     }
                     if let cat = data.category { self.selectedCategory = cat }
                     if let currency = data.currency, let region = Region.from(currencyText: currency) {
@@ -216,7 +197,7 @@ final class AddTransactionViewModel {
         if card.rewardType == .points {
             rewardPreview = nil
             Task {
-                let pointValue = await resolvePointValueInCardCurrency(for: card)
+                let pointValue = await card.pointValueInCardCurrency()
                 let result = card.calculateCappedPoints(
                     amount: finalAmount,
                     category: selectedCategory,
@@ -251,21 +232,6 @@ final class AddTransactionViewModel {
             let isCapped = cashback < (theoretical - 0.01)
             rewardPreview = RewardPreview(value: cashback, points: 0, isCapped: isCapped)
         }
-    }
-
-    // v1 近似：积分价值统一折算到卡主币种，副币种入账的交易也按主币种估值 (待后续跟进)
-    private func resolvePointValueInCardCurrency(for card: CreditCard) async -> Double {
-        guard let pointProgram = card.pointProgram else { return 0 }
-        let pointRegion = pointProgram.valueCurrencyCode
-        let cardRegion = card.issueRegion
-        if pointRegion == cardRegion {
-            return pointProgram.pointValue
-        }
-        let rates = await CurrencyService.getRates(base: pointRegion.currencyCode)
-        if let rate = rates[cardRegion.currencyCode], rate > 0 {
-            return pointProgram.pointValue * rate
-        }
-        return pointProgram.pointValue
     }
 
     // MARK: - Billing Amount
@@ -322,32 +288,14 @@ final class AddTransactionViewModel {
                 imageData = nil
             }
 
-            var finalCashback: Double = 0
-            var pointsEarned: Int = 0
-
-            if card.rewardType == .points {
-                let pointValue = await resolvePointValueInCardCurrency(for: card)
-                let result = card.calculateCappedPoints(
-                    amount: billingDouble,
-                    category: selectedCategory,
-                    location: location,
-                    date: date,
-                    paymentMethod: paymentMethod,
-                    pointValueInCardCurrency: pointValue,
-                    transactionToExclude: transactionToEdit
-                )
-                finalCashback = result.value
-                pointsEarned = result.points
-            } else {
-                finalCashback = card.calculateCappedCashback(
-                    amount: billingDouble,
-                    category: selectedCategory,
-                    location: location,
-                    date: date,
-                    paymentMethod: paymentMethod,
-                    transactionToExclude: transactionToEdit
-                )
-            }
+            let (finalCashback, pointsEarned) = await card.cappedReward(
+                amount: billingDouble,
+                category: selectedCategory,
+                location: location,
+                date: date,
+                paymentMethod: paymentMethod,
+                transactionToExclude: transactionToEdit
+            )
 
             let nominalRate = card.getRate(for: selectedCategory, location: location, payment: paymentMethod)
             let billingCode = resolvedBillingRegion(cards: cards).currencyCode

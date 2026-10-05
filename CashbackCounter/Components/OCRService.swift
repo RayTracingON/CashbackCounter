@@ -7,7 +7,6 @@
 
 import Vision
 import UIKit
-import FoundationModels // 引入 AI 框架
 import ImageIO          // 用于处理图片方向
 
 struct RecognizedElement: Hashable {
@@ -28,10 +27,13 @@ struct RecognizedRow: Hashable {
 struct OCRService {
     
     @MainActor static let aiParser = ReceiptParser()
-    
-    // MARK: - 🚀 总入口：智能双重分析 (节省一次 AI 调用版)
+
+    /// OCR 识别语言：中英日繁全开，覆盖国内支付截图、日本小票、港台单据
+    nonisolated static let defaultLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
+
+    // MARK: - 🚀 总入口：云端多模态优先，否则 OCR + 一次 AI 文本解析
     @MainActor
-    static func analyzeImage(_ image: UIImage, region: Region? = nil) async -> ReceiptMetadata? {
+    static func analyzeImage(_ image: UIImage) async -> ReceiptMetadata? {
 
         // ☁️🖼️ 多模态优先：云端 PCC 就绪时把原图直传模型，跳过本地 OCR。
         // 本地模型跑图片输入过慢，刻意不做本地多模态；云端失败则回退下方 OCR 文本管线。
@@ -49,32 +51,11 @@ struct OCRService {
         // ⏱️ 预热模型：趁 OCR 跑的时候把模型权重加载进内存，缩短首次 AI 调用延迟
         aiParser.prewarm()
 
-        // 🟢 情况 A：用户已经在界面上选好了地区 (比如手动选了日本)
-        // 直接用该地区的优化语言进行一次精准识别，省流且快。
-        if let userRegion = region {
-            print("🎯 用户已指定地区: \(userRegion.rawValue)，直接进行精准识别")
-            let ocrStart = Date()
-            let rawText = await recognizeTextInRows(from: image, languages: getLanguages(for: userRegion))
-            print("⏱️ OCR 耗时: \(String(format: "%.2f", Date().timeIntervalSince(ocrStart)))s")
-            return await parseWithLogging(rawText)
-        }
-
-        // 🟠 情况 B：用户没选地区 (默认模式) -> 启动“本地推断 + 单次高精度扫描”策略
-        print("🔍 未指定地区，启动通用探索模式...")
-
-        // 1. OCR：使用通用语言列表
-        let broadLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
         let ocrStart = Date()
-        let rawText = await recognizeTextInRows(from: image, languages: broadLanguages)
+        let rawText = await recognizeTextInRows(from: image)
         print("⏱️ OCR 耗时: \(String(format: "%.2f", Date().timeIntervalSince(ocrStart)))s")
         print(rawText)
 
-        // 2. ⚡️ 本地快速推断 (辅助诊断信息，已移除多余的第二轮 OCR)
-        let detectedRegion = simpleInferRegion(from: rawText)
-        print("⚡️ 本地推断地区: \(detectedRegion?.rawValue ?? "未知")")
-
-        // 3. 最终只调用一次 AI
-        print("🤖以此文本请求 AI 分析...")
         return await parseWithLogging(rawText)
     }
 
@@ -322,45 +303,28 @@ struct OCRService {
         return results
     }
     
-    // 获取各地区的最佳语言优先级
-    static func getLanguages(for region: Region) -> [String] {
-        switch region {
-        case .jp:
-            // 日本：必须把 ja-JP 放第一
-            return ["ja-JP", "en-US", "zh-Hans"]
-        case .cn:
-            // 简中区
-            return ["zh-Hans", "en-US", "ja-JP"]
-        case .hk, .tw, .mo:
-            // 繁中区
-            return ["zh-Hant", "en-US", "ja-JP"]
-        case .us, .nz, .other, .uk:
-            // 英语区
-            return ["en-US", "zh-Hans", "ja-JP"]
-        }
-    }
-    
-    // MARK: - Vision 基础能力 (不变)
-    static func recognizeTextInRows(from image: UIImage, languages: [String]) async -> String {
+    // MARK: - Vision 基础能力
+    static func recognizeTextInRows(from image: UIImage, languages: [String] = defaultLanguages) async -> String {
         let observations = await recognizeObservations(from: image, languages: languages)
         let rows = reconstructRows(from: observations)
         return rows.map { $0.text }.joined(separator: "\n")
     }
-    
-    static func recognizeText(from image: UIImage, languages: [String]) async -> String {
-        guard let cgImage = image.cgImage else { return "" }
+
+    static func recognizeObservations(from image: UIImage, languages: [String]) async -> [VNRecognizedTextObservation] {
+        guard let originalImage = image.cgImage else { return [] }
         let orientation = cgImageOrientation(from: image.imageOrientation)
-        
+
         return await withCheckedContinuation { continuation in
             Task.detached {
+                // 📐 相机原图动辄 4000px+，先缩到 2500px 以内：OCR 速度可提升数倍，精度几乎无损
+                let cgImage = downscaledCGImage(originalImage, maxDimension: 2500)
                 let requestHandler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation)
                 let request = VNRecognizeTextRequest { request, error in
                     guard let observations = request.results as? [VNRecognizedTextObservation], error == nil else {
-                        continuation.resume(returning: "")
+                        continuation.resume(returning: [])
                         return
                     }
-                    let fullText = observations.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
-                    continuation.resume(returning: fullText)
+                    continuation.resume(returning: observations)
                 }
                 request.recognitionLevel = .accurate
                 if let supported = try? request.supportedRecognitionLanguages() {
@@ -372,44 +336,10 @@ struct OCRService {
                     try requestHandler.perform([request])
                 } catch {
                     print("Vision OCR 错误: \(error)")
-                    continuation.resume(returning: "")
+                    continuation.resume(returning: [])
                 }
             }
         }
-    }
-
-    static func recognizeObservations(from image: UIImage, languages: [String]) async -> [VNRecognizedTextObservation] {
-        guard let originalImage = image.cgImage else { return [] }
-        let orientation = cgImageOrientation(from: image.imageOrientation)
-
-
-        return await withCheckedContinuation { continuation in
-                Task.detached {
-                    // 📐 相机原图动辄 4000px+，先缩到 2500px 以内：OCR 速度可提升数倍，精度几乎无损
-                    let cgImage = downscaledCGImage(originalImage, maxDimension: 2500)
-                    let requestHandler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation)
-                    let request = VNRecognizeTextRequest { request, error in
-                        guard let observations = request.results as? [VNRecognizedTextObservation], error == nil else {
-                            continuation.resume(returning: [])
-                            return
-                        }
-                        continuation.resume(returning: observations)
-                    }
-                    request.recognitionLevel = .accurate
-                    if let supported = try? request.supportedRecognitionLanguages() {
-                        request.recognitionLanguages = languages.filter { supported.contains($0) }
-                    } else {
-                        request.recognitionLanguages = languages
-                    }
-                    do {
-                        try requestHandler.perform([request])
-                    } catch {
-                        print("Vision OCR 错误: \(error)")
-                        continuation.resume(returning: [])
-                    }
-                }
-            }
-        
     }
 
     static func reconstructRows(from observations: [VNRecognizedTextObservation]) -> [RecognizedRow] {
@@ -457,7 +387,8 @@ struct OCRService {
     
     /// 超过 maxDimension 的图片等比缩小；小图原样返回。
     /// 只缩像素不动方向信息，调用方传入的 orientation 依然有效。
-    static func downscaledCGImage(_ cgImage: CGImage, maxDimension: CGFloat) -> CGImage {
+    /// nonisolated：OCR 在后台 detached task 里调用它（UIGraphicsImageRenderer 线程安全）
+    nonisolated static func downscaledCGImage(_ cgImage: CGImage, maxDimension: CGFloat) -> CGImage {
         let width = CGFloat(cgImage.width)
         let height = CGFloat(cgImage.height)
         let maxSide = max(width, height)
@@ -535,31 +466,5 @@ struct OCRService {
         }
 
         return output
-    }
-    
-    // MARK: - 🌟 iOS 18 / macOS 15 Native Table Extraction
-    @available(macOS 26.0, iOS 26.0, *)
-    static func extractDocumentLayout(from image: UIImage) async throws -> (tables: String, text: String) {
-        guard let cgImage = image.cgImage else { return ("", "") }
-        
-        let request = RecognizeDocumentsRequest()
-        let results = try await request.perform(on: cgImage)
-        
-        var tablesString = ""
-        var fullText = ""
-        
-        for obs in results {
-            fullText += obs.document.text.transcript + "\n"
-            
-            for table in obs.document.tables {
-                for row in table.rows {
-                    let rowTexts = row.map { $0.content.text.transcript.replacingOccurrences(of: "\n", with: " ") }
-                    tablesString += "| " + rowTexts.joined(separator: " | ") + " |\n"
-                }
-                tablesString += "\n"
-            }
-        }
-        
-        return (tablesString, fullText)
     }
 }
