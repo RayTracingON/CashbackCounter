@@ -262,6 +262,65 @@ struct OCRService {
             || containsJapaneseKana(text)
             || text.contains("合計") || text.contains("料金")
     }
+
+    /// 文本里有没有指向中国大陆的迹象：人民币标记，或简体界面用语「金额 / 交易」
+    static func hasMainlandEvidence(in text: String) -> Bool {
+        Region.cn.hasCurrencyMarker(in: text.uppercased())
+            || text.contains("金额") || text.contains("交易")
+    }
+
+    // MARK: - 💱 同屏的第二种币种
+    /// 外币消费时 App 常同屏显示入账金额和原币金额（银联「-¥7.33（HK$8.60）」、
+    /// 银行 App「交易金额 HKD 8.60 / 入账金额 人民币 7.33」）。这里找紧挨着明确币种标记、
+    /// 且币种不是 excluded 的那个数。汇率行（含「汇率 / RATE」）整行跳过，紧挨「=」的数也不算；
+    /// 出现两种以上外币有歧义，返回 nil；同一外币有多个金额时取出现次数最多的，并列取先出现的。
+    static func otherCurrencyAmount(in text: String, excluding excluded: Region) -> CurrencyAmount? {
+        var found: [CurrencyAmount] = []
+        for line in text.components(separatedBy: .newlines) {
+            let upper = line.uppercased()
+            if upper.contains("汇率") || upper.contains("匯率") || Region.containsMarker("RATE", in: upper) { continue }
+            var hits: [(offset: Int, value: CurrencyAmount)] = []
+            for region in Region.allCases where region != excluded {
+                for marker in region.currencyMarkers {
+                    hits += amounts(adjacentTo: marker, in: upper).map {
+                        (offset: $0.offset, value: CurrencyAmount(amount: $0.amount, region: region))
+                    }
+                }
+            }
+            found += hits.sorted { $0.offset < $1.offset }.map(\.value)
+        }
+        guard let region = found.first?.region, found.allSatisfy({ $0.region == region }) else { return nil }
+        let counts = Dictionary(found.map { ($0.amount, 1) }, uniquingKeysWith: +)
+        return found.max { counts[$0.amount, default: 0] < counts[$1.amount, default: 0] }
+    }
+
+    /// 紧挨着币种标记的金额：标记在前（HK$8.60、港币：8.60）或在后（8.60 HKD、10,780日元）。
+    /// 前后紧挨「=」的是汇率写法（1HK$=0.85元），不算。upperText 需已转大写。
+    private static func amounts(adjacentTo marker: String, in upperText: String) -> [(offset: Int, amount: Double)] {
+        let escaped = NSRegularExpression.escapedPattern(for: marker)
+        let isWord = Region.isWordMarker(marker)
+        let number = "([0-9][0-9,，]*(?:\\.[0-9]+)?)"
+        let patterns = [
+            (isWord ? "(?<![A-Z])" : "") + escaped + "[\\s:：]*" + number,
+            number + "\\s*" + escaped + (isWord ? "(?![A-Z])" : "")
+        ]
+        let text = upperText as NSString
+        var results: [(offset: Int, amount: Double)] = []
+        for pattern in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+            for match in regex.matches(in: upperText, range: NSRange(location: 0, length: text.length)) {
+                let before = text.substring(to: match.range.location).trimmingCharacters(in: .whitespaces).last
+                let after = text.substring(from: NSMaxRange(match.range)).trimmingCharacters(in: .whitespaces).first
+                if before == "=" || before == "＝" || after == "=" || after == "＝" { continue }
+                let digits = text.substring(with: match.range(at: 1))
+                    .replacingOccurrences(of: ",", with: "")
+                    .replacingOccurrences(of: "，", with: "")
+                guard let amount = Double(digits), amount > 0 else { continue }
+                results.append((offset: match.range.location, amount: amount))
+            }
+        }
+        return results
+    }
     
     // 获取各地区的最佳语言优先级
     static func getLanguages(for region: Region) -> [String] {

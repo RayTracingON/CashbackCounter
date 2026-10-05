@@ -102,11 +102,14 @@ extension Region {
     /// MUSASHINO 里的 USA、AMATEUR 里的 EUR 这类子串误命中；紧贴数字（JPY10780）照样算。
     /// 中文和符号标记没有这个问题，直接包含即可。
     static func containsMarker(_ marker: String, in upperText: String) -> Bool {
-        guard let first = marker.unicodeScalars.first,
-              first.isASCII, CharacterSet.letters.contains(first) else {
-            return upperText.contains(marker)
-        }
+        guard isWordMarker(marker) else { return upperText.contains(marker) }
         let pattern = "(?<![A-Z])\(NSRegularExpression.escapedPattern(for: marker))(?![A-Z])"
         return upperText.range(of: pattern, options: .regularExpression) != nil
+    }
+
+    /// 英文字母开头的标记（JPY、HK$）需要按整词匹配
+    static func isWordMarker(_ marker: String) -> Bool {
+        guard let first = marker.unicodeScalars.first else { return false }
+        return first.isASCII && CharacterSet.letters.contains(first)
     }
 }

@@ -345,13 +345,14 @@ final class ReceiptParser {
         return cleaned.isEmpty ? nil : cleaned
     }
 
-    /// 本地小模型见 ¥ 常猜 JPY（CNY/JPY 混淆）：全文没有任何日本迹象、关键词又指向中国大陆时纠正为 CNY。
+    /// 本地小模型见 ¥ 常猜 JPY（CNY/JPY 混淆）：全文没有任何日本迹象、又有中国大陆迹象时纠正为 CNY。
+    /// 同屏有别的外币也照样纠正（银联「-¥7.33（HK$8.60）」里的 ¥ 是人民币入账金额）。
     /// 只用于本地模型——云端 / 第三方模型的币种判断可靠，不能拿界面用语去推翻它。
     static func correctingLocalYenGuess(_ metadata: ReceiptMetadata, text: String) -> ReceiptMetadata {
         guard let currency = metadata.currency,
               Region.from(currencyText: currency) == .jp,
               !OCRService.hasJapaneseEvidence(in: text),
-              OCRService.simpleInferRegion(from: text) == .cn else { return metadata }
+              OCRService.hasMainlandEvidence(in: text) else { return metadata }
         print("🧰 本地模型 ¥ 纠偏: \(currency) → CNY")
         var result = metadata
         result.currency = Region.cn.currencyCode
@@ -455,21 +456,26 @@ final class ReceiptParser {
         return cleaned
     }
 
-    func parseScreenshot(text: String) async throws -> ReceiptMetadata {
+    /// 支付截图 OCR 文本解析。云端额外返回模型标出的原币 / 入账两侧（同屏两种币种时），本地恒为 nil
+    func parseScreenshot(text: String) async throws -> (metadata: ReceiptMetadata, conversion: CurrencyConversion?) {
         try Self.ensureModelAvailable()
         let (session, isCloud) = makeSession(mode: .screenshot)
         let today = Date().formatted(date: .abbreviated, time: .omitted)
 
-        // 同 parse()：prompt 按模型分流；日期提示两边都保留
+        // 同 parse()：prompt 按模型分流；日期提示两边都保留。
+        // 云端用 CloudPaymentMetadata，多出的原币 / 入账字段让模型自己分清两种币种
         let metadata: ReceiptMetadata
+        var conversion: CurrencyConversion?
         if isCloud {
-            metadata = try await session.respond(generating: CloudReceiptMetadata.self) {
+            let content = try await session.respond(generating: CloudPaymentMetadata.self) {
                 "Today is \(today). If no date is found in the text, use today."
                 Self.cloudPreamble
                 "=== START OF SCREENSHOT DATA ==="
                 text
                 "=== END OF SCREENSHOT DATA ==="
-            }.content.asReceiptMetadata
+            }.content
+            metadata = content.asReceiptMetadata
+            conversion = Self.conversion(from: content)
         } else {
             metadata = try await session.respond(generating: ReceiptMetadata.self) {
                 "Today is \(today). If no date is found in the text, use today."
@@ -480,10 +486,12 @@ final class ReceiptParser {
         var cleaned = Self.sanitized(metadata)
         if !isCloud { cleaned = Self.correctingLocalYenGuess(cleaned, text: text) }
         Self.logReceiptFields(cleaned, label: "Screenshot OCR")
-        return cleaned
+        Self.logConversion(conversion, label: "Screenshot OCR")
+        return (cleaned, conversion)
     }
 
-    func SMSparse(text: String) async throws -> ReceiptMetadata {
+    /// 银行短信解析。云端额外返回模型标出的原币 / 入账两侧（「消费HKD8.60，折合人民币7.33元」），本地恒为 nil
+    func SMSparse(text: String) async throws -> (metadata: ReceiptMetadata, conversion: CurrencyConversion?) {
             try Self.ensureModelAvailable()
 
             // 👇👇👇 核心修改：每次调用 parse 时，创建一个全新的 session！
@@ -492,13 +500,16 @@ final class ReceiptParser {
 
             // 同 parse()：prompt 按模型分流
             let metadata: ReceiptMetadata
+            var conversion: CurrencyConversion?
             if isCloud {
-                metadata = try await session.respond(generating: CloudReceiptMetadata.self) {
+                let content = try await session.respond(generating: CloudPaymentMetadata.self) {
                     Self.cloudPreamble
                     "=== START OF SMS DATA ==="
                     text
                     "=== END OF SMS DATA ==="
-                }.content.asReceiptMetadata
+                }.content
+                metadata = content.asReceiptMetadata
+                conversion = Self.conversion(from: content)
             } else {
                 metadata = try await session.respond(generating: ReceiptMetadata.self) {
                     text
@@ -508,8 +519,31 @@ final class ReceiptParser {
         var cleaned = Self.sanitized(metadata)
         if !isCloud { cleaned = Self.correctingLocalYenGuess(cleaned, text: text) }
         Self.logReceiptFields(cleaned, label: "SMS")
-        return cleaned
+        Self.logConversion(conversion, label: "SMS")
+        return (cleaned, conversion)
         }
+
+    /// 云端模型标出的原币 / 入账两侧 → CurrencyConversion；金额缺失或币种认不出的一侧当没有
+    static func conversion(from content: CloudPaymentMetadata) -> CurrencyConversion? {
+        func side(_ amount: Double?, _ currency: String?) -> CurrencyAmount? {
+            guard let amount, amount != 0,
+                  let code = cleanedString(currency),
+                  let region = Region.from(currencyText: code) else { return nil }
+            return CurrencyAmount(amount: abs(amount), region: region)
+        }
+        let original = side(content.originalAmount, content.originalCurrency)
+        let billing = side(content.billingAmount, content.billingCurrency)
+        guard original != nil || billing != nil else { return nil }
+        return CurrencyConversion(original: original, billing: billing)
+    }
+
+    private static func logConversion(_ conversion: CurrencyConversion?, label: String) {
+        guard let conversion else { return }
+        func describe(_ side: CurrencyAmount?) -> String {
+            side.map { "\($0.region.currencyCode) \(String(format: "%.2f", $0.amount))" } ?? "nil"
+        }
+        print("\(label) conversion: original=\(describe(conversion.original)), billing=\(describe(conversion.billing))")
+    }
 
     // MARK: - 多模态解析（图片直传，仅云端 PCC）
 
@@ -547,14 +581,15 @@ final class ReceiptParser {
     }
 
     /// 支付截图原图直传云端解析；云端不可用时抛错，调用方应回退 OCR 文本管线。
+    /// 同 parseScreenshot：另返回模型标出的原币 / 入账两侧
     @available(iOS 27.0, *)
-    func parseScreenshotImage(_ image: UIImage) async throws -> ReceiptMetadata {
+    func parseScreenshotImage(_ image: UIImage) async throws -> (metadata: ReceiptMetadata, conversion: CurrencyConversion?) {
         let session = try makeMultimodalSession(mode: .screenshotImage)
         let attachment = try Self.makeImageAttachment(image)
         let today = Date().formatted(date: .abbreviated, time: .omitted)
 
         let response = try await session.respond(
-            generating: CloudReceiptMetadata.self,
+            generating: CloudPaymentMetadata.self,
             options: GenerationOptions(samplingMode: .greedy)
         ) {
             "Today is \(today). If no date is visible in the screenshot, use today."
@@ -563,8 +598,10 @@ final class ReceiptParser {
         }
 
         let metadata = Self.sanitized(response.content.asReceiptMetadata)
+        let conversion = Self.conversion(from: response.content)
         Self.logReceiptFields(metadata, label: "🖼️ Screenshot image")
-        return metadata
+        Self.logConversion(conversion, label: "🖼️ Screenshot image")
+        return (metadata, conversion)
     }
 
     nonisolated private static func logReceiptFields(_ metadata: ReceiptMetadata, label: String) {

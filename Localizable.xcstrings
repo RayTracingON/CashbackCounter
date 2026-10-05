@@ -10188,6 +10188,28 @@
         }
       }
     },
+    "识别出：%@ %@%@（入账 %@%@）\n将记入 %@，是否确认？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parsed: %1$@ %2$@%3$@ (billed %4$@%5$@)\nWill be recorded to %6$@, confirm?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别出：%1$@ %2$@%3$@（入账 %4$@%5$@）\n将记入 %6$@，是否确认？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "辨識出：%1$@ %2$@%3$@（入賬 %4$@%5$@）\n將記入 %6$@，是否確認？"
+          }
+        }
+      }
+    },
     "识别失败" : {
       "localizations" : {
         "en" : {

@@ -35,10 +35,8 @@ struct AddTransactionFromSMSIntent: AppIntent {
                 }
         // 在主线程上创建解析器并调用 parse()；模型漏抽金额/币种时用规则兜底
         let parser = ReceiptParser()
-        let metadata = OCRService.backfill(
-            try await parser.SMSparse(text: textToParse),
-            rawText: textToParse
-        )
+        let parsed = try await parser.SMSparse(text: textToParse)
+        let metadata = OCRService.backfill(parsed.metadata, rawText: textToParse)
 
         // 核心字段检查
         guard let merchant = metadata.merchant,
@@ -78,24 +76,27 @@ struct AddTransactionFromSMSIntent: AppIntent {
             return nil
         }()
 
-        // 地区：以模型给出的币种为准，没有才看全文关键词（见 OCRService.resolveRegion）；
-        // 短信没写币种时多半就是发卡行本币，按所选卡的发卡地区兜底
-        let region = OCRService.resolveRegion(currency: metadata.currency, rawText: textToParse)
-            ?? selectedCard?.issueRegion
-            ?? .cn
+        // 金额与地区：拆成原币（消费地）和入账（卡币种）两组（见 RecognizedAmounts）。
+        // 「消费HKD8.60，折合人民币7.33元」这类短信两边都是现成的数，云端模型会直接标出原币 / 入账；
+        // 没写币种时多半就是发卡行本币，按所选卡的发卡地区兜底
+        let amounts = await RecognizedAmounts.resolve(
+            totalAmount: amount,
+            currency: metadata.currency,
+            rawText: textToParse,
+            card: selectedCard,
+            conversion: parsed.conversion
+        )
 
-        // 计算入账金额和返现
-        // TODO: billingAmount 未做换汇，异币种消费的原始金额会直接进入以卡币种计价的上限统计
-        let billingAmount = amount    // 如需跨币种，可根据汇率再计算
+        // 计算返现：按入账金额（卡币种）+ 消费地区
         var cashback: Double = 0.0
         var pointsEarned: Int = 0
         if let card = selectedCard {
             if card.rewardType == .points {
                 let pointValue = await resolvePointValueInCardCurrency(pointProgram: card.pointProgram, cardCurrency: card.issueRegion.currencyCode)
                 let result = card.calculateCappedPoints(
-                    amount: billingAmount,
+                    amount: amounts.billingAmount,
                     category: category,
-                    location: region,
+                    location: amounts.location,
                     date: date,
                     paymentMethod: .offline,
                     pointValueInCardCurrency: pointValue
@@ -104,9 +105,9 @@ struct AddTransactionFromSMSIntent: AppIntent {
                 pointsEarned = result.points
             } else {
                 cashback = card.calculateCappedCashback(
-                    amount: billingAmount,
+                    amount: amounts.billingAmount,
                     category: category,
-                    location: region,
+                    location: amounts.location,
                     date: date,
                     paymentMethod: .offline
                 )
@@ -117,22 +118,21 @@ struct AddTransactionFromSMSIntent: AppIntent {
         let newTransaction = Transaction(
             merchant: merchant,
             category: category,
-            location: region,
-            amount: amount,
+            location: amounts.location,
+            amount: amounts.amount,
             date: date,
             card: selectedCard,
             receiptData: nil,
-            billingAmount: billingAmount,
+            billingAmount: amounts.billingAmount,
             cashbackAmount: cashback,
             pointsEarned: pointsEarned,
-            // billingAmount 即原币金额，入账币种如实记为消费地币种
-            billingCurrencyCode: region.currencyCode
+            billingCurrencyCode: amounts.billingRegion.currencyCode
         )
         modelContext.insert(newTransaction)
         try modelContext.save()
         // 返回意图执行结果，系统会在快捷指令中显示“完成”
-        // 与截图记账共用同一条已翻译的文案；旧文案写死了 ¥ 且金额按 %lf 显示成 6 位小数
-        return .result(dialog: "✅ 已添加：\(merchant) – \(region.currencySymbol)\(String(format: "%.2f", amount))")
+        // 与截图记账共用同一条已翻译的文案；显示原币金额
+        return .result(dialog: "✅ 已添加：\(merchant) – \(amounts.location.currencySymbol)\(String(format: "%.2f", amounts.amount))")
     }
 
     private func resolvePointValueInCardCurrency(pointProgram: Point?, cardCurrency: String) async -> Double {

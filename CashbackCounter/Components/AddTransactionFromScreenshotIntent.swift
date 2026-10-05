@@ -48,32 +48,37 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
             )
         }
 
-            // 2+3. 解析：云端 PCC 就绪时原图直传（多模态），否则 OCR + 文本解析
+            // 2+3. 解析：云端多模态就绪时原图直传，否则 OCR + 文本解析。
+            // OCR 文本两条路都要：外币消费的截图常同屏显示入账金额和原币金额，要靠它找出另一种币种
             let parser = ReceiptParser()
-            var rawText = ""
-            var multimodalResult: ReceiptMetadata? = nil
+            let broadLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
+            var multimodalResult: (metadata: ReceiptMetadata, conversion: CurrencyConversion?)? = nil
+            let rawText: String
 
             if #available(iOS 27.0, *), ReceiptParser.isMultimodalAvailable {
-                print("[AddTransactionFromScreenshotIntent] ☁️🖼️ 云端多模态解析截图")
+                print("[AddTransactionFromScreenshotIntent] ☁️🖼️ 云端多模态解析截图（并行 OCR）")
+                async let ocrText = OCRService.recognizeTextInRows(from: image, languages: broadLanguages)
                 do {
                     multimodalResult = try await parser.parseScreenshotImage(image)
                 } catch {
                     print("[AddTransactionFromScreenshotIntent] ❌ 多模态解析失败，回退 OCR 文本管线: \(error)")
                 }
-            }
-
-            let metadata: ReceiptMetadata
-            if let multimodalResult {
-                metadata = multimodalResult
+                rawText = await ocrText
             } else {
-                // OCR 文字提取（Vision）
                 // 先预热 AI 模型：权重加载与 OCR 并行，省掉后面 AI 调用的冷启动
                 parser.prewarm()
                 print("[AddTransactionFromScreenshotIntent] 🔍 开始 OCR 文字提取")
-                let broadLanguages = ["zh-Hans", "en-US", "ja-JP", "zh-Hant"]
                 rawText = await OCRService.recognizeTextInRows(from: image, languages: broadLanguages)
-                print("[AddTransactionFromScreenshotIntent] 🔍 OCR 结果:\n\(rawText)")
+            }
+            print("[AddTransactionFromScreenshotIntent] 🔍 OCR 结果:\n\(rawText)")
 
+            // conversion：同屏两种币种时云端模型标出的原币 / 入账两侧（本地模型为 nil）
+            let metadata: ReceiptMetadata
+            let conversion: CurrencyConversion?
+            if let multimodalResult {
+                metadata = OCRService.backfill(multimodalResult.metadata, rawText: rawText)
+                conversion = multimodalResult.conversion
+            } else {
                 guard !rawText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     print("[AddTransactionFromScreenshotIntent] ❌ 截图中未识别到文字内容")
                     throw NSError(
@@ -86,16 +91,15 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                 // AI 解析（独立 ReceiptParser，使用 try await 暴露错误）
                 print("[AddTransactionFromScreenshotIntent] 🤖 开始 AI 解析")
                 // 模型漏抽金额/币种时用规则兜底，避免整条快捷指令因一个 nil 字段失败
-                metadata = OCRService.backfill(
-                    try await parser.parseScreenshot(text: rawText),
-                    rawText: rawText
-                )
+                let parsed = try await parser.parseScreenshot(text: rawText)
+                metadata = OCRService.backfill(parsed.metadata, rawText: rawText)
+                conversion = parsed.conversion
             }
             print("[AddTransactionFromScreenshotIntent] 🤖 AI 解析完成: \(metadata)")
 
             // 4. 核心字段检查：只有金额是硬性要求；
             // 商户名识别失败用占位符继续走确认弹窗，用户可在弹窗里取消
-            guard let amount = metadata.totalAmount else {
+            guard let amount = metadata.totalAmount ?? conversion?.billing?.amount ?? conversion?.original?.amount else {
                 print("[AddTransactionFromScreenshotIntent] ❌ 未能从截图中识别出金额")
                 throw NSError(
                 domain: "AddTransactionFromScreenshotIntent",
@@ -116,7 +120,7 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
             return formatter.date(from: dateStr) ?? Date()
         }()
 
-            // 5. 尝试匹配信用卡（排在地区之前：识别不出币种时要按卡的发卡地区兜底）
+            // 5. 尝试匹配信用卡（排在金额拆分之前：入账币种和兜底地区都要看卡）
         let availableCards = try modelContext.fetch(FetchDescriptor<CreditCard>())
         let selectedCard: CreditCard? = {
             if let last4 = metadata.cardLast4 {
@@ -138,20 +142,19 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
             return nil
         }()
 
-            // 6. 地区：以模型给出的币种为准，没有才看全文关键词（见 OCRService.resolveRegion），
-            // 再没有就按所选卡的发卡地区（与批量导入一致）
-            let region: Region
-            if let resolved = OCRService.resolveRegion(currency: metadata.currency, rawText: rawText) {
-                region = resolved
-                print("[AddTransactionFromScreenshotIntent] 🌍 地区: \(region.rawValue)（币种 \(metadata.currency ?? "nil")）")
-            } else {
-                region = selectedCard?.issueRegion ?? .cn
-                print("[AddTransactionFromScreenshotIntent] 🌍 未识别出币种，按卡片发卡地区: \(region.rawValue)")
-            }
+            // 6. 金额与地区：拆成原币（消费地）和入账（卡币种）两组。
+            // 同屏两种币种时优先用云端模型标出的两侧，没标再从 OCR 文本里找；
+            // 只有一种币种且与卡币种不同时按汇率估算（见 RecognizedAmounts）
+            let amounts = await RecognizedAmounts.resolve(
+                totalAmount: amount,
+                currency: metadata.currency,
+                rawText: rawText,
+                card: selectedCard,
+                conversion: conversion
+            )
+            print("[AddTransactionFromScreenshotIntent] 🌍 \(amounts.location.rawValue) \(amounts.location.currencyCode) \(amounts.amount) → 入账 \(amounts.billingRegion.currencyCode) \(amounts.billingAmount)\(amounts.isBillingEstimated ? "（汇率估算）" : "")")
 
-        // 7. 计算入账金额和返现
-        // TODO: billingAmount 未做换汇，异币种消费的原始金额会直接进入以卡币种计价的上限统计
-        let billingAmount = amount
+        // 7. 计算返现：按入账金额（卡币种）+ 消费地区
         var cashback: Double = 0.0
         var pointsEarned: Int = 0
         // 奖励计算与保存必须用同一个支付方式，否则日后编辑这笔交易时奖励会被重算成另一个数
@@ -164,9 +167,9 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                     cardCurrency: card.issueRegion.currencyCode
                 )
                 let result = card.calculateCappedPoints(
-                    amount: billingAmount,
+                    amount: amounts.billingAmount,
                     category: category,
-                    location: region,
+                    location: amounts.location,
                     date: date,
                     paymentMethod: paymentMethod,
                     pointValueInCardCurrency: pointValue
@@ -175,19 +178,27 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                 pointsEarned = result.points
             } else {
                 cashback = card.calculateCappedCashback(
-                    amount: billingAmount,
+                    amount: amounts.billingAmount,
                     category: category,
-                    location: region,
+                    location: amounts.location,
                     date: date,
                     paymentMethod: paymentMethod
                 )
             }
         }
 
-            // 8. 请求用户确认
-            let currencySymbol = region.currencySymbol
+            // 8. 请求用户确认：原币和入账币种不同时两个都显示，汇率估算的入账金额标 ≈
+            let currencySymbol = amounts.location.currencySymbol
+            let amountText = String(format: "%.2f", amounts.amount)
             let cardName = selectedCard != nil ? "\(selectedCard!.bankName)尾号\(selectedCard!.endNum)" : "默认分类"
-            let confirmDialog = IntentDialog("识别出：\(merchant) \(currencySymbol)\(String(format: "%.2f", amount))\n将记入 \(cardName)，是否确认？")
+            let confirmDialog: IntentDialog
+            if amounts.billingRegion != amounts.location {
+                let billingSymbol = (amounts.isBillingEstimated ? "≈" : "") + amounts.billingRegion.currencySymbol
+                let billingText = String(format: "%.2f", amounts.billingAmount)
+                confirmDialog = IntentDialog("识别出：\(merchant) \(currencySymbol)\(amountText)（入账 \(billingSymbol)\(billingText)）\n将记入 \(cardName)，是否确认？")
+            } else {
+                confirmDialog = IntentDialog("识别出：\(merchant) \(currencySymbol)\(amountText)\n将记入 \(cardName)，是否确认？")
+            }
             print("[AddTransactionFromScreenshotIntent] 💬 请求用户确认...")
             try await requestConfirmation(result: .result(dialog: confirmDialog))
             print("[AddTransactionFromScreenshotIntent] 💬 用户已确认")
@@ -198,24 +209,23 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
             let newTransaction = Transaction(
                 merchant: merchant,
                 category: category,
-                location: region,
-                amount: amount,
+                location: amounts.location,
+                amount: amounts.amount,
                 date: date,
                 card: selectedCard,
                 receiptData: receiptData,
-                billingAmount: billingAmount,
+                billingAmount: amounts.billingAmount,
                 cashbackAmount: cashback,
                 pointsEarned: pointsEarned,
                 paymentMethod: paymentMethod,
-                // billingAmount 即原币金额，入账币种如实记为消费地币种
-                billingCurrencyCode: region.currencyCode
+                billingCurrencyCode: amounts.billingRegion.currencyCode
             )
             modelContext.insert(newTransaction)
             try modelContext.save()
 
             // 10. 返回结果
             print("[AddTransactionFromScreenshotIntent] ✅ 快捷指令执行成功！")
-            return .result(dialog: "✅ 已添加：\(merchant) – \(currencySymbol)\(String(format: "%.2f", amount))")
+            return .result(dialog: "✅ 已添加：\(merchant) – \(currencySymbol)\(amountText)")
         } catch {
             print("[AddTransactionFromScreenshotIntent] ❌ 捕获到错误: \(error.localizedDescription)")
             print("[AddTransactionFromScreenshotIntent] ❌ 详细错误: \(error)")

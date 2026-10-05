@@ -28,6 +28,26 @@ final class ThirdPartyModelTests: XCTestCase {
         )
     }
 
+    /// 支付截图 / 短信的云端 schema：前六个字段必须与 CloudReceiptMetadata 一致（PCC 验证过的顺序），
+    /// 原币 / 入账字段只能追加在后面
+    func testSchemaPreservesDeclaredPropertyOrder_CloudPayment() throws {
+        let json = try SchemaJSON.from(CloudPaymentMetadata.generationSchema)
+        XCTAssertEqual(
+            propertyNames(of: json),
+            ["merchant", "totalAmount", "currency", "dateString", "cardLast4", "category",
+             "originalAmount", "originalCurrency", "billingAmount", "billingCurrency"]
+        )
+    }
+
+    /// 原币 / 入账怎么分全靠字段描述告诉模型，描述必须真的进到发给第三方的 strict schema 里
+    func testCloudPaymentConversionGuidesReachStrictSchema() throws {
+        let strict = try SchemaJSON.from(CloudPaymentMetadata.generationSchema).openAIStrictSchema()
+        let original = strict["properties"]?["originalAmount"]?["description"]?.stringValue ?? ""
+        let billing = strict["properties"]?["billingAmount"]?["description"]?.stringValue ?? ""
+        XCTAssertTrue(original.contains("ORIGINAL currency"), original)
+        XCTAssertTrue(billing.contains("charged to the card"), billing)
+    }
+
     /// 序列化后的字节序也必须保住顺序——真正发给模型的是这串文本
     func testSerializedSchemaKeepsPropertyOrder() throws {
         let text = try SchemaJSON.from(CloudReceiptMetadata.generationSchema)

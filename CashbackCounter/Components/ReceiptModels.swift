@@ -72,6 +72,54 @@ struct CloudReceiptMetadata {
     }
 }
 
+/// ☁️ 云端支付截图 / 短信专用 schema：前六个字段与 CloudReceiptMetadata 完全一致（同样 merchant 打头），
+/// 后面追加「同屏两种币种」时的原币 / 入账两侧，由云端模型直接分清原币种和入账币种。
+/// 单独成型而不往 CloudReceiptMetadata 里加：App 内小票走的那套是 PCC 真机验证过的配方，先不动它。
+/// 本地模型不用这个类型（本地 schema 对字段很敏感，见 ReceiptMetadata 的注释）。
+@Generable
+struct CloudPaymentMetadata {
+    @Guide(description: "The name of the store or merchant.")
+    var merchant: String?
+
+    @Guide(description: "The final paid amount.")
+    var totalAmount: Double?
+
+    @Guide(description: "The currency code, one of: CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR.")
+    var currency: String?
+
+    @Guide(description: "The date of transaction in YYYY-MM-DD format.")
+    var dateString: String?
+
+    @Guide(description: "The last 4 digits of the credit card used.")
+    var cardLast4: String?
+
+    @Guide(description: "Classify the receipt into one of the categories based on the merchant and items")
+    var category: Category?
+
+    @Guide(description: "Only when the screen shows TWO different currencies (a foreign-currency purchase): the amount in the merchant's ORIGINAL currency before conversion, e.g. 8.60 in '-¥7.33 (HK$8.60)' or in '交易金额 HKD 8.60 / 入账金额 CNY 7.33'. nil when only one currency appears.")
+    var originalAmount: Double?
+
+    @Guide(description: "Currency code of originalAmount, one of: CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR. nil when only one currency appears.")
+    var originalCurrency: String?
+
+    @Guide(description: "Only when the screen shows TWO different currencies: the amount actually charged to the card in the card's billing currency, e.g. 7.33 in '-¥7.33 (HK$8.60)' or in '交易金额 HKD 8.60 / 入账金额 CNY 7.33'. nil when only one currency appears.")
+    var billingAmount: Double?
+
+    @Guide(description: "Currency code of billingAmount, one of: CNY, USD, HKD, JPY, NZD, TWD, GBP, MOP, EUR. nil when only one currency appears.")
+    var billingCurrency: String?
+
+    var asReceiptMetadata: ReceiptMetadata {
+        var metadata = ReceiptMetadata()
+        metadata.merchant = merchant
+        metadata.totalAmount = totalAmount
+        metadata.currency = currency
+        metadata.dateString = dateString
+        metadata.cardLast4 = cardLast4
+        metadata.category = category
+        return metadata
+    }
+}
+
 @Generable
 struct SMSMetadata {
     @Guide(description: "The name of the store or merchant.")
