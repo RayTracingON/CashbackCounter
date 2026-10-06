@@ -31,6 +31,7 @@
       "online",
       3
     ],
+    "memo" : "「线上消费」额外 +3%，每月加成上限 RC300（约 HK$1 万消费）",
     "bankName" : "滙豐香港",
     "defaultRate" : 1
   },
@@ -70,6 +71,7 @@
       "pulse",
       2
     ],
+    "memo" : "餐饮额外加成；内地银联合资格消费选「Pulse」支付方式；各项均有年度上限",
     "bankName" : "滙豐香港",
     "defaultRate" : 2.4
   },
@@ -102,6 +104,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "外币消费 2.4%（年度上限），本地仅 0.4%",
     "bankName" : "滙豐香港",
     "defaultRate" : 0.4
   },
@@ -135,6 +138,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "外币消费 3.6%（年度上限），本地 1.6%",
     "bankName" : "滙豐香港",
     "defaultRate" : 1.6
   },
@@ -201,6 +205,7 @@
       "online",
       200
     ],
+    "memo" : "外币消费每 HK$1 得 10.75 积分；「线上消费」每 HK$1 得 5 积分",
     "bankName" : "AMEX HK",
     "defaultRate" : 300
   },
@@ -307,6 +312,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 Chase Travel 8x 计（日常实际 1x）；航空/酒店官网直订记「交通出行」4x",
     "bankName" : "Chase",
     "defaultRate" : 100
   },
@@ -349,6 +355,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 Chase Travel 5x 计（日常实际 1x）；超市 3x 仅限网购",
     "bankName" : "Chase",
     "defaultRate" : 100
   },
@@ -390,6 +397,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按万豪酒店 6x 计（日常实际 2x）；餐饮、超市合计每年首 $6,000 享 3x",
     "bankName" : "Chase",
     "defaultRate" : 200
   },
@@ -426,6 +434,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 Chase Travel 5x 计（日常实际 1x）；季度轮换 5x 需激活，未计入",
     "bankName" : "Chase",
     "defaultRate" : 100
   },
@@ -462,6 +471,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 Chase Travel 5x 计（日常实际 1.5x）",
     "bankName" : "Chase",
     "defaultRate" : 150
   },
@@ -496,6 +506,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "航空直订及 Amex Travel 预付酒店记「交通出行」5x；打车等其他出行实际 1x",
     "bankName" : "AMEX US",
     "defaultRate" : 100
   },
@@ -534,6 +545,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按万豪酒店 6x 计（日常实际 2x）；航空直订记「交通出行」3x",
     "bankName" : "AMEX US",
     "defaultRate" : 200
   },
@@ -572,6 +584,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按万豪酒店 6x 计（日常实际 2x）；餐饮、美国超市合计每年首 $15,000 享 4x，上限未计入",
     "bankName" : "AMEX US",
     "defaultRate" : 200
   },
@@ -606,6 +619,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按万豪酒店消费计（积分翻倍）",
     "bankName" : "中信银行",
     "defaultRate" : 10
   },
@@ -644,6 +658,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按希尔顿酒店 14x 计（日常实际 3x）；航空直订、租车记「交通出行」7x",
     "bankName" : "AMEX US",
     "defaultRate" : 300
   },
@@ -682,6 +697,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按希尔顿酒店 12x 计（日常实际 3x）；超市 6x 仅限美国",
     "bankName" : "AMEX US",
     "defaultRate" : 300
   },
@@ -756,6 +772,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 IHG 酒店 10x 计（日常实际 3x）；旅行、餐饮 5x",
     "bankName" : "Chase",
     "defaultRate" : 300
   },
@@ -821,6 +838,7 @@
       "applePay",
       1
     ],
+    "memo" : "用 Apple Pay 支付时选「Apple Pay」得 2%",
     "bankName" : "Apple",
     "defaultRate" : 1
   },
@@ -895,6 +913,7 @@
       "offline",
       5
     ],
+    "memo" : "超市、线下、扫码有额外返现，均设每月上限；内地消费以人民币入账",
     "bankName" : "工銀亞洲",
     "defaultRate" : 1.5
   },
@@ -931,6 +950,7 @@
       "pulse",
       100
     ],
+    "memo" : "外币消费 12 倍积分，每月有上限",
     "bankName" : "東亞銀行",
     "defaultRate" : 100
   },
@@ -964,6 +984,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "外币消费 11.5 倍积分，每月有上限",
     "bankName" : "東亞銀行",
     "defaultRate" : 100
   },
@@ -997,6 +1018,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "外币消费 11.5 倍积分，每月有上限",
     "bankName" : "東亞銀行",
     "defaultRate" : 100
   },
@@ -1030,6 +1052,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "外币消费 10 倍积分，年度上限",
     "bankName" : "建行亞洲",
     "defaultRate" : 100
   },
@@ -1065,6 +1088,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "餐饮 5 倍积分，年度上限",
     "bankName" : "建行亞洲",
     "defaultRate" : 100
   },
@@ -1100,6 +1124,7 @@
       "gba",
       6
     ],
+    "memo" : "大湾区合资格消费选「信银gba」支付方式；本地返现每月有上限；外币仅 0.4%",
     "bankName" : "信銀國際",
     "defaultRate" : 4
   },
@@ -1165,6 +1190,7 @@
       "applePay",
       1
     ],
+    "memo" : "Apple Pay 额外 1%；外币消费 3%，每月上限",
     "bankName" : "农业银行",
     "defaultRate" : 0.1
   },
@@ -1201,6 +1227,7 @@
       "applePay",
       2
     ],
+    "memo" : "外币消费入美元账户 3%，每月上限；Apple Pay 额外 2%",
     "bankName" : "农业银行",
     "defaultRate" : 0.1
   },
@@ -1233,6 +1260,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "仅外币消费有 3% 返现",
     "bankName" : "工商银行",
     "defaultRate" : 0
   },
@@ -1269,6 +1297,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "餐饮、酒店直订（记「交通出行」）HK$4=1里，仅限港币入账；外币 HK$4=1里；其余 HK$6=1里",
     "bankName" : "渣打香港",
     "defaultRate" : 16.666666666666668
   },
@@ -1305,6 +1334,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "AA 消费记「交通出行」4x；「其他消费」按 aa.com 订酒店/租车 12x 计（日常实际 1x）",
     "bankName" : "Citi",
     "defaultRate" : 100
   },
@@ -1339,6 +1369,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 Capital One Travel 订酒店/租车 10x 计（日常实际 2x）；门户机票实际 5x",
     "bankName" : "Capital One",
     "defaultRate" : 200
   },
@@ -1375,6 +1406,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「交通出行」含打车、公交、停车等，与餐饮同享 3x",
     "bankName" : "AMEX US",
     "defaultRate" : 100
   },
@@ -1416,6 +1448,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "餐饮每年首 $5 万、美国超市首 $2.5 万享 4x；航空直订记「交通出行」3x",
     "bankName" : "AMEX US",
     "defaultRate" : 100
   },
@@ -1484,6 +1517,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按万豪酒店 6x 计（日常实际 2x）；美国加油、电信、寄件 4x 未计入",
     "bankName" : "AMEX US",
     "defaultRate" : 200
   },
@@ -1522,6 +1556,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按万豪酒店 6x 计（日常实际 2x）；机票直订、租车记「交通出行」3x",
     "bankName" : "Chase",
     "defaultRate" : 200
   },
@@ -1623,6 +1658,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 United 消费 2x 计（日常实际 1x）；酒店直订记「交通出行」2x",
     "bankName" : "Chase",
     "defaultRate" : 100
   },
@@ -1663,6 +1699,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 United 消费 4x 计（日常实际 1x）；其他旅行、餐饮、流媒体 2x",
     "bankName" : "Chase",
     "defaultRate" : 100
   },
@@ -1700,6 +1737,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 United 消费 5x 计（日常实际 1x）；其他旅行、餐饮 2x",
     "bankName" : "Chase",
     "defaultRate" : 100
   },
@@ -1736,6 +1774,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 United 消费 2x 计（日常实际 1x）；加油、公共交通记「交通出行」2x",
     "bankName" : "Chase",
     "defaultRate" : 100
   },
@@ -1775,6 +1814,7 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 Capital One Travel 订酒店/租车 5% 计（日常实际 1%）；娱乐 3% 未计入",
     "bankName" : "Capital One",
     "defaultRate" : 1
   },
@@ -1807,7 +1847,227 @@
     "paymentMethodRates" : [
 
     ],
+    "memo" : "「其他消费」按 Capital One Travel 订酒店/租车 5% 计（日常实际 1.5%）",
     "bankName" : "Capital One",
     "defaultRate" : 1.5
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "other",
+      375
+    ],
+    "type" : "VentureOne",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "capital one|miles|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "2B4A6B",
+      "7FA3C0"
+    ],
+    "foreignCurrencyRate" : 125,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "「其他消费」按 Capital One Travel 订酒店/租车 5x 计（日常实际 1.25x）",
+    "bankName" : "Capital One",
+    "defaultRate" : 125
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "dining",
+      100,
+      "travel",
+      100,
+      "other",
+      300
+    ],
+    "pictureURL" : "chasehyatt",
+    "type" : "World of Hyatt",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "hyatt|point|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "5E5F60",
+      "959596"
+    ],
+    "foreignCurrencyRate" : 100,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "「其他消费」按 Hyatt 酒店 4x 计（日常实际 1x）；航空、本地交通记「交通出行」2x",
+    "bankName" : "Chase",
+    "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "travel",
+      100,
+      "grocery",
+      100
+    ],
+    "pictureURL" : "citiaamileup",
+    "type" : "AAdvantage MileUp",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "american airlines|aadvantage|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "2B4A51",
+      "4A757E"
+    ],
+    "foreignCurrencyRate" : 100,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "AA 消费记「交通出行」2x；有外币手续费",
+    "bankName" : "Citi",
+    "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "travel",
+      200,
+      "dining",
+      100,
+      "other",
+      500
+    ],
+    "type" : "AAdvantage Globe",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "american airlines|aadvantage|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "1B2A3A",
+      "4D6478"
+    ],
+    "foreignCurrencyRate" : 100,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "「其他消费」按 AAdvantage Hotels 6x 计（日常实际 1x）；AA 消费记「交通出行」3x，打车/轨交实际 2x",
+    "bankName" : "Citi",
+    "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+      "travel",
+      100,
+      "dining",
+      100
+    ],
+    "pictureURL" : "chaseaaplat",
+    "type" : "AAdvantage Platinum Select",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "american airlines|aadvantage|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "828283",
+      "9E9E9E"
+    ],
+    "foreignCurrencyRate" : 100,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "AA 消费及加油记「交通出行」2x",
+    "bankName" : "Citi",
+    "defaultRate" : 100
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "amexchecking",
+    "type" : "Rewards Checking",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "amex us|mr|usd",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "575A5D",
+      "848484"
+    ],
+    "foreignCurrencyRate" : 50,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "借记卡：每 $2 消费得 1 MR",
+    "bankName" : "AMEX US",
+    "defaultRate" : 50
   }
 ]
