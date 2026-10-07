@@ -882,14 +882,14 @@
     },
     "specialRate" : [
       "grocery",
-      9
+      15
     ],
     "pictureURL" : "icbcasiagba",
     "type" : "粵港澳灣區信用卡",
     "foreignBaseCap" : 0,
     "categoryCaps" : [
       "grocery",
-      190
+      300
     ],
     "localBaseCap" : 0,
     "rewardType" : "cashback",
@@ -913,7 +913,7 @@
       "offline",
       5
     ],
-    "memo" : "超市、线下、扫码有额外返现，均设每月上限；内地消费以人民币入账",
+    "memo" : "内地消费5%单笔需大于1000，海外需大于10000；内地消费以人民币入账",
     "bankName" : "工銀亞洲",
     "defaultRate" : 1.5
   },
@@ -1058,30 +1058,28 @@
   },
   {
     "capPeriod" : {
-      "yearly" : {
+      "monthly" : {
 
       }
     },
     "specialRate" : [
-      "dining",
-      400
+
     ],
     "pictureURL" : "ccbeye",
     "type" : "eye",
     "foreignBaseCap" : 0,
     "localBaseCap" : 0,
     "categoryCaps" : [
-      "dining",
-      300000
+
     ],
     "rewardType" : "points",
     "pointProgramKey" : "ccb hk|point|hkd",
     "region" : "香港",
     "paymentCaps" : [
       "applePay",
-      96000,
+      52000,
       "online",
-      96000
+      52000
     ],
     "colors" : [
       "002B5C",
@@ -1090,11 +1088,11 @@
     "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
       "applePay",
-      750,
+      650,
       "online",
-      750
+      650
     ],
-    "memo" : "餐饮 5 倍积分，年度上限",
+    "memo" : "网上AP签账需要每月消费满3000HKD，网上签账额外享受2%",
     "bankName" : "建行亞洲",
     "defaultRate" : 100
   },
@@ -1231,15 +1229,15 @@
     "foreignCurrencyRate" : 3,
     "paymentMethodRates" : [
       "applePay",
-      2
+      3
     ],
-    "memo" : "外币消费入美元账户 3%，每月上限；Apple Pay 额外 2%",
+    "memo" : "外币消费入美元账户 3%，每月上限；境外Apple Pay 额外 3%",
     "bankName" : "农业银行",
     "defaultRate" : 0.1
   },
   {
     "capPeriod" : {
-      "yearly" : {
+      "monthly" : {
 
       }
     },
@@ -1248,7 +1246,7 @@
     ],
     "pictureURL" : "icbcsafari",
     "type" : "牡丹祥运信用卡",
-    "foreignBaseCap" : 0,
+    "foreignBaseCap" : 225,
     "categoryCaps" : [
 
     ],
