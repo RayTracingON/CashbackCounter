@@ -1078,7 +1078,10 @@
     "pointProgramKey" : "ccb hk|point|hkd",
     "region" : "香港",
     "paymentCaps" : [
-
+      "applePay",
+      96000,
+      "online",
+      96000
     ],
     "colors" : [
       "002B5C",
@@ -1086,7 +1089,10 @@
     ],
     "foreignCurrencyRate" : 100,
     "paymentMethodRates" : [
-
+      "applePay",
+      750,
+      "online",
+      750
     ],
     "memo" : "餐饮 5 倍积分，年度上限",
     "bankName" : "建行亞洲",
