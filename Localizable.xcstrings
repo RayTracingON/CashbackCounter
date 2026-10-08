@@ -1151,6 +1151,22 @@
         }
       }
     },
+    "App 版本" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Version"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App 版本"
+          }
+        }
+      }
+    },
     "Apple ID" : {
       "localizations" : {
         "en" : {
@@ -2004,6 +2020,22 @@
         }
       }
     },
+    "不确定" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Sure"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不確定"
+          }
+        }
+      }
+    },
     "主货币" : {
       "localizations" : {
         "en" : {
@@ -2647,6 +2679,22 @@
         }
       }
     },
+    "例如：餐饮 5%、超市 3%、其他 1%，每月上限 500。附上官网或条款链接会更快收录。\n\n提交时会附带 App 版本、系统版本和设备型号，便于排查问题。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: 5% dining, 3% groceries, 1% everything else, capped at 500 a month. A link to the official page or terms helps us add it faster.\n\nYour app version, iOS version and device model are included to help with troubleshooting."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如：餐飲 5%、超市 3%、其他 1%，每月上限 500。附上官網或條款連結會更快收錄。\n\n提交時會附帶 App 版本、系統版本和裝置型號，便於排查問題。"
+          }
+        }
+      }
+    },
     "保存" : {
       "localizations" : {
         "en" : {
@@ -3107,6 +3155,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "關閉"
+          }
+        }
+      }
+    },
+    "其他" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他"
           }
         }
       }
@@ -3632,6 +3696,22 @@
         }
       }
     },
+    "卡片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片"
+          }
+        }
+      }
+    },
     "卡片%@占比" : {
       "localizations" : {
         "en" : {
@@ -3644,6 +3724,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "卡片%@佔比"
+          }
+        }
+      }
+    },
+    "卡片名称，如 Freedom Flex" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card name, e.g. Freedom Flex"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片名稱，如 Freedom Flex"
           }
         }
       }
@@ -3704,6 +3800,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "雙幣卡"
+          }
+        }
+      }
+    },
+    "反馈内容" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Feedback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回饋內容"
+          }
+        }
+      }
+    },
+    "发卡地区" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuing Region"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發卡地區"
           }
         }
       }
@@ -3936,6 +4064,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "圖片編碼失敗"
+          }
+        }
+      }
+    },
+    "在「从模板添加」里找不到你的卡？告诉我们是哪张，收录后就能直接从模板添加。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't find your card in “Add from Template”? Tell us which one it is. Once we add it, you can add it straight from a template."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「從模板添加」裡找不到你的卡？告訴我們是哪張，收錄後就能直接從模板添加。"
           }
         }
       }
@@ -4275,6 +4419,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "好的"
+          }
+        }
+      }
+    },
+    "完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
           }
         }
       }
@@ -4954,6 +5114,22 @@
         }
       }
     },
+    "已收到你的建议" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggestion Received"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已收到你的建議"
+          }
+        }
+      }
+    },
     "已登录" : {
       "localizations" : {
         "en" : {
@@ -4966,6 +5142,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已登入"
+          }
+        }
+      }
+    },
+    "已登录，反馈会记在你的账号下。留下联系方式方便我们回复你。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're signed in, so this feedback is linked to your account. Leave a contact if you'd like a reply."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已登入，回饋會記在你的帳號下。留下聯絡方式方便我們回覆你。"
           }
         }
       }
@@ -5066,6 +5258,22 @@
         }
       }
     },
+    "希望增加或改进什么？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What would you like us to add or improve?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "希望增加或改進什麼？"
+          }
+        }
+      }
+    },
     "常规" : {
       "localizations" : {
         "en" : {
@@ -5121,6 +5329,22 @@
         }
       }
     },
+    "建议" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggestion"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建議"
+          }
+        }
+      }
+    },
     "建议在更新版本前，提前在设置页将全部数据导出并保存" : {
       "localizations" : {
         "en" : {
@@ -5133,6 +5357,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "建議在更新版本前，提前在設定頁將全部資料匯出並儲存"
+          }
+        }
+      }
+    },
+    "建议收录新卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest a Card"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建議收錄新卡"
           }
         }
       }
@@ -5479,6 +5719,54 @@
         }
       }
     },
+    "想对我们说点什么？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What's on your mind?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "想對我們說點什麼？"
+          }
+        }
+      }
+    },
+    "意见反馈" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "意見回饋"
+          }
+        }
+      }
+    },
+    "感谢你的反馈" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks for Your Feedback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感謝你的回饋"
+          }
+        }
+      }
+    },
     "我们只用 Apple ID 做身份识别，不获取你的通讯录或其他资料。" : {
       "localizations" : {
         "en" : {
@@ -5491,6 +5779,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "我們只用 Apple ID 做身分識別，不取得你的通訊錄或其他資料。"
+          }
+        }
+      }
+    },
+    "我们已经收到，会认真看每一条。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We've received it, and we read every message."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我們已經收到，會認真看每一則。"
           }
         }
       }
@@ -5942,6 +6246,54 @@
         }
       }
     },
+    "提交" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Submit"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提交"
+          }
+        }
+      }
+    },
+    "提交太频繁了，请稍后再试" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many submissions. Please try again later."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提交太頻繁了，請稍後再試"
+          }
+        }
+      }
+    },
+    "提交新卡建议需要先登录，只用于识别提交者、防止重复和滥用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to suggest a card. Your Apple ID is only used to tell who sent it and to prevent duplicates and spam."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提交新卡建議需要先登入，只用於識別提交者、防止重複和濫用。"
+          }
+        }
+      }
+    },
     "搜索商户" : {
       "localizations" : {
         "en" : {
@@ -6216,6 +6568,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收入金額"
+          }
+        }
+      }
+    },
+    "收录后会出现在「从模板添加」的列表里。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once it's added, it will show up in “Add from Template”."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收錄後會出現在「從模板添加」的列表裡。"
           }
         }
       }
@@ -7252,6 +7620,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未找到結果"
+          }
+        }
+      }
+    },
+    "未登录时匿名提交。如果希望收到回复，请留下联系方式。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're not signed in, so this is sent anonymously. Leave a contact if you'd like a reply."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未登入時匿名提交。如果希望收到回覆，請留下聯絡方式。"
           }
         }
       }
@@ -9144,6 +9528,22 @@
         }
       }
     },
+    "系统" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統"
+          }
+        }
+      }
+    },
     "线上消费" : {
       "localizations" : {
         "en" : {
@@ -9633,6 +10033,22 @@
         }
       }
     },
+    "联系方式（选填）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact (Optional)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聯絡方式（選填）"
+          }
+        }
+      }
+    },
     "自动（推荐）" : {
       "localizations" : {
         "en" : {
@@ -10107,6 +10523,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記一筆"
+          }
+        }
+      }
+    },
+    "设备" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "裝置"
           }
         }
       }
@@ -10833,6 +11265,22 @@
         }
       }
     },
+    "返现信息（选填）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rewards (Optional)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返現資訊（選填）"
+          }
+        }
+      }
+    },
     "返现分析" : {
       "localizations" : {
         "en" : {
@@ -10845,6 +11293,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "返現分析"
+          }
+        }
+      }
+    },
+    "返现或积分规则" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cashback or points rules"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返現或積分規則"
           }
         }
       }
@@ -10925,6 +11389,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "還沒有選擇服務商，目前仍使用本機模型"
+          }
+        }
+      }
+    },
+    "这些信息用于排查问题，不包含任何个人信息或账单数据。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is only used for troubleshooting and contains no personal information or transaction data."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這些資訊用於排查問題，不包含任何個人資訊或帳單資料。"
           }
         }
       }
@@ -11447,6 +11927,38 @@
         }
       }
     },
+    "遇到了什么问题？在哪一步出现的？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What went wrong, and what were you doing when it happened?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "遇到了什麼問題？在哪一步出現的？"
+          }
+        }
+      }
+    },
+    "邮箱或其他联系方式" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email or other contact"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "電子郵件或其他聯絡方式"
+          }
+        }
+      }
+    },
     "配合操作按钮，一键截屏并自动入账" : {
       "localizations" : {
         "en" : {
@@ -11610,6 +12122,22 @@
         }
       }
     },
+    "银行，如 Chase、招商银行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bank, e.g. Chase or HSBC"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "銀行，如 Chase、滙豐"
+          }
+        }
+      }
+    },
     "银行一有新交易就推送提醒" : {
       "localizations" : {
         "en" : {
@@ -11690,6 +12218,22 @@
         }
       }
     },
+    "问题" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issue"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "問題"
+          }
+        }
+      }
+    },
     "隐私政策" : {
       "localizations" : {
         "en" : {
@@ -11702,6 +12246,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "隱私政策"
+          }
+        }
+      }
+    },
+    "随反馈附带" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent with Your Feedback"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隨回饋附帶"
           }
         }
       }
@@ -11734,6 +12294,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要先登入"
+          }
+        }
+      }
+    },
+    "需要登录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-In Required"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要登入"
           }
         }
       }

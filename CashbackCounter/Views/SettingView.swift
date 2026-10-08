@@ -336,6 +336,11 @@ struct SettingsView: View {
                             }
                         }
 
+                        // 提交到自建后端；不要求登录，未登录时匿名提交
+                        NavigationLink(destination: FeedbackView()) {
+                            Label("意见反馈", systemImage: "envelope")
+                        }
+
                         NavigationLink(destination: DeveloperView()) {
                             Label("开发者/贡献者", systemImage: "person.crop.circle")
                         }

@@ -1352,7 +1352,7 @@
       "other",
       800
     ],
-    "pictureURL" : "CapitalOneVentureX",
+    "pictureURL" : "c1vx",
     "type" : "Venture X",
     "foreignBaseCap" : 0,
     "localBaseCap" : 0,
@@ -1887,7 +1887,8 @@
     ],
     "memo" : "「其他消费」按 Capital One Travel 订酒店/租车 5x 计（日常实际 1.25x）",
     "bankName" : "Capital One",
-    "defaultRate" : 125
+    "defaultRate" : 125,
+    "pictureURL" : "c1ventureone"
   },
   {
     "capPeriod" : {

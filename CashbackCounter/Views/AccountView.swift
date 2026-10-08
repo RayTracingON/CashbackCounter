@@ -146,6 +146,63 @@ struct SignInView: View {
     }
 }
 
+// MARK: - 嵌在表单里的登录按钮
+
+/// 不弹整页、直接嵌进表单的「通过 Apple 登录」。
+///
+/// 和 SignInView 走的是同一条路：nonce 由 AppleSignInCoordinator 生成，
+/// 凭据交给 AuthService 换会话 token —— 改登录流程时两处要一起看。
+/// 区别只在于用户正在填一张表（比如「建议收录新卡」），登录完应该留在原地接着填。
+/// 登录成功后 AuthService.isSignedIn 变 true，调用方据此把这个按钮收起来。
+struct InlineSignInButton: View {
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    @State private var auth = AuthService.shared
+    @State private var errorMessage: String?
+    /// 本次授权请求的 nonce 原文，在 request 回调里生成、completion 回调里用掉
+    @State private var rawNonce: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SignInWithAppleButton(.signIn) { request in
+                rawNonce = AppleSignInCoordinator.prepare(request)
+            } onCompletion: { result in
+                Task { await handle(result) }
+            }
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            .frame(height: 44)
+            .disabled(auth.isBusy)
+            .opacity(auth.isBusy ? 0.5 : 1)
+
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func handle(_ result: Result<ASAuthorization, Error>) async {
+        errorMessage = nil
+
+        switch result {
+        case .failure(let error):
+            // 用户主动取消不是错误，不显示任何东西
+            if case .canceled = AppleSignInCoordinator.mapError(error) { return }
+            errorMessage = AppleSignInCoordinator.mapError(error).localizedDescription
+
+        case .success(let authorization):
+            do {
+                try await auth.completeSignIn(with: authorization, rawNonce: rawNonce)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
 // MARK: - 设置页里的账号区
 
 /// 直接嵌进 SettingsView 的 List 里的一个 Section。

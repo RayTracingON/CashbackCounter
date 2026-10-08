@@ -146,7 +146,7 @@ final class PlaidAPIClient {
         try await send(method: "DELETE", path: path, query: query, body: Optional<Never>.none).value
     }
 
-    /// 免认证端点专用（目前只有 POST /api/auth/apple）。
+    /// 免认证端点专用：POST /api/auth/apple，以及未登录时的 POST /api/feedback（匿名反馈）。
     /// 单独开一个入口而不是给 send 加参数，是为了让「哪些请求不带凭据」
     /// 在调用处一眼可见，不会被默认值悄悄改变。
     func postUnauthenticated<Body: Encodable, Response: Decodable>(

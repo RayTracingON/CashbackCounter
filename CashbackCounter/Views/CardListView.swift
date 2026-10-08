@@ -13,6 +13,8 @@ import UniformTypeIdentifiers
 enum SheetType: Identifiable {
     case template
     case custom
+    /// 「建议收录新卡」：模板库里找不到自己的卡时的出口
+    case cardRequest
     var id: Int { hashValue }
 }
 
@@ -364,6 +366,13 @@ struct CardListView: View {
                             } label: {
                                 Label("导入卡片", systemImage: "square.and.arrow.down")
                             }
+
+                            Divider()
+
+                            // 模板库里没有自己的卡时，报给开发者，收录后就能从模板添加
+                            Button(action: { viewModel.activeSheet = .cardRequest }) {
+                                Label("建议收录新卡", systemImage: "plus.bubble")
+                            }
                         }
                         label: {
                             Image(systemName: "ellipsis.circle.fill").font(.system(size: 24))
@@ -398,6 +407,7 @@ struct CardListView: View {
                 switch type {
                 case .template: CardTemplateListView(rootSheet: $viewModel.activeSheet)
                 case .custom: AddCardView()
+                case .cardRequest: CardRequestView()
                 }
             }
             .sheet(isPresented: Binding(
