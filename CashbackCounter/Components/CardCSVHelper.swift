@@ -5,7 +5,7 @@ import SwiftData
 struct CardCSVHelper {
     
     // 👇 1. 修改表头：末尾增加双币卡三列
-    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限,上限周期(monthly/yearly),还款日,支付方式加成(代码:rate),支付方式上限(代码:cap),奖励类型,积分名称,积分银行,备注,副币种地区,双币模式,副币费率(%)"
+    static let header = "银行名称,卡种名称,尾号,颜色1(Hex),颜色2(Hex),地区(Code),本币返现率(%),外币返现率(%),本币上限,外币上限,餐饮加成(%),超市加成(%),出行加成(%),数码加成(%),其他加成(%),餐饮上限,超市上限,出行上限,数码上限,其他上限,上限周期(monthly/yearly),还款日,支付方式加成(代码:rate),支付方式上限(代码:cap),奖励类型,积分名称,积分银行,备注,副币种地区,双币模式,副币费率(%),积分价值,积分币种"
     
     // MARK: - 导出逻辑 (生成字符串)
     static func generateCSV(from cards: [CreditCard]) -> String {
@@ -63,8 +63,11 @@ struct CardCSVHelper {
             }.joined(separator: "|")
             
             let rewardTypeStr = card.rewardType.rawValue
-            let pointName = card.pointProgram?.pointName ?? ""
-            let pointBank = card.pointProgram?.bankName ?? ""
+            let pointName = (card.pointProgram?.pointName ?? "").replacingOccurrences(of: ",", with: "，")
+            let pointBank = (card.pointProgram?.bankName ?? "").replacingOccurrences(of: ",", with: "，")
+            // 估值和币种不导出的话，积分卡导回来 pointProgram 是空的，之后每笔记账奖励都是 0
+            let pointValueStr = card.pointProgram.map { String(format: "%.8f", $0.pointValue) } ?? ""
+            let pointCurrencyStr = card.pointProgram?.valueCurrencyCode.currencyCode ?? ""
 
             // 👇 新增：备注
             let memoStr = card.memo.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: ",", with: "，")
@@ -74,7 +77,7 @@ struct CardCSVHelper {
             let dualModeStr = card.secondaryRegion != nil ? card.dualCurrencyMode.rawValue : ""
             let secRateStr = card.secondaryRate != nil ? String(format: "%.2f", card.secondaryRate! * 100) : ""
 
-            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap),\(capPeriodStr),\(rDay),\(pmRatesStr),\(pmCapsStr),\(rewardTypeStr),\(pointName),\(pointBank),\(memoStr),\(secRegionStr),\(dualModeStr),\(secRateStr)\n"
+            let row = "\(bank),\(type),\(endNum),\(c1),\(c2),\(region),\(defRate),\(forRate),\(locCap),\(forCap),\(diningRate),\(groceryRate),\(travelRate),\(digitalRate),\(otherRate),\(diningCap),\(groceryCap),\(travelCap),\(digitalCap),\(otherCap),\(capPeriodStr),\(rDay),\(pmRatesStr),\(pmCapsStr),\(rewardTypeStr),\(pointName),\(pointBank),\(memoStr),\(secRegionStr),\(dualModeStr),\(secRateStr),\(pointValueStr),\(pointCurrencyStr)\n"
             csvString.append(row)
         }
         return csvString
@@ -100,6 +103,8 @@ struct CardCSVHelper {
         let dualModeIdx = headerColumns.firstIndex { $0.contains("双币模式") }
         let secRateIdx = headerColumns.firstIndex { $0.contains("副币费率") }
         let hasDualColumns = secRegionIdx != nil
+        let pointValueIdx = headerColumns.firstIndex { $0.contains("积分价值") }
+        let pointCurrencyIdx = headerColumns.firstIndex { $0.contains("积分币种") }
 
 
         for (index, row) in rows.enumerated() {
@@ -207,34 +212,51 @@ struct CardCSVHelper {
                 secondaryRate = r / 100.0
             }
 
-            // 旧版无双币列的 CSV 才走这段积分解析：新版 CSV 的 28+ 列是双币字段，会被误读成积分数据
-            if rewardType == .points, !hasDualColumns, columns.count >= 29 {
-                let pointName = columns[25].trimmingCharacters(in: .whitespacesAndNewlines)
-                let pointBank = columns[26].trimmingCharacters(in: .whitespacesAndNewlines)
-                let pointValue = Double(columns[27]) ?? 0
-                let pointCurrencyIndex = columns.count > 29 ? 29 : 28
-                let pointCurrency = columns[pointCurrencyIndex].trimmingCharacters(in: .whitespacesAndNewlines)
-                
-                if !pointName.isEmpty, !pointCurrency.isEmpty {
-                    let pointRegion = Self.region(from: pointCurrency)
-                    let key = pointKey(
-                        bankName: pointBank,
-                        pointName: pointName,
-                        currencyCode: pointRegion.currencyCode,
-                        pointValue: pointValue
-                    )
-                    if let existing = pointMap[key] {
-                        pointProgram = existing
-                    } else if pointValue > 0 {
-                        let newPoint = Point(
+            if rewardType == .points {
+                // 积分名称 / 积分银行固定在第 26、27 列（新旧版一样）；估值和币种按表头定位（新版才有）。
+                // 更早的旧版（无双币列）把估值和币种放在第 28 / 29 列。
+                let pointName = columns.count > 25 ? columns[25].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+                let pointBank = columns.count > 26 ? columns[26].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+                var pointValue: Double = 0
+                var pointCurrency = ""
+                if let vi = pointValueIdx, let ci = pointCurrencyIdx, columns.count > max(vi, ci) {
+                    pointValue = Double(columns[vi]) ?? 0
+                    pointCurrency = columns[ci].trimmingCharacters(in: .whitespacesAndNewlines)
+                } else if !hasDualColumns, columns.count >= 29 {
+                    pointValue = Double(columns[27]) ?? 0
+                    let pointCurrencyIndex = columns.count > 29 ? 29 : 28
+                    pointCurrency = columns[pointCurrencyIndex].trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+
+                if !pointName.isEmpty {
+                    if !pointCurrency.isEmpty, pointValue > 0 {
+                        let pointRegion = Self.region(from: pointCurrency)
+                        let key = pointKey(
                             bankName: pointBank,
                             pointName: pointName,
-                            pointValue: pointValue,
-                            valueCurrencyCode: pointRegion
+                            currencyCode: pointRegion.currencyCode,
+                            pointValue: pointValue
                         )
-                        context.insert(newPoint)
-                        pointMap[key] = newPoint
-                        pointProgram = newPoint
+                        if let existing = pointMap[key] {
+                            pointProgram = existing
+                        } else {
+                            let newPoint = Point(
+                                bankName: pointBank,
+                                pointName: pointName,
+                                pointValue: pointValue,
+                                valueCurrencyCode: pointRegion
+                            )
+                            context.insert(newPoint)
+                            pointMap[key] = newPoint
+                            pointProgram = newPoint
+                        }
+                    } else {
+                        // 没有估值 / 币种列（本版本之前导出的 CSV）：按名称 + 银行找积分库里已有的计划。
+                        // 之前这种情况直接留空，积分卡导入后 pointProgram 为 nil，之后每笔记账奖励都是 0
+                        pointProgram = points.first {
+                            $0.pointName.caseInsensitiveCompare(pointName) == .orderedSame
+                                && $0.bankName.caseInsensitiveCompare(pointBank) == .orderedSame
+                        }
                     }
                 }
             }

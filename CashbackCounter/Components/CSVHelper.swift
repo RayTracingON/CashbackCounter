@@ -35,7 +35,10 @@ struct CSVHelper {
     }
     
     // MARK: - 导入交易逻辑
-    static func importBackupZip(url: URL, context: ModelContext, allCards: [CreditCard]) throws {
+
+    /// 返回这次导入涉及的交易（新建的和去重时对上的已有交易），调用方据此重算奖励
+    @discardableResult
+    static func importBackupZip(url: URL, context: ModelContext, allCards: [CreditCard]) throws -> [Transaction] {
         let fileManager = FileManager.default
         let tempDir = fileManager.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         
@@ -71,6 +74,25 @@ struct CSVHelper {
             let incomeContent = try String(contentsOf: incomeURL, encoding: .utf8)
             parseIncomeCSV(content: incomeContent, context: context, transactions: createdTransactions)
         }
+        return createdTransactions
+    }
+
+    /// 类别列兼容三种写法：rawValue（新版导出）、当前语言的显示名、以及任一已打包语言的显示名。
+    /// 之前只认当前语言的显示名：中文界面导出、英文界面导入，每一行都归到「其他」。
+    static func categoryLookup() -> [String: Category] {
+        var map: [String: Category] = [:]
+        let bundles: [Bundle] = Bundle.main.localizations.compactMap { lang in
+            Bundle.main.path(forResource: lang, ofType: "lproj").flatMap { Bundle(path: $0) }
+        }
+        for category in Category.allCases {
+            map[category.rawValue] = category
+            map[category.displayNameKey] = category
+            map[category.displayName] = category
+            for bundle in bundles {
+                map[bundle.localizedString(forKey: category.displayNameKey, value: nil, table: nil)] = category
+            }
+        }
+        return map
     }
 
     // MARK: - 导入 CSV 核心逻辑 (已更新支持 PaymentMethod)
@@ -78,7 +100,7 @@ struct CSVHelper {
         let rows = content.components(separatedBy: .newlines)
         var createdTransactions: [Transaction] = []
         
-        let categoryMap: [String: Category] = Dictionary(uniqueKeysWithValues: Category.allCases.map { ($0.displayName, $0) })
+        let categoryMap = categoryLookup()
         let regionMap: [String: Region] = Dictionary(uniqueKeysWithValues: Region.allCases.map { ($0.rawValue, $0) })
         
         // 去重：按 (商户, 日期, 金额, 入账金额, 卡) 做**数量对齐**，而不是"存在即跳过"。
@@ -170,9 +192,23 @@ struct CSVHelper {
                 let code = columns[11].trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
                 if !code.isEmpty { billingCurrencyCode = code }
             }
+
+            // 来源 / 去重ID (索引 12、13)。不还原的话恢复备份后全是 .manual：
+            // Plaid 数量对齐只数 .plaid，窗口内每一笔都会再插一遍；dedupeID 换新值后
+            // CloudKit 上的原记录和恢复出来的也无法再被合并。
+            var source: TransactionSource = .manual
+            if columns.count > 12,
+               let parsed = TransactionSource(rawValue: columns[12].trimmingCharacters(in: .whitespacesAndNewlines)) {
+                source = parsed
+            }
+            var importedDedupeID: String? = nil
+            if columns.count > 13 {
+                let id = columns[13].trimmingCharacters(in: .whitespacesAndNewlines)
+                if !id.isEmpty { importedDedupeID = id }
+            }
             
             let date = dateStr.toDate()
-            let category = categoryMap[categoryName] ?? .other
+            let category = categoryMap[categoryName.trimmingCharacters(in: .whitespacesAndNewlines)] ?? .other
             let cleanRegionName = regionName.trimmingCharacters(in: .whitespacesAndNewlines)
             let region = regionMap[cleanRegionName] ?? .cn
             
@@ -200,12 +236,16 @@ struct CSVHelper {
                 cashbackAmount: cashback,
                 pointsEarned: pointsEarned,
                 paymentMethod: paymentMethod, // 👈 写入数据库
-                billingCurrencyCode: billingCurrencyCode
+                billingCurrencyCode: billingCurrencyCode,
+                source: source
             )
             // 旧版 CSV 无入账币种列：保持 nil，读取时走 resolvedBillingCurrencyCode 启发式
             // (init 会按卡片规则自动填充，但对未换汇的旧数据会填错，必须显式清掉)
             if billingCurrencyCode == nil {
                 newTransaction.billingCurrencyCode = nil
+            }
+            if let importedDedupeID {
+                newTransaction.dedupeID = importedDedupeID
             }
 
             context.insert(newTransaction)
@@ -336,14 +376,15 @@ extension Array where Element == Transaction {
     
     func generateCSV() -> String {
         // 入账/返现金额随入账币种计价 (双币卡可能是副币种)，末尾的 "入账币种" 列记录实际币种
-        var csvString = "交易时间,商户名称,消费类别,消费金额(原币),入账金额,返现金额,支付卡片,卡片尾号,消费地区,支付方式,积分数,入账币种\n"
+        var csvString = "交易时间,商户名称,消费类别,消费金额(原币),入账金额,返现金额,支付卡片,卡片尾号,消费地区,支付方式,积分数,入账币种,来源,去重ID\n"
 
         for t in self {
             let date = t.dateString
             let safeMerchant = t.merchant.replacingOccurrences(of: "\"", with: "\"\"")
             let merchant = "\"\(safeMerchant)\""
 
-            let category = t.category.displayName
+            // 用 rawValue 而不是显示名：显示名随界面语言变，换语言后导不回来
+            let category = t.category.rawValue
             let amount = String(format: "%.2f", t.amount)
             let billing = String(format: "%.2f", t.billingAmount)
             let cashback = String(format: "%.2f", t.cashbackamount)
@@ -356,7 +397,10 @@ extension Array where Element == Transaction {
             // 用 resolved 值导出，旧数据 (nil) 也能写出启发式推断的正确币种
             let billingCurrency = t.resolvedBillingCurrencyCode
 
-            let row = "\(date),\(merchant),\(category),\(amount),\(billing),\(cashback),\(cardName),\(cardNumber),\(region),\(paymentMethod),\(pointsEarned),\(billingCurrency)\n"
+            let source = t.source.rawValue
+            let dedupeID = t.dedupeID.replacingOccurrences(of: ",", with: "")
+
+            let row = "\(date),\(merchant),\(category),\(amount),\(billing),\(cashback),\(cardName),\(cardNumber),\(region),\(paymentMethod),\(pointsEarned),\(billingCurrency),\(source),\(dedupeID)\n"
             csvString.append(row)
         }
         return csvString

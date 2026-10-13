@@ -145,7 +145,7 @@ struct TransactionDetailView: View {
                 // MARK: - 4. 返现分析
                 Section("返现分析") {
                     let isPoints = transaction.card?.rewardType == .points
-                    let rewardCurrency = transaction.resolvedBillingCurrencyCode
+                    let rewardCurrency = transaction.rewardCurrencyCode
                     
                     HStack {
                         Label {
@@ -164,7 +164,8 @@ struct TransactionDetailView: View {
                         DetailRow(title: "积分数", value: String(transaction.pointsEarned), icon: "star.circle")
                     }
                     
-                    if transaction.billingAmount > 0 {
+                    // 奖励币种和入账币种不同（陆式双币积分卡的境外消费）时比率没有意义，不显示
+                    if transaction.billingAmount > 0, rewardCurrency == transaction.resolvedBillingCurrencyCode {
                         let actualRate = (transaction.cashbackamount / transaction.billingAmount) * 100
                         DetailRow(title: "实际回馈率", value: String(format: "%.2f%%", actualRate), icon: "percent")
                     }

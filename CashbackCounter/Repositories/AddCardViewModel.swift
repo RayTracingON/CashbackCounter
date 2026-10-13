@@ -347,6 +347,13 @@ final class AddCardViewModel {
 
             NotificationManager.shared.scheduleNotification(for: existingCard)
 
+            // 费率 / 上限 / 周期改了，历史交易存的奖励快照要按新规则重算（含额度分配）。
+            // 之前只改卡不动交易，列表还显示旧返现，而引擎又按新费率估已用额度，两套数字打架
+            Task { @MainActor in
+                await existingCard.recalculateAllRewards()
+                try? context.save()
+            }
+
         } else {
             let newCard = CreditCard(
                 bankName: bankName,

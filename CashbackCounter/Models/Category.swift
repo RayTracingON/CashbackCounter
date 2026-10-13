@@ -32,17 +32,22 @@ enum Category: String, CaseIterable, Codable {
         }
     }
     
+    /// 显示名的本地化键（简体中文原文）。CSV 跨语言导入时要拿它去查每种语言的译名
+    var displayNameKey: String {
+        switch self {
+        case .dining: return "餐饮美食"
+        case .grocery: return "超市便利"
+        case .travel: return "交通出行"
+        case .digital: return "数码产品"
+        case .anime: return "二次元"
+        case .streaming: return "订阅"
+        case .other: return "其他消费"
+        }
+    }
+
     // 计算属性：返回给人看的名称（走本地化词典）
     var displayName: String {
-        switch self {
-        case .dining: return String.loc("餐饮美食")
-        case .grocery: return String.loc("超市便利")
-        case .travel: return String.loc("交通出行")
-        case .digital: return String.loc("数码产品")
-        case .anime: return String.loc("二次元")
-        case .streaming: return String.loc("订阅")
-        case .other: return String.loc("其他消费")
-        }
+        String.loc(String.LocalizationValue(displayNameKey))
     }
     var color: Color {
             switch self {

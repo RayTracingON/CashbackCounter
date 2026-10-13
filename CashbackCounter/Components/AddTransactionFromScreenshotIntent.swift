@@ -171,7 +171,19 @@ struct AddTransactionFromScreenshotIntent: AppIntent {
                 billingCurrencyCode: amounts.billingRegion.currencyCode
             )
             modelContext.insert(newTransaction)
+            if let selectedCard {
+                // 挂到卡上并按时间顺序重算同周期的额度分配，和手动记账一致
+                if selectedCard.transactions == nil {
+                    selectedCard.transactions = [newTransaction]
+                } else {
+                    selectedCard.transactions?.append(newTransaction)
+                }
+            }
             try modelContext.save()
+            if let selectedCard {
+                await selectedCard.recalculateRewards(inPeriodOf: date)
+                try modelContext.save()
+            }
 
             // 10. 返回结果
             print("[AddTransactionFromScreenshotIntent] ✅ 快捷指令执行成功！")

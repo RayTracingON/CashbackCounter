@@ -242,107 +242,24 @@ class CreditCard: Identifiable {
         // 3. 核心修改：将基础费率与类别加成相加
         return currentBaseRate + categoryBonus + paymentBonus
     }
-    func calculateCappedCashback(amount: Double, category: Category, location: Region, date: Date, paymentMethod: PaymentMethod, transactionToExclude: Transaction? = nil) -> Double {
-            
-        let track = rewardTrack(for: location)
+    // MARK: - 封顶计算（对外接口；实现见文末的「奖励引擎」扩展）
 
-        // --- 第一步：准备费率和当笔理论值 ---
-        let currentBaseRate = baseRate(forLocation: location)
-        let potentialBaseReward = amount * currentBaseRate
-
-        let categoryBonusRate = specialRates[category] ?? 0.0
-        let paymentBonusRate  = paymentMethodRates[paymentMethod] ?? 0.0 // 确保 CreditCard 有这个字典
-
-        let potentialCategoryReward = amount * categoryBonusRate
-        let potentialPaymentReward  = amount * paymentBonusRate
-
-        // --- 第二步：准备上限阈值 ---
-        let baseCapLimit = (track == .foreign) ? foreignBaseCap : localBaseCap
-        let categoryCapLimit = categoryCaps[category] ?? 0.0
-        let paymentCapLimit = paymentCaps[paymentMethod] ?? 0.0 // ⚠️ 确保 CreditCard 类里定义了 paymentCaps
-            
-        // --- 第三步：统计历史用量 ---
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: date)
-        let currentMonth = calendar.component(.month, from: date)
-            
-        // 筛选同一张卡在同一结算周期内的交易（排除正在编辑的这一笔）
-        let periodTransactions = (transactions ?? []).filter { t in
-            let year = calendar.component(.year, from: t.date)
-            guard year == currentYear else { return false }
-            
-            let isNotSelf = (t != transactionToExclude)
-            guard isNotSelf else { return false }
-            
-            switch capPeriod {
-            case .yearly:
-                return true
-            case .monthly:
-                let month = calendar.component(.month, from: t.date)
-                return month == currentMonth
-            }
-        }
-            
-        // A. 计算已用基础返现 (估算值)
-        // 注意：这里假设历史费率未变。港式双币卡的副币账单金额直接累加，即按 1:1 计入本币上限
-        var usedBase: Double = 0
-        if baseCapLimit > 0 {
-            usedBase = periodTransactions
-                .filter { rewardTrack(for: $0.location) == track }
-                .reduce(0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
-        }
-            
-        // B. 计算已用类别加成返现 (Category Used)
-        var usedCategoryBonus: Double = 0 // 💡 改名：明确这是类别用的
-        if categoryCapLimit > 0 {
-            usedCategoryBonus = periodTransactions
-                .filter { $0.category == category }
-                .reduce(0) { sum, t in
-                    let tBonusRate = specialRates[t.category] ?? 0.0
-                    return sum + (t.billingAmount * tBonusRate)
-                }
-        }
-        
-        // C. 计算已用支付方式加成返现 (Payment Method Used)
-        var usedPaymentBonus: Double = 0 // 💡 改名：明确这是支付方式用的
-        if paymentCapLimit > 0 {
-            usedPaymentBonus = periodTransactions
-                .filter { $0.paymentMethod == paymentMethod }
-                .reduce(0) { sum, t in
-                    let tBonusRate = paymentMethodRates[t.paymentMethod] ?? 0.0
-                    return sum + (t.billingAmount * tBonusRate)
-                }
-        }
-        
-        // --- 第四步：结算 (Reward Cap 逻辑) ---
-        
-        // 1. 结算基础
-        var finalBase = potentialBaseReward
-        if baseCapLimit > 0 {
-            let remaining = max(0, baseCapLimit - usedBase)
-            finalBase = min(potentialBaseReward, remaining)
-        }
-            
-        // 2. 结算类别加成
-        var finalCategoryBonus = potentialCategoryReward
-        if categoryCapLimit > 0 {
-            // ✅ 修正：这里使用 usedCategoryBonus
-            let remaining = max(0, categoryCapLimit - usedCategoryBonus)
-            finalCategoryBonus = min(potentialCategoryReward, remaining)
-        }
-        
-        // 3. 结算支付方式加成
-        var finalPaymentBonus = potentialPaymentReward
-        if paymentCapLimit > 0 {
-            // ✅ 修正：这里必须减去 usedPaymentBonus，而不是 usedCategoryBonus
-            let remaining = max(0, paymentCapLimit - usedPaymentBonus)
-            finalPaymentBonus = min(potentialPaymentReward, remaining)
-        }
-        
-        // --- 第五步：汇总返回 ---
-        return finalBase + finalCategoryBonus + finalPaymentBonus
+    /// 这一笔（含上限）的返现金额。把它放进所属结算周期、按时间顺序和其它交易一起模拟后得到。
+    ///
+    /// - transactionToExclude: 编辑中的那一笔，模拟时用候选值替换它
+    /// - sortKey: 候选在同一天内的顺序键（新建时传预生成的 dedupeID，和保存后重算的顺序一致）；
+    ///   不传时排在同一天最后，即历史交易先吃额度
+    func calculateCappedCashback(amount: Double, category: Category, location: Region, date: Date,
+                                 paymentMethod: PaymentMethod,
+                                 transactionToExclude: Transaction? = nil,
+                                 sortKey: String? = nil) -> Double {
+        simulateReward(amount: amount, category: category, location: location, date: date,
+                       paymentMethod: paymentMethod,
+                       transactionToExclude: transactionToExclude, sortKey: sortKey).capped
     }
-    
+
+    /// 积分卡版本：返回积分数和按 pointValueInCardCurrency 折算的价值。
+    /// 积分数不依赖估值；估值拿不到（≤ 0）时价值记 0，积分照常算。
     func calculateCappedPoints(
         amount: Double,
         category: Category,
@@ -350,97 +267,15 @@ class CreditCard: Identifiable {
         date: Date,
         paymentMethod: PaymentMethod,
         pointValueInCardCurrency: Double,
-        transactionToExclude: Transaction? = nil
+        transactionToExclude: Transaction? = nil,
+        sortKey: String? = nil
     ) -> (points: Int, value: Double) {
-        guard pointValueInCardCurrency > 0 else {
-            return (points: 0, value: 0)
-        }
-        
-        let track = rewardTrack(for: location)
-
-        let currentBaseRate = baseRate(forLocation: location)
-
-        let potentialBasePoints = (amount * currentBaseRate)
-        let categoryBonusRate = specialRates[category] ?? 0.0
-        let paymentBonusRate = paymentMethodRates[paymentMethod] ?? 0.0
-
-        let potentialCategoryPoints = (amount * categoryBonusRate)
-        let potentialPaymentPoints = (amount * paymentBonusRate)
-
-        let baseCapLimit = (track == .foreign) ? foreignBaseCap : localBaseCap
-        let categoryCapLimit = categoryCaps[category] ?? 0.0
-        let paymentCapLimit = paymentCaps[paymentMethod] ?? 0.0
-        
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: date)
-        let currentMonth = calendar.component(.month, from: date)
-        
-        let periodTransactions = (transactions ?? []).filter { t in
-            let year = calendar.component(.year, from: t.date)
-            guard year == currentYear else { return false }
-            
-            let isNotSelf = (t != transactionToExclude)
-            guard isNotSelf else { return false }
-            
-            switch capPeriod {
-            case .yearly:
-                return true
-            case .monthly:
-                let month = calendar.component(.month, from: t.date)
-                return month == currentMonth
-            }
-        }
-        
-        var usedBasePoints: Double = 0
-        if baseCapLimit > 0 {
-            usedBasePoints = periodTransactions
-                .filter { rewardTrack(for: $0.location) == track }
-                .reduce(0) { $0 + ($1.billingAmount * baseRate(forLocation: $1.location)) }
-        }
-        
-        var usedCategoryPoints: Double = 0
-        if categoryCapLimit > 0 {
-            usedCategoryPoints = periodTransactions
-                .filter { $0.category == category }
-                .reduce(0) { sum, t in
-                    let tBonusRate = specialRates[t.category] ?? 0.0
-                    return sum + (t.billingAmount * tBonusRate)
-                }
-        }
-        
-        var usedPaymentPoints: Double = 0
-        if paymentCapLimit > 0 {
-            usedPaymentPoints = periodTransactions
-                .filter { $0.paymentMethod == paymentMethod }
-                .reduce(0) { sum, t in
-                    let tBonusRate = paymentMethodRates[t.paymentMethod] ?? 0.0
-                    return sum + (t.billingAmount * tBonusRate)
-                }
-        }
-        
-        var finalBasePoints = potentialBasePoints
-        if baseCapLimit > 0 {
-            let remaining = max(0, baseCapLimit - usedBasePoints)
-            finalBasePoints = min(potentialBasePoints, remaining)
-        }
-        
-        var finalCategoryPoints = potentialCategoryPoints
-        if categoryCapLimit > 0 {
-            let remaining = max(0, categoryCapLimit - usedCategoryPoints)
-            finalCategoryPoints = min(potentialCategoryPoints, remaining)
-        }
-        
-        var finalPaymentPoints = potentialPaymentPoints
-        if paymentCapLimit > 0 {
-            let remaining = max(0, paymentCapLimit - usedPaymentPoints)
-            finalPaymentPoints = min(potentialPaymentPoints, remaining)
-        }
-        
-        let totalPoints = finalBasePoints + finalCategoryPoints + finalPaymentPoints
-        let pointsEarned = max(0, Int(floor(totalPoints)))
-        let value = Double(pointsEarned) * pointValueInCardCurrency
-        
-        return (points: pointsEarned, value: value)
+        let result = simulateReward(amount: amount, category: category, location: location, date: date,
+                                    paymentMethod: paymentMethod,
+                                    transactionToExclude: transactionToExclude, sortKey: sortKey)
+        let reward = Self.pointsReward(fromCappedTotal: result.capped,
+                                       pointValueInCardCurrency: pointValueInCardCurrency)
+        return (points: reward.points, value: reward.value)
     }
 
     // MARK: - 排序
@@ -514,6 +349,188 @@ extension CreditCard {
         let parts = (UserDefaults.standard.string(forKey: defaultCardDefaultsKey) ?? "").split(separator: "|")
         guard parts.count == 2 else { return nil }
         return cards.first { $0.bankName == String(parts[0]) && $0.endNum == String(parts[1]) }
+    }
+}
+
+
+// MARK: - 奖励引擎（手动记账 / 快捷指令 / Plaid 同步 / 周期重算共用）
+//
+// 三条规则：
+//   1. 上限按**时间顺序**消耗：同一结算周期内，早的交易先吃额度。
+//   2. 每一笔的封顶值是增量：min(已用 + 本笔理论, 上限) - min(已用, 上限)。
+//      正数时等价于 min(本笔理论, 剩余额度)；负数（退款）时只在额度真的回落到上限以下时才扣回 ——
+//      之前的 min(本笔理论, 剩余) 会把封顶后的退款全额扣回，周期总返现凭空少一截。
+//   3. 存进 Transaction 的奖励是快照，周期内任何一笔增删改、卡规则变化后都要重算整个周期
+//      （见 recalculateRewards）。否则删掉一笔，后面那笔本该拿回来的额度永远拿不回来。
+
+extension CreditCard {
+
+    /// 结算周期键：按月时是 (年, 月)，按年时是 (年, 0)
+    struct PeriodKey: Hashable {
+        let year: Int
+        let month: Int
+    }
+
+    func periodKey(for date: Date) -> PeriodKey {
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: date)
+        return PeriodKey(year: year, month: capPeriod == .monthly ? calendar.component(.month, from: date) : 0)
+    }
+
+    /// 三个维度各自的理论累计用量（未封顶）。单位：返现卡是金额、积分卡是积分
+    struct RewardUsage {
+        var base: [RewardTrack: Double] = [:]
+        var category: [Category: Double] = [:]
+        var payment: [PaymentMethod: Double] = [:]
+    }
+
+    struct RewardResult {
+        /// 不看上限的理论值
+        let potential: Double
+        /// 封顶后的实际值
+        let capped: Double
+        var isCapped: Bool { capped < potential - 0.000001 }
+    }
+
+    /// 增量封顶。cap <= 0 表示无上限。
+    static func cappedIncrement(potential: Double, used: Double, cap: Double) -> Double {
+        guard cap > 0 else { return potential }
+        return min(used + potential, cap) - min(used, cap)
+    }
+
+    /// 在给定累计用量上算这一笔，并把它的理论值累加进用量（调用方按时间顺序逐笔喂）
+    func applyReward(amount: Double, category: Category, location: Region, paymentMethod: PaymentMethod,
+                     usage: inout RewardUsage) -> RewardResult {
+        let track = rewardTrack(for: location)
+        let potentialBase = amount * baseRate(forLocation: location)
+        let potentialCategory = amount * (specialRates[category] ?? 0)
+        let potentialPayment = amount * (paymentMethodRates[paymentMethod] ?? 0)
+
+        let baseCap = (track == .foreign) ? foreignBaseCap : localBaseCap
+        let finalBase = Self.cappedIncrement(potential: potentialBase, used: usage.base[track] ?? 0, cap: baseCap)
+        let finalCategory = Self.cappedIncrement(potential: potentialCategory, used: usage.category[category] ?? 0,
+                                                 cap: categoryCaps[category] ?? 0)
+        let finalPayment = Self.cappedIncrement(potential: potentialPayment, used: usage.payment[paymentMethod] ?? 0,
+                                                cap: paymentCaps[paymentMethod] ?? 0)
+
+        usage.base[track, default: 0] += potentialBase
+        usage.category[category, default: 0] += potentialCategory
+        usage.payment[paymentMethod, default: 0] += potentialPayment
+
+        return RewardResult(potential: potentialBase + potentialCategory + potentialPayment,
+                            capped: finalBase + finalCategory + finalPayment)
+    }
+
+    /// 积分卡：封顶后的"积分总量"取整（正数向下、负数向零，退款扣回的积分也是整数），再按估值折算
+    static func pointsReward(fromCappedTotal total: Double, pointValueInCardCurrency: Double) -> (points: Int, value: Double) {
+        let points = Int(total.rounded(.towardZero))
+        let value = pointValueInCardCurrency > 0 ? Double(points) * pointValueInCardCurrency : 0
+        return (points, value)
+    }
+
+    /// 周期内交易的稳定顺序：先按日期，同一天按 dedupeID（随机但固定）。
+    /// 顺序决定同一天里谁先吃额度，必须可复现，否则每次重算都会把额度分给不同的交易。
+    static func rewardOrder(_ a: Transaction, _ b: Transaction) -> Bool {
+        if a.date != b.date { return a.date < b.date }
+        return a.dedupeID < b.dedupeID
+    }
+
+    /// 把一笔候选交易放进它所属的周期、按时间顺序模拟后得到的奖励（含上限）。
+    /// 记账预览和保存前的初值都走这里；保存后再由 recalculateRewards 统一回写。
+    func simulateReward(amount: Double, category: Category, location: Region, date: Date,
+                        paymentMethod: PaymentMethod,
+                        transactionToExclude: Transaction? = nil,
+                        sortKey: String? = nil) -> RewardResult {
+        let key = periodKey(for: date)
+        let others = (transactions ?? []).filter {
+            !$0.isDeleted && $0 != transactionToExclude && periodKey(for: $0.date) == key
+        }
+        // 没给顺序键就排在同一天最后：历史交易先吃额度
+        let candidateKey = sortKey ?? transactionToExclude?.dedupeID ?? "\u{10FFFF}"
+
+        // 候选和已有交易一起排序。(date, key) 相同的极端情况下候选在后
+        let sortedOthers = others.sorted(by: Self.rewardOrder)
+        var usage = RewardUsage()
+        for t in sortedOthers {
+            let candidateFirst = date < t.date || (date == t.date && candidateKey < t.dedupeID)
+            if candidateFirst { break }
+            _ = applyReward(amount: t.billingAmount, category: t.category, location: t.location,
+                            paymentMethod: t.paymentMethod, usage: &usage)
+        }
+        return applyReward(amount: amount, category: category, location: location,
+                           paymentMethod: paymentMethod, usage: &usage)
+    }
+
+    /// 按时间顺序重算某个结算周期内所有交易的奖励并回写 cashbackamount / pointsEarned。
+    /// 返回被改动的笔数。积分卡要传入「一点积分值多少发卡币种」（见 pointValueInCardCurrency()）。
+    @discardableResult
+    func recalculateRewards(inPeriodOf date: Date, pointValueInCardCurrency: Double) -> Int {
+        recalculateRewards(periodKey: periodKey(for: date), pointValueInCardCurrency: pointValueInCardCurrency)
+    }
+
+    @discardableResult
+    func recalculateRewards(periodKey key: PeriodKey, pointValueInCardCurrency: Double) -> Int {
+        let rows = (transactions ?? [])
+            .filter { !$0.isDeleted && periodKey(for: $0.date) == key }
+            .sorted(by: Self.rewardOrder)
+        var usage = RewardUsage()
+        var changed = 0
+        for t in rows {
+            let result = applyReward(amount: t.billingAmount, category: t.category, location: t.location,
+                                     paymentMethod: t.paymentMethod, usage: &usage)
+            let cashback: Double
+            let points: Int
+            if rewardType == .points {
+                let reward = Self.pointsReward(fromCappedTotal: result.capped,
+                                               pointValueInCardCurrency: pointValueInCardCurrency)
+                cashback = reward.value
+                points = reward.points
+            } else {
+                cashback = result.capped
+                points = 0
+            }
+            if abs(t.cashbackamount - cashback) > 0.000001 || t.pointsEarned != points {
+                t.cashbackamount = cashback
+                t.pointsEarned = points
+                changed += 1
+            }
+        }
+        return changed
+    }
+
+    /// 重算这张卡**所有**周期（卡的费率 / 上限 / 周期改了之后用）
+    @discardableResult
+    func recalculateAllRewards(pointValueInCardCurrency: Double) -> Int {
+        let keys = Set((transactions ?? []).filter { !$0.isDeleted }.map { periodKey(for: $0.date) })
+        return keys.reduce(0) { $0 + recalculateRewards(periodKey: $1, pointValueInCardCurrency: pointValueInCardCurrency) }
+    }
+
+    /// 异步版本：积分卡会先解析一次估值（可能查汇率）
+    @discardableResult
+    func recalculateRewards(inPeriodOf date: Date) async -> Int {
+        let pointValue = rewardType == .points ? await pointValueInCardCurrency() : 0
+        return recalculateRewards(inPeriodOf: date, pointValueInCardCurrency: pointValue)
+    }
+
+    @discardableResult
+    func recalculateAllRewards() async -> Int {
+        let pointValue = rewardType == .points ? await pointValueInCardCurrency() : 0
+        return recalculateAllRewards(pointValueInCardCurrency: pointValue)
+    }
+}
+
+extension Transaction {
+    /// 删除一笔交易并重算同卡同周期其余交易的奖励：它吃掉的额度要回到后面那些交易身上
+    @MainActor
+    static func deleteRecalculating(_ transaction: Transaction, in context: ModelContext) async {
+        let card = transaction.card
+        let date = transaction.date
+        context.delete(transaction)
+        try? context.save()
+        if let card {
+            await card.recalculateRewards(inPeriodOf: date)
+            try? context.save()
+        }
     }
 }
 

@@ -316,7 +316,8 @@ final class DualCurrencyCardTests: XCTestCase {
 
         let csv = [tx].generateCSV()
         XCTAssertTrue(csv.contains("入账币种"))
-        XCTAssertTrue(csv.contains(",CNY\n"))
+        // 入账币种后面还有「来源,去重ID」两列，所以不再是行尾
+        XCTAssertTrue(csv.contains(",CNY,manual,"))
 
         // 删除原交易再导入，避免命中去重逻辑
         context.delete(tx)

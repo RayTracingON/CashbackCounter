@@ -317,7 +317,7 @@ struct BillHomeContentView: View {
             Task { @MainActor in
                 await CardTemplateManager.shared.syncTemplates()
                 do {
-                    try CardTemplateManager.shared.refreshCardsFromTemplates(in: context)
+                    try await CardTemplateManager.shared.refreshCardsFromTemplates(in: context)
                 } catch {
                     print("Failed to refresh cards from templates: \(error)")
                 }

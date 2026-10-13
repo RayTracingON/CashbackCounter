@@ -241,7 +241,9 @@ final class PointOperationTests: XCTestCase {
             amount: 100, category: .other, location: .hk, date: Date(),
             paymentMethod: .offline, pointValueInCardCurrency: 0.0, transactionToExclude: nil
         )
-        XCTAssertEqual(result.points, 0)
+        // 积分数不依赖估值：估值拿不到（没绑积分计划 / 填了 0）时积分照常算，只有折算价值是 0。
+        // 之前两者一起归零，用户看到的是"这张卡每笔都 0 分"而没有任何提示
+        XCTAssertEqual(result.points, 100)
         XCTAssertEqual(result.value, 0.0)
     }
 

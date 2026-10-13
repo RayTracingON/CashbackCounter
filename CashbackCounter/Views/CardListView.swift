@@ -397,7 +397,7 @@ struct CardListView: View {
                 Task { @MainActor in
                     await CardTemplateManager.shared.syncTemplates()
                     do {
-                        try CardTemplateManager.shared.refreshCardsFromTemplates(in: context)
+                        try await CardTemplateManager.shared.refreshCardsFromTemplates(in: context)
                     } catch {
                         print("Failed to sync card templates: \(error)")
                     }
@@ -481,7 +481,9 @@ struct EmbeddedTransactionListView: View {
                             .onTapGesture { selectedTransaction = item }
                             .contextMenu {
                                 Button { transactionToEdit = item } label: { Label("编辑", systemImage: "pencil") }
-                                Button(role: .destructive) { context.delete(item) } label: { Label("删除", systemImage: "trash") }
+                                Button(role: .destructive) {
+                                    Task { await Transaction.deleteRecalculating(item, in: context) }
+                                } label: { Label("删除", systemImage: "trash") }
                             }
                     }
                 }

@@ -148,4 +148,16 @@ extension Transaction {
         // 用 billingRegion(for:) 而非 issueRegion，这样卡片后来升级为双币卡时旧交易也能正确归类
         return card.billingRegion(for: location).currencyCode
     }
+
+    /// 奖励（cashbackamount）的计价币种。
+    ///
+    /// 返现卡：和入账金额同币种。积分卡：`pointValueInCardCurrency()` 按**发卡币种**估值，
+    /// 所以是发卡币种 —— 陆式双币积分卡在境外的消费入账是副币（USD），奖励价值却是本币（CNY），
+    /// 统计时按入账币种换算会差一个汇率倍数。
+    var rewardCurrencyCode: String {
+        if let card, card.rewardType == .points {
+            return card.issueRegion.currencyCode
+        }
+        return resolvedBillingCurrencyCode
+    }
 }

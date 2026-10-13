@@ -32,6 +32,13 @@ final class AddTransactionViewModel {
     let prefillCardLast4: String?
     let shouldSkipRateUpdate: Bool
 
+    /// 新建交易预先定好的 dedupeID。预览和保存后的周期重算都按 (日期, dedupeID) 排序，
+    /// 提前定下来，预览里看到的额度分配才和保存后一致
+    let pendingDedupeID = UUID().uuidString
+
+    /// 积分卡预览要先查一次估值（可能走网络），快速连续输入时只保留最后一次
+    private var previewTask: Task<Void, Never>?
+
     // 编辑模式下记录原始收据：只有用户换图/删图时才重新压缩写入，
     // 避免每次编辑都 解码→再压缩 导致画质逐次劣化
     private var originalReceiptData: Data?
@@ -194,43 +201,32 @@ final class AddTransactionViewModel {
         let card = cards[selectedCardIndex]
         let finalAmount = Double(billingAmountStr) ?? amountDouble
 
+        // 和保存后的周期重算用同一套顺序与封顶算法：放进所属周期按时间模拟
+        let result = card.simulateReward(
+            amount: finalAmount,
+            category: selectedCategory,
+            location: location,
+            date: date,
+            paymentMethod: paymentMethod,
+            transactionToExclude: transactionToEdit,
+            sortKey: transactionToEdit?.dedupeID ?? pendingDedupeID
+        )
+
         if card.rewardType == .points {
             rewardPreview = nil
-            Task {
+            previewTask?.cancel()
+            previewTask = Task {
                 let pointValue = await card.pointValueInCardCurrency()
-                let result = card.calculateCappedPoints(
-                    amount: finalAmount,
-                    category: selectedCategory,
-                    location: location,
-                    date: date,
-                    paymentMethod: paymentMethod,
-                    pointValueInCardCurrency: pointValue,
-                    transactionToExclude: transactionToEdit
-                )
-
-                let theoreticalRate = card.getRate(for: selectedCategory, location: location, payment: paymentMethod)
-                let theoreticalValue = finalAmount * theoreticalRate
-                let theoreticalPoints = pointValue > 0 ? Int(floor(theoreticalValue / pointValue)) : 0
-                let isCapped = result.points < theoreticalPoints
-
+                guard !Task.isCancelled else { return }
+                // 之前用「理论价值 ÷ 每分价值」估理论积分数，但理论值本身已经是积分数，
+                // 再除一次就放大了 1/pointValue 倍 —— 积分卡预览永远显示"已达上限"
+                let reward = CreditCard.pointsReward(fromCappedTotal: result.capped, pointValueInCardCurrency: pointValue)
                 await MainActor.run {
-                    rewardPreview = RewardPreview(value: result.value, points: result.points, isCapped: isCapped)
+                    rewardPreview = RewardPreview(value: reward.value, points: reward.points, isCapped: result.isCapped)
                 }
             }
         } else {
-            let cashback = card.calculateCappedCashback(
-                amount: finalAmount,
-                category: selectedCategory,
-                location: location,
-                date: date,
-                paymentMethod: paymentMethod,
-                transactionToExclude: transactionToEdit
-            )
-
-            let theoreticalRate = card.getRate(for: selectedCategory, location: location, payment: paymentMethod)
-            let theoretical = finalAmount * theoreticalRate
-            let isCapped = cashback < (theoretical - 0.01)
-            rewardPreview = RewardPreview(value: cashback, points: 0, isCapped: isCapped)
+            rewardPreview = RewardPreview(value: result.capped, points: 0, isCapped: result.isCapped)
         }
     }
 
@@ -302,6 +298,9 @@ final class AddTransactionViewModel {
 
             if let t = transactionToEdit {
                 // --- 编辑模式 ---
+                // 换卡或跨周期移动时，原来那边的周期也要重算
+                let previousCard = t.card
+                let previousDate = t.date
                 // ⚠️ 必须先比较再赋值：判断条件里用到的旧值（如 t.date）一旦先被覆盖，比较就永远为 false
                 let needsRewardUpdate = t.card != card ||
                     t.billingAmount != billingDouble ||
@@ -333,6 +332,16 @@ final class AddTransactionViewModel {
                     t.receiptData = imageData
                 }
 
+                // 周期内顺序重算：这一笔和同周期其它交易的额度分配都可能变。
+                // 先 save 让关系数组（card.transactions）稳定下来再算
+                try? context.save()
+                await card.recalculateRewards(inPeriodOf: date)
+                if let previousCard, previousCard != card {
+                    await previousCard.recalculateRewards(inPeriodOf: previousDate)
+                } else if card.periodKey(for: previousDate) != card.periodKey(for: date) {
+                    await card.recalculateRewards(inPeriodOf: previousDate)
+                }
+
             } else {
                 // --- 新建模式 ---
                 let newTransaction = Transaction(
@@ -349,6 +358,8 @@ final class AddTransactionViewModel {
                     paymentMethod: paymentMethod,
                     billingCurrencyCode: billingCode
                 )
+                // 和预览时用的顺序键一致
+                newTransaction.dedupeID = pendingDedupeID
                 context.insert(newTransaction)
 
                 if card.transactions == nil {
@@ -356,6 +367,10 @@ final class AddTransactionViewModel {
                 } else {
                     card.transactions?.append(newTransaction)
                 }
+
+                // 补录早于同周期其它交易的日期时，额度要重新按时间顺序分配
+                try? context.save()
+                await card.recalculateRewards(inPeriodOf: date)
             }
 
             try? context.save()

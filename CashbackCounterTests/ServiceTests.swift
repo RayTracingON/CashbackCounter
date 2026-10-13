@@ -182,7 +182,8 @@ final class ServiceTests: XCTestCase {
 
         let dataRow = lines[1]
         XCTAssertTrue(dataRow.contains("McDonald's"), "应包含商户名")
-        XCTAssertTrue(dataRow.contains("餐饮美食"), "应包含类别名")
+        // 类别列导的是 rawValue 而不是显示名：显示名随界面语言变，换语言后导不回来
+        XCTAssertTrue(dataRow.contains(",dining,"), "应包含类别 rawValue")
         XCTAssertTrue(dataRow.contains("5678"), "应包含卡号尾数")
         XCTAssertTrue(dataRow.contains("applePay"), "应包含支付方式")
     }
