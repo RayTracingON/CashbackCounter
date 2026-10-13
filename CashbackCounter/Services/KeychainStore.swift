@@ -66,7 +66,9 @@ nonisolated enum KeychainStore {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+            // ThisDeviceOnly：会话 token 和第三方 API Key 不随加密备份 / 快速迁移到新设备；
+            // AfterFirstUnlock 保留给后台推送同步用
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
 
         let status = SecItemAdd(query as CFDictionary, nil)

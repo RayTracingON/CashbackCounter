@@ -2331,6 +2331,23 @@
         }
       }
     },
+    "今天是这张卡的还款日，别忘了处理账单哦！" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today is this card's repayment day. Don't forget to pay the bill!"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天是這張卡的還款日，別忘了處理帳單喔！"
+          }
+        }
+      }
+    },
     "从信用卡通知短信添加交易" : {
       "localizations" : {
         "en" : {
@@ -8145,6 +8162,57 @@
         }
       }
     },
+    "正在同步…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在同步…"
+          }
+        }
+      }
+    },
+    "正在处理 %lld 笔交易…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing %lld transactions…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在處理 %lld 筆交易…"
+          }
+        }
+      }
+    },
+    "正在导入历史交易…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importing transaction history…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在匯入歷史交易…"
+          }
+        }
+      }
+    },
     "正在获取…" : {
       "localizations" : {
         "en" : {
@@ -8157,6 +8225,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在取得…"
+          }
+        }
+      }
+    },
+    "正在补齐历史交易…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Catching up on transaction history…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在補齊歷史交易…"
           }
         }
       }
@@ -11379,6 +11464,23 @@
         }
       }
     },
+    "还款提醒: %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repayment reminder: %@ %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "還款提醒: %@ %@"
+          }
+        }
+      }
+    },
     "还款日提醒 (每月)" : {
       "localizations" : {
         "en" : {
@@ -12232,6 +12334,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "銀行資料介面暫時無法使用，請稍後重試"
+          }
+        }
+      }
+    },
+    "银行数据正在准备中…（%lld/%lld）" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bank data is being prepared… (%lld/%lld)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "銀行資料正在準備中…（%lld/%lld）"
           }
         }
       }

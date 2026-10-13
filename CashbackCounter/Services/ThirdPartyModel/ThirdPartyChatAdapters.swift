@@ -143,7 +143,11 @@ enum ThirdPartyHTTP {
         guard (200..<300).contains(http.statusCode) else {
             let text = String(data: data, encoding: .utf8) ?? ""
             switch http.statusCode {
-            case 401, 403:
+            case 401:
+                throw ThirdPartyModelError.unauthorized
+            // 403 常见于地区限制 / 模型无权限 / 余额不足，一律说成"密钥无效"会误导用户；
+            // 保留服务端的说明走 httpError
+            case 403 where text.isEmpty:
                 throw ThirdPartyModelError.unauthorized
             case 429:
                 let retryAfter = (http.value(forHTTPHeaderField: "Retry-After")

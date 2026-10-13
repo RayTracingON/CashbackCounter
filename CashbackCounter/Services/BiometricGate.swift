@@ -39,7 +39,7 @@ enum BiometricGate {
         // touchIDAuthenticationAllowableReuseDuration 内直接返回上次的成功结果 ——
         // 那就等于这道关卡在一段时间内形同虚设。
         let context = LAContext()
-        context.localizedCancelTitle = "取消"
+        context.localizedCancelTitle = String.loc("取消")
 
         var canEvaluateError: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &canEvaluateError) else {

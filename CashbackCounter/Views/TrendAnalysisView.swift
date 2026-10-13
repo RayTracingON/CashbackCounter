@@ -202,12 +202,12 @@ struct TrendAnalysisView: View {
                 .locale(AppLanguage.locale)
             )
         }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = mainCurrencyCode
-        formatter.locale = AppLanguage.locale
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? ""
+        // 走 FormatStyle 而不是每次 body 新建 NumberFormatter（创建成本在每行每帧上会放大）
+        return amount.formatted(
+            .currency(code: mainCurrencyCode)
+            .precision(.fractionLength(0))
+            .locale(AppLanguage.locale)
+        )
     }
 
     private var highlightedData: MonthlyData? {

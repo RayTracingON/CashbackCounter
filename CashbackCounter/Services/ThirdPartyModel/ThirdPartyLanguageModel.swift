@@ -249,11 +249,18 @@ enum ThirdPartyChatClient {
         guard case ThirdPartyModelError.httpError(let status, let body) = error,
               status == 400 || status == 404 || status == 422 else { return false }
         let lowered = body.lowercased()
-        let markers = [
+        // 必须同时点名结构化输出相关的参数才算。之前只要出现 "unsupported" / "invalid parameter"
+        // 就降级，推理模型拒绝 max_tokens、Gemini 拒绝图片输入这类 400 也会触发
+        // jsonSchema → jsonObject → promptOnly 三连重试，三倍延迟和费用后才报错
+        let schemaMarkers = [
             "response_format", "json_schema", "responseschema", "response_schema",
-            "structured output", "tool_choice", "input_schema", "not supported",
-            "unsupported", "unknown parameter", "invalid parameter", "unrecognized"
+            "structured output", "tool_choice", "input_schema", "tools"
         ]
-        return markers.contains { lowered.contains($0) }
+        let rejectionMarkers = [
+            "not supported", "unsupported", "unknown parameter", "invalid parameter",
+            "unrecognized", "invalid", "not allowed"
+        ]
+        return schemaMarkers.contains { lowered.contains($0) }
+            && rejectionMarkers.contains { lowered.contains($0) }
     }
 }

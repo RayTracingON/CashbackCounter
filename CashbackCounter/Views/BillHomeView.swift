@@ -119,7 +119,7 @@ struct BillHomeContentView: View {
     }
 
     @ViewBuilder
-    private var statsBar: some View {
+    private func statsBar(_ filteredTransactions: [Transaction]) -> some View {
         HStack(spacing: DesignConstants.Spacing.statsSpacing) {
             // 支出统计 -> 红色趋势图
             Button(action: { viewModel.showExpenseSheet = true }) {
@@ -160,7 +160,7 @@ struct BillHomeContentView: View {
     }
 
     @ViewBuilder
-    private var transactionList: some View {
+    private func transactionList(_ filteredTransactions: [Transaction]) -> some View {
         LazyVStack(spacing: DesignConstants.Spacing.listItemSpacing) {
             ForEach(filteredTransactions) { item in
                 VStack(alignment: .leading, spacing: 8) {
@@ -207,7 +207,10 @@ struct BillHomeContentView: View {
     }
 
     var body: some View {
-        NavigationView {
+        // 一次算好，body 里各处（统计、列表、导出菜单、调试日志）共用。
+        // 之前是计算属性，每处引用都把全部交易重新过滤一遍，一次渲染要过滤 5 次
+        let filteredTransactions = self.filteredTransactions
+        return NavigationView {
             ZStack {
                 Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
                 
@@ -215,13 +218,13 @@ struct BillHomeContentView: View {
                     VStack(spacing: DesignConstants.Spacing.sectionSpacing) {
                         
                         // 1. 统计条 (点击数字可查看趋势)
-                        statsBar
+                        statsBar(filteredTransactions)
                         
                         // 2. 控制栏 (筛选器) - 使用 ScrollView 优化布局
                         filterBar
                         
                         // 3. 交易列表
-                        transactionList
+                        transactionList(filteredTransactions)
                     }
                 }
             }

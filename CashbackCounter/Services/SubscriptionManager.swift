@@ -162,6 +162,12 @@ final class SubscriptionManager {
             // 只认通过校验的交易。unverified 意味着签名有问题，直接当没买过 ——
             // StoreKit 已经替我们做了本地验签，这一层不能跳过。
             guard case .verified(let transaction) = verification else {
+                // 校验失败的交易也要 finish 掉：不 finish 会在每次启动通过 Transaction.updates
+                // 反复投递，而它永远不会变成 verified
+                if case .unverified(let unverified, let error) = verification {
+                    print("⚠️ 购买交易未通过本地验签，不授予权益：\(error.localizedDescription)")
+                    await unverified.finish()
+                }
                 return false
             }
             await transaction.finish()
@@ -296,7 +302,13 @@ final class SubscriptionManager {
     }
 
     private func handle(updateResult: VerificationResult<StoreKit.Transaction>) async {
-        guard case .verified(let transaction) = updateResult else { return }
+        guard case .verified(let transaction) = updateResult else {
+            if case .unverified(let unverified, let error) = updateResult {
+                print("⚠️ 收到未通过验签的交易更新，不授予权益：\(error.localizedDescription)")
+                await unverified.finish()
+            }
+            return
+        }
         await transaction.finish()
         await refreshEntitlements()
     }

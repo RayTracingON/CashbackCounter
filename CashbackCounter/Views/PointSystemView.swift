@@ -343,11 +343,18 @@ private struct PointDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
+        // 相关交易 / 调整各扫一次，图表和明细共用。之前是一串计算属性：
+        // chartData 的 6 个月循环里每月各扫一遍、netPoints 再算一遍 chartData、
+        // historyItems 再扫一遍，一次渲染要把全部交易扫十几遍
+        let related = relatedTransactions
+        let relatedAdjustments = self.relatedAdjustments
+        let chart = chartData(related: related, adjustments: relatedAdjustments)
+        let history = historyItems(related: related, adjustments: relatedAdjustments)
+        return ScrollView {
             VStack(spacing: 16) {
                 headerCard
-                chartCard
-                historyCard
+                chartCard(chart: chart)
+                historyCard(items: history)
             }
             .padding()
         }
@@ -402,16 +409,16 @@ private struct PointDetailView: View {
         .cardSurface(cornerRadius: 16, tint: accentColor)
     }
 
-    private var chartCard: some View {
+    private func chartCard(chart: [MonthlyPointSnapshot]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("近6个月积分变化")
                 .font(.headline)
-            Text("净变化：\(formattedPoints(netPoints)) 积分")
+            Text("净变化：\(formattedPoints(netPoints(chart))) 积分")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .monospacedDigit()
 
-            Chart(chartData) { item in
+            Chart(chart) { item in
                 LineMark(
                     x: .value("月份", item.date, unit: .month),
                     y: .value("积分", item.points)
@@ -458,7 +465,7 @@ private struct PointDetailView: View {
         .cardSurface(cornerRadius: 16)
     }
 
-    private var historyCard: some View {
+    private func historyCard(items historyItems: [PointHistoryItem]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("积分变动明细")
                 .font(.headline)
@@ -525,7 +532,8 @@ private struct PointDetailView: View {
         return adjustments.filter { $0.pointProgram?.id == program.id }
     }
 
-    private var historyItems: [PointHistoryItem] {
+    private func historyItems(related relatedTransactions: [Transaction],
+                              adjustments relatedAdjustments: [PointAdjustment]) -> [PointHistoryItem] {
         var items: [PointHistoryItem] = []
         
         // 1. 手动/系统调整记录
@@ -555,7 +563,8 @@ private struct PointDetailView: View {
         return items.sorted(by: { $0.date > $1.date })
     }
 
-    private var chartData: [MonthlyPointSnapshot] {
+    private func chartData(related relatedTransactions: [Transaction],
+                           adjustments relatedAdjustments: [PointAdjustment]) -> [MonthlyPointSnapshot] {
         let calendar = Calendar.current
         let now = Date()
 
@@ -589,8 +598,8 @@ private struct PointDetailView: View {
         summary.points
     }
 
-    private var netPoints: Int {
-        Int(chartData.reduce(0) { $0 + $1.points })
+    private func netPoints(_ chart: [MonthlyPointSnapshot]) -> Int {
+        Int(chart.reduce(0) { $0 + $1.points })
     }
 
     private var estimatedValue: Double {
@@ -604,10 +613,7 @@ private struct PointDetailView: View {
     }
 
     private func formattedPoints(_ value: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = AppLanguage.locale
-        return formatter.string(from: NSNumber(value: value)) ?? String(value)
+        value.formatted(.number.locale(AppLanguage.locale))
     }
 
     private func formattedCurrency(_ value: Double, code: String) -> String {

@@ -133,10 +133,7 @@ final class PointSystemViewModel {
     // MARK: - Formatting
 
     func formattedPoints(_ value: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = AppLanguage.locale
-        return formatter.string(from: NSNumber(value: value)) ?? String(value)
+        value.formatted(.number.locale(AppLanguage.locale))
     }
 
     func formattedCurrency(_ value: Double, code: String) -> String {

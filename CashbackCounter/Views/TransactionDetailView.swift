@@ -15,12 +15,19 @@ struct TransactionDetailView: View {
     @State private var showEditSheet = false
     @State private var showFullScreenReceipt = false
     
-    // 格式化日期
+    // 格式化日期。DateFormatter 创建很贵，按语言缓存一份而不是每次渲染都新建
     private var dateFormatter: DateFormatter {
+        Self.dateFormatter(for: AppLanguage.locale)
+    }
+
+    nonisolated(unsafe) private static var cachedDateFormatters: [String: DateFormatter] = [:]
+    private static func dateFormatter(for locale: Locale) -> DateFormatter {
+        if let cached = cachedDateFormatters[locale.identifier] { return cached }
         let formatter = DateFormatter()
-        formatter.locale = AppLanguage.locale
+        formatter.locale = locale
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
+        cachedDateFormatters[locale.identifier] = formatter
         return formatter
     }
     

@@ -24,14 +24,36 @@ struct AppConstants {
 // MARK: - 2. 内置图片缓存 (Actor)
 actor ImageCache {
     static let shared = ImageCache()
-    private var cache: [String: UIImage] = [:]
+
+    /// 缓存条目同时带原始字节：命中时直接返回原数据，不再 `pngData()` 重编码 ——
+    /// 把一张压缩过的 JPEG 卡面转成 PNG 存进 `cardImageData` 会把外置存储撑大数倍。
+    private final class Entry {
+        let image: UIImage
+        let data: Data
+        init(image: UIImage, data: Data) {
+            self.image = image
+            self.data = data
+        }
+    }
+
+    /// NSCache 有上限且会在内存警告时自动清理；之前是无上限的字典
+    private let cache: NSCache<NSString, Entry> = {
+        let cache = NSCache<NSString, Entry>()
+        cache.countLimit = 200
+        cache.totalCostLimit = 64 * 1024 * 1024
+        return cache
+    }()
 
     func load(forKey key: String) -> UIImage? {
-        return cache[key]
+        cache.object(forKey: key as NSString)?.image
+    }
+
+    func loadData(forKey key: String) -> Data? {
+        cache.object(forKey: key as NSString)?.data
     }
 
     func save(_ image: UIImage, data: Data, forKey key: String) {
-        cache[key] = image
+        cache.setObject(Entry(image: image, data: data), forKey: key as NSString, cost: data.count)
     }
 }
 
@@ -153,10 +175,10 @@ class ImageDownloadManager: NSObject, ObservableObject {
     }
     /// 专门用于获取图片 Data (支持缓存 + 本地 Assets)，适合用于数据库存储
         func downloadImageData(from urlString: String) async -> Data? {
-            // 1. 检查缓存 (如果缓存有，把 UIImage 转回 Data 返回)
-            if let cachedImage = await ImageCache.shared.load(forKey: urlString) {
+            // 1. 检查缓存：直接返回当初存进去的原始字节
+            if let cachedData = await ImageCache.shared.loadData(forKey: urlString) {
                 print("✅ [ImageDownloadManager] 命中缓存，直接返回数据")
-                return cachedImage.pngData()
+                return cachedData
             }
             
             // 2. 判断来源：网络 URL 还是本地 Assets

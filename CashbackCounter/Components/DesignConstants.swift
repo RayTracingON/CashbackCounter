@@ -22,8 +22,8 @@ enum DesignConstants {
         return 375 // fallback 默认值（iPhone SE 宽度）
     }
 
-    /// 是否为小屏设备（iPhone SE 等 375pt 以下）
-    static var isCompact: Bool { screenWidth < 375 }
+    /// 是否为小屏设备（iPhone SE 等 375pt 及以下）。SE 正好是 375，之前写 `<` 把它排除在外了
+    static var isCompact: Bool { screenWidth <= 375 }
 
     // MARK: - 圆角半径
 
