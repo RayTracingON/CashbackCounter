@@ -286,7 +286,8 @@ final class ServiceTests: XCTestCase {
     }
 
     func testCategory_AllCases() {
-        XCTAssertEqual(Category.allCases.count, 6)
+        // 7 类：餐饮、超市、出行、数码、二次元、订阅、其他。加类别时同步改这里
+        XCTAssertEqual(Category.allCases.count, 7)
         for cat in Category.allCases {
             XCTAssertFalse(cat.iconName.isEmpty)
             XCTAssertFalse(cat.displayName.isEmpty)

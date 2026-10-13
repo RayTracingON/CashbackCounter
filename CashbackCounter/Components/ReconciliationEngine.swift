@@ -13,7 +13,12 @@ struct ReconciliationEngine {
         var usedExistingIDs: Set<Transaction.ID> = []
 
         let matched = imported.filter { importedTransaction in
-            existing.contains { transaction in
+            // 账单行没有商户名多半是解析失败，不能只凭金额和日期就认成"已记录"——
+            // 那会把一笔真正缺失的交易藏进"已匹配"里
+            guard !importedTransaction.merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return false
+            }
+            return existing.contains { transaction in
                 guard !usedExistingIDs.contains(transaction.id) else { return false }
                 let isMatch = amountsMatch(importedTransaction, transaction) &&
                     datesWithinRange(importedTransaction.transactionDate, transaction.date, calendar: calendar)
