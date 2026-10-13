@@ -14,6 +14,17 @@ final class CardTemplateManager {
     let remoteURL = AppConfig.cardTemplatesURL
     
     var templates: [CardTemplate] = []
+
+    /// 当前这份模板是从哪来的。决定要不要拿它去改用户已有的卡片（见 refreshCardsFromTemplates）。
+    enum TemplateSource {
+        /// 本次启动刚从远端拉到的
+        case remote
+        /// 远端失败，用的是上一次成功拉到并存在本地的那份
+        case cachedRemote
+        /// 远端和本地缓存都没有，用的是打包进 App 的那份（可能已经过时）
+        case bundle
+    }
+    private(set) var templatesSource: TemplateSource?
     
     private var hasSyncedThisLaunch = false
     private var hasRefreshedThisLaunch = false
@@ -24,43 +35,87 @@ final class CardTemplateManager {
     func syncTemplates(force: Bool = false) async {
         if hasSyncedThisLaunch && !force { return }
         do {
-            let seeds = try await fetchTemplateSeeds()
+            let (seeds, source) = try await fetchTemplateSeeds()
             self.templates = seeds
+            self.templatesSource = source
             self.hasSyncedThisLaunch = true
         } catch {
             print("❌ Failed to sync templates: \(AppError.networkFailure(underlying: error).localizedDescription)")
         }
     }
-    
-    private func fetchTemplateSeeds() async throws -> [CardTemplate] {
-        let rawTemplates: [CardTemplate]
-        // 尝试从远端获取
+
+    /// 上一次成功拉到的远端 JSON 存在这里，远端失败时优先用它而不是打包的旧种子
+    static var remoteCacheURL: URL {
+        URL.applicationSupportDirectory.appending(path: "CardTemplates.remote.json")
+    }
+
+    private func fetchTemplateSeeds() async throws -> ([CardTemplate], TemplateSource) {
+        var rawTemplates: [CardTemplate]?
+        var source: TemplateSource = .bundle
+
+        // ① 远端
         do {
             var request = URLRequest(url: remoteURL)
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.timeoutInterval = AppConfig.networkTimeout
             let (data, response) = try await URLSession.shared.data(for: request)
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                let decoder = JSONDecoder()
-                rawTemplates = try decoder.decode([CardTemplate].self, from: data)
-            } else {
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 throw NSError(domain: "CardTemplateManager", code: 404)
             }
+            let decoded = try Self.decodeTemplates(from: data)
+            if decoded.skipped > 0 {
+                print("⚠️ 远端模板有 \(decoded.skipped) 条本版本无法解析（通常是新增的枚举值），已跳过，其余 \(decoded.templates.count) 条照常使用")
+            }
+            rawTemplates = decoded.templates
+            source = .remote
+            // 存一份，下次离线启动还能用这份最新的
+            try? FileManager.default.createDirectory(
+                at: Self.remoteCacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try? data.write(to: Self.remoteCacheURL, options: .atomic)
         } catch {
             print("⚠️ 无法从远端获取配置，尝试读取本地缓存... (\(error.localizedDescription))")
-            // 远端获取失败，读取打包在 App 内的 CardTemplates.json 作为 fallback
+        }
+
+        // ② 上一次成功拉到的远端副本
+        if rawTemplates == nil,
+           let data = try? Data(contentsOf: Self.remoteCacheURL),
+           let decoded = try? Self.decodeTemplates(from: data) {
+            rawTemplates = decoded.templates
+            source = .cachedRemote
+        }
+
+        // ③ 打包进 App 的种子。只用来显示模板列表，**不会**拿去改用户的卡片
+        if rawTemplates == nil {
             guard let url = Bundle.main.url(forResource: "CardTemplates", withExtension: "json") else {
                 throw NSError(domain: "CardTemplateManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "Bundle 中未找到 CardTemplates.json"])
             }
             let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            rawTemplates = try decoder.decode([CardTemplate].self, from: data)
+            rawTemplates = try Self.decodeTemplates(from: data).templates
+            source = .bundle
         }
-        
+
         // 返回前排好序，避免在 View 的 body 中进行耗时的重排序操作
-        return rawTemplates.sorted(by: {
+        let sorted = (rawTemplates ?? []).sorted(by: {
             $0.bankName < $1.bankName || ($0.bankName == $1.bankName && $0.type < $1.type)
         })
+        return (sorted, source)
+    }
+
+    /// 逐条容错地解码模板数组。
+    ///
+    /// 远端 JSON 是**全部版本共用**的：新版本加一个 `PaymentMethod` / `Region` 枚举值，
+    /// 老版本的 `[CardTemplate].self` 整份解码就失败 —— 之前的后果是静默回退到打包的旧种子，
+    /// 再用旧种子把用户卡片上的费率全部改回去。现在一条解不开只丢那一条。
+    /// 整个数组都不是合法 JSON、或者一条都解不出来时才抛错。
+    static func decodeTemplates(from data: Data) throws -> (templates: [CardTemplate], skipped: Int) {
+        let wrapped = try JSONDecoder().decode([FailableDecodable<CardTemplate>].self, from: data)
+        let templates = wrapped.compactMap(\.value)
+        let skipped = wrapped.count - templates.count
+        if templates.isEmpty && skipped > 0 {
+            throw NSError(domain: "CardTemplateManager", code: 422,
+                          userInfo: [NSLocalizedDescriptionKey: "模板 JSON 里 \(skipped) 条全部无法解析"])
+        }
+        return (templates, skipped)
     }
     
     /// 去重逻辑版本号：手动 +1 可强制所有用户在下次启动全量去重一次
@@ -104,10 +159,18 @@ final class CardTemplateManager {
     }
 
     @MainActor
-    func refreshCardsFromTemplates(in context: ModelContext, force: Bool = false) throws {
+    func refreshCardsFromTemplates(in context: ModelContext, force: Bool = false) async throws {
         if hasRefreshedThisLaunch && !force { return }
 
         runDeduplicationIfNeeded(in: context)
+
+        // 只有确认是远端（或远端的本地副本）的规则才拿去改用户的卡片。
+        // 打包进 App 的种子可能比远端旧好几个版本：离线启动时用它覆盖，
+        // 卡片费率会被改回旧值，联网后再改回来 —— 两种费率的交易混在一起。
+        guard let source = templatesSource, source != .bundle else {
+            print("ℹ️ 模板来源是打包种子或尚未加载，跳过本次卡片规则刷新（只用于模板列表显示）")
+            return
+        }
         
         let templateMap = Dictionary(self.templates.map { ($0.templateKey, $0) }, uniquingKeysWith: { first, _ in first })
         if templateMap.isEmpty { return }
@@ -119,16 +182,20 @@ final class CardTemplateManager {
         }, uniquingKeysWith: { first, _ in first })
 
         let cards = try context.fetch(FetchDescriptor<CreditCard>())
-        var hasChanges = false
+        var modifiedCards: [CreditCard] = []
         for card in cards {
             guard let key = card.templateKey, let template = templateMap[key] else { continue }
-            let modified = template.applyRules(to: card, pointMap: pointMap)
-            if modified {
-                hasChanges = true
+            if template.applyRules(to: card, pointMap: pointMap) {
+                modifiedCards.append(card)
             }
         }
         
-        if hasChanges {
+        if !modifiedCards.isEmpty {
+            try context.save()
+            // 模板改了费率 / 上限，这些卡上历史交易的奖励快照要按新规则重算
+            for card in modifiedCards {
+                await card.recalculateAllRewards()
+            }
             try context.save()
             print("✅ Card templates refreshed and saved to DB.")
         }
@@ -153,14 +220,18 @@ final class CardTemplateManager {
                 // 尾号为空时无法可靠判定是否为同一张卡；因本方法现在每次启动都跑，
                 // 不加此保护会把两张同行同卡种、都没填尾号的**不同**卡片误并，造成数据丢失。
                 guard !endNum.isEmpty else { continue }
-                let key = "\(bank)|\(type)|\(endNum)"
+                // 规则也要完全一致才算同一张卡的副本。CloudKit 复制出来的副本是逐字段相同的；
+                // 而两张恰好同行同卡种同尾号、但费率 / 上限不同的卡，是用户有意区分的两张卡，
+                // 合并会把其中一张连同它的规则一起删掉。
+                let key = "\(bank)|\(type)|\(endNum)|\(Self.rulesFingerprint(of: card))"
                 grouped[key, default: []].append(card)
             }
             
             var hasDeletes = false
             
             for (key, cardGroup) in grouped where cardGroup.count > 1 {
-                print("🔍 Found duplicates for card: \(key) (count: \(cardGroup.count))")
+                let label = key.split(separator: "|").prefix(3).joined(separator: "|")
+                print("🔍 Found duplicates for card: \(label) (count: \(cardGroup.count))")
                 
                 // 优先保留包含交易记录最多、或已下载卡面图数据的卡片作为 master
                 let sortedGroup = cardGroup.sorted { c1, c2 in
@@ -226,6 +297,32 @@ final class CardTemplateManager {
         }
     }
     
+    /// 两张卡「规则完全一致」的指纹。只比模板会改的字段（费率 / 上限 / 周期 / 积分类型 / 地区），
+    /// 不比备注、还款日、排序、卡面图 —— 那些在 CloudKit 副本之间也可能不同。
+    static func rulesFingerprint(of card: CreditCard) -> String {
+        func dict<K: RawRepresentable & Hashable>(_ d: [K: Double]) -> String where K.RawValue == String {
+            d.map { "\($0.key.rawValue)=\($0.value)" }.sorted().joined(separator: ",")
+        }
+        let parts: [String] = [
+            "d=\(card.defaultRate)",
+            "f=\(card.foreignCurrencyRate.map { String($0) } ?? "")",
+            "s=\(dict(card.specialRates))",
+            "p=\(dict(card.paymentMethodRates))",
+            "cc=\(dict(card.categoryCaps))",
+            "pc=\(dict(card.paymentCaps))",
+            "lb=\(card.localBaseCap)",
+            "fb=\(card.foreignBaseCap)",
+            "cp=\(card.capPeriod == .monthly ? "m" : "y")",
+            "rt=\(card.rewardType.rawValue)",
+            "r=\(card.issueRegion.rawValue)",
+            "sr=\(card.secondaryRegion?.rawValue ?? "")",
+            "dm=\(card.dualCurrencyMode.rawValue)",
+            "s2=\(card.secondaryRate.map { String($0) } ?? "")",
+            "tk=\(card.templateKey ?? "")"
+        ]
+        return parts.joined(separator: ";")
+    }
+
     /// 自动合并 CloudKit 在 schema 迁移后重新导入产生的重复交易。
     ///
     /// ⚠️ **只按 `Transaction.dedupeID` 分组，绝不按内容分组。**
@@ -310,4 +407,13 @@ final class CardTemplateManager {
         }
     }
     
+}
+
+/// 解码数组时让单个元素失败不拖垮整个数组：失败的元素 `value` 为 nil。
+struct FailableDecodable<T: Decodable>: Decodable {
+    let value: T?
+
+    init(from decoder: Decoder) throws {
+        value = try? T(from: decoder)
+    }
 }

@@ -110,7 +110,7 @@ struct PaywallView: View {
             benefit("building.columns", "绑定美国银行", "信用卡与活期账户都支持，可绑多家")
             benefit("arrow.triangle.2.circlepath", "交易自动同步", "每天自动导入，也可随时手动刷新")
             benefit("bell.badge", "新交易通知", "银行一有新交易就推送提醒")
-            benefit("arrow.uturn.backward", "退款自动抵销", "退款会自动冲掉原来那笔，返现跟着回冲")
+            benefit("arrow.uturn.backward", "退款自动抵销", "退款会自动记成一笔负数交易，返现跟着回冲")
         }
         .padding(.horizontal, 32)
     }

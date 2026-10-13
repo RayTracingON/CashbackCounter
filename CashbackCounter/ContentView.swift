@@ -10,6 +10,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var context
     @AppStorage(OnboardingTour.seenKey) private var hasSeenOnboarding = false
     @State private var tour = OnboardingTour.shared
+    /// 启动时发现本地数据库打不开、已被挪到备份目录重建：只提示一次
+    @State private var storeRecoveryNotice: SharedModelContainer.RecoveryNotice? = SharedModelContainer.recoveryNotice
 
     var body: some View {
         // TabView 是底部导航栏的核心容器
@@ -75,6 +77,17 @@ struct ContentView: View {
             if !hasSeenOnboarding {
                 tour.start()
             }
+        }
+        .alert(
+            String.loc("本地数据库已重建"),
+            isPresented: Binding(
+                get: { storeRecoveryNotice != nil },
+                set: { if !$0 { storeRecoveryNotice = nil; SharedModelContainer.clearRecoveryNotice() } }
+            )
+        ) {
+            Button(String.loc("好的"), role: .cancel) {}
+        } message: {
+            Text(String.loc("上次启动时本地数据库无法打开，旧文件已原样保留在 App 的 Application Support/StoreBackups 目录中，没有删除。开启了 iCloud 同步的数据会自动恢复；如未开启，请通过反馈联系我们协助找回。"))
         }
         .task {
             do {

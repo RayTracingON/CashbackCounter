@@ -158,7 +158,9 @@ final class AddCardViewModel {
         } else if let template = template {
             bankName = template.bankName
             cardType = template.type
-            endNum = "8888"
+            // 尾号留空让用户自己填。之前预填 "8888"：两个人从同一模板各建一张卡都没改它，
+            // 下次启动就被 deduplicateCards 按「银行|卡种|尾号」当成同一张卡合并掉一张
+            endNum = ""
             memo = template.memo ?? ""
             cardImageData = nil
 

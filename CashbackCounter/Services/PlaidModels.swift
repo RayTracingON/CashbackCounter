@@ -88,6 +88,24 @@ extension PlaidTransactionDTO {
     var amountCents: Int {
         Int((abs(amount) * 100).rounded())
     }
+
+    /// 入库金额（分，带符号）：消费为正、退款为负。
+    ///
+    /// Plaid 的符号约定是"正数 = 流出"，而本地 Transaction 用的是"负数 = 退款"，
+    /// 所以这里翻一次。去重键和入库都用它，保证同一笔退款不会和等额消费撞到同一组。
+    var signedBillingCents: Int {
+        let cents = amountCents
+        return isInflow ? -cents : cents
+    }
+
+    /// 去重用的日期键：直接用服务端给的 `yyyy-MM-dd` 字符串，不经过 Date。
+    ///
+    /// 走 Date 再取"自然日"会依赖当前时区：在纽约同步时存成 7/10 本地午夜，
+    /// 飞到洛杉矶再取 startOfDay 就变成 7/9，整个重叠窗口的交易全部重复插入。
+    /// 字符串没有这个问题 —— 它就是账单上印的那一天。
+    var dayKey: String {
+        date.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 // MARK: - 账户

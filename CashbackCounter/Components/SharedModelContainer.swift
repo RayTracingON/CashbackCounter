@@ -17,6 +17,10 @@ enum SharedModelContainer {
 
     static let shared: ModelContainer = makeContainer()
 
+    /// 本次启动是否把打不开的旧数据库挪到了旁边并重建。
+    /// 挪走的文件一个都没删，位置记在 UserDefaults（见 `recoveryNotice`）。
+    private(set) static var didRebuildStore = false
+
     private static func makeContainer() -> ModelContainer {
         let schema = Schema([
             Transaction.self, CreditCard.self, Income.self, Point.self, PointAdjustment.self,
@@ -35,17 +39,17 @@ enum SharedModelContainer {
         #endif
 
         // 第一次尝试正常创建
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: cloudKitDB)
         do {
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: cloudKitDB)
             return try ModelContainer(for: schema, configurations: [config])
         } catch {
-            // ⚠️ 在删任何东西之前，先关掉 CloudKit 再试一次。
+            // ⚠️ 在动任何文件之前，先关掉 CloudKit 再试一次。
             //
             // 这一步是用一次真实的数据丢失换来的：给模型加了一个**没有 inverse 的关系**，
             // CloudKit 的 schema 校验直接拒绝整个 schema
             // （"CloudKit integration requires that all relationships have an inverse"）。
             // 这类错误和本地数据库里存了什么**毫无关系** —— 删库一百次也修不好它，
-            // 但下面那段删库逻辑照删不误，于是用户的卡包和账单就没了。
+            // 但下面那段重建逻辑照跑不误，于是用户的卡包和账单就没了。
             //
             // 先降级成本地模式：能开起来就说明数据库本身是好的，问题出在 CloudKit 约束上。
             // 代价是这次启动不同步 iCloud，但数据一条不少 —— 这个取舍不需要犹豫。
@@ -67,27 +71,29 @@ enum SharedModelContainer {
                 }
             }
 
-            // 走到这里才是真正的存储损坏 / 迁移失败，删库重建是唯一出路
-            print("⚠️ ModelContainer 初始化失败，尝试删除本地数据库并重建... 错误: \(error)")
+            // 走到这里才是真正的存储损坏 / 迁移失败。
+            //
+            // ⚠️ **只挪不删。** 之前这里直接 removeItem，而且用的还是错误的文件名
+            // （`default.store.wal`，SQLite 实际写的是 `default.store-wal`）：主库被删、
+            // 带着最新写入页的 WAL 却留在原地，谁也找不回来。
+            // 现在把三个文件整体搬进带时间戳的备份目录，再在原位置重建一个空库。
+            // 关了 iCloud 的用户至少还能从备份里救回数据；开了 iCloud 的会自动重新同步。
+            print("⚠️ ModelContainer 初始化失败，把本地数据库挪到备份目录后重建... 错误: \(error)")
 
-            // 删除本地 SwiftData 存储文件
-            let defaultURL = URL.applicationSupportDirectory.appending(path: "default.store")
-            let filesToDelete = [
-                defaultURL,
-                defaultURL.appendingPathExtension("shm"),
-                defaultURL.appendingPathExtension("wal")
-            ]
-            for url in filesToDelete {
-                try? FileManager.default.removeItem(at: url)
+            if let backupDirectory = moveStoreAside(storeURL: config.url) {
+                let defaults = UserDefaults.standard
+                defaults.set(backupDirectory.path, forKey: AppConfig.UserDefaultsKey.storeBackupPath)
+                defaults.set(Date(), forKey: AppConfig.UserDefaultsKey.storeBackupDate)
+                didRebuildStore = true
             }
 
             // 第二次尝试：使用全新的空数据库
             do {
-                let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: cloudKitDB)
-                let container = try ModelContainer(for: schema, configurations: [config])
+                let fresh = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: cloudKitDB)
+                let container = try ModelContainer(for: schema, configurations: [fresh])
                 // 重建后 iCloud 重新同步可能产生重复数据，标记下次启动执行一次去重
                 UserDefaults.standard.set(true, forKey: AppConfig.UserDefaultsKey.needsDataDeduplication)
-                print("✅ 已成功重建本地数据库，iCloud 数据将自动重新同步。")
+                print("✅ 已在原位置重建本地数据库，旧库保留在备份目录；iCloud 数据将自动重新同步。")
                 return container
             } catch {
                 // 最终兜底：使用内存模式，至少不崩溃
@@ -100,5 +106,78 @@ enum SharedModelContainer {
                 }
             }
         }
+    }
+
+    // MARK: - 存储文件搬运
+
+    /// SQLite 在 WAL 模式下的三个文件：主库、`-shm`、`-wal`。
+    /// 边车文件名是在**完整文件名后面**接 `-shm` / `-wal`（`default.store-wal`），
+    /// 不是换扩展名 —— `appendingPathExtension("wal")` 得到的 `default.store.wal` 根本不存在。
+    static func storeFileURLs(for storeURL: URL) -> [URL] {
+        [storeURL,
+         URL(fileURLWithPath: storeURL.path + "-shm"),
+         URL(fileURLWithPath: storeURL.path + "-wal")]
+    }
+
+    /// 备份目录统一放在存储文件旁边的 `StoreBackups/` 下，按时间戳分目录。
+    static func backupRootDirectory(for storeURL: URL) -> URL {
+        storeURL.deletingLastPathComponent().appending(path: "StoreBackups", directoryHint: .isDirectory)
+    }
+
+    /// 把数据库连同边车文件搬进一个新的时间戳目录，返回该目录；一个文件都没搬动时返回 nil。
+    ///
+    /// 只搬 SQLite 文件本身。`.externalStorage` 的图片 blob 在旁边的 `default_SUPPORT/` 里，
+    /// 留在原地：新库不会引用它们（顶多占点空间），而备份库恢复回来时还能找到它们。
+    @discardableResult
+    static func moveStoreAside(storeURL: URL, now: Date = Date()) -> URL? {
+        let fileManager = FileManager.default
+        let existing = storeFileURLs(for: storeURL).filter { fileManager.fileExists(atPath: $0.path) }
+        guard !existing.isEmpty else { return nil }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        let directory = backupRootDirectory(for: storeURL)
+            .appending(path: "default.store.corrupt-\(formatter.string(from: now))", directoryHint: .isDirectory)
+
+        do {
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        } catch {
+            print("❌ 无法创建备份目录 \(directory.path): \(error)")
+            return nil
+        }
+
+        var moved = 0
+        for url in existing {
+            let target = directory.appending(path: url.lastPathComponent)
+            do {
+                try fileManager.moveItem(at: url, to: target)
+                moved += 1
+            } catch {
+                // 搬不动就原地不动。宁可重建失败回退到内存模式，也不能把它删了。
+                print("❌ 无法移动 \(url.lastPathComponent) 到备份目录: \(error)")
+            }
+        }
+        return moved > 0 ? directory : nil
+    }
+
+    // MARK: - 给界面用的提示
+
+    struct RecoveryNotice {
+        let backupPath: String
+        let date: Date
+    }
+
+    /// 上一次（或本次）启动挪走了打不开的数据库时，这里有值；界面提示过一次后调 `clearRecoveryNotice()`。
+    static var recoveryNotice: RecoveryNotice? {
+        let defaults = UserDefaults.standard
+        guard let path = defaults.string(forKey: AppConfig.UserDefaultsKey.storeBackupPath) else { return nil }
+        let date = defaults.object(forKey: AppConfig.UserDefaultsKey.storeBackupDate) as? Date ?? Date()
+        return RecoveryNotice(backupPath: path, date: date)
+    }
+
+    static func clearRecoveryNotice() {
+        UserDefaults.standard.removeObject(forKey: AppConfig.UserDefaultsKey.storeBackupPath)
+        UserDefaults.standard.removeObject(forKey: AppConfig.UserDefaultsKey.storeBackupDate)
     }
 }

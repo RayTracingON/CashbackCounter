@@ -104,8 +104,8 @@ struct AddCardView: View {
                         .keyboardType(.numberPad)
                         .onChange(of: viewModel.endNum) { oldValue, newValue in
                             if newValue.count > 4 { viewModel.endNum = String(newValue.prefix(4)) }
-                            // 只认「刚打满第 4 位」：模板会预填 8888，在它后面多打一位时
-                            // 会先收到 5 位、再被上面截回 8888，那两次都不算填好了
+                            // 只认「刚打满第 4 位」：已经是 4 位时再多打一位会先收到 5 位、
+                            // 再被上面截回 4 位，那两次都不算"刚填好"
                             OnboardingTour.shared.handle(.lastFourChanged(isComplete: oldValue.count < 4 && newValue.count == 4))
                         }
                         .tourTarget(.cardLastFour)

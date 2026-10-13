@@ -1902,6 +1902,23 @@
         }
       }
     },
+    "上次启动时本地数据库无法打开，旧文件已原样保留在 App 的 Application Support/StoreBackups 目录中，没有删除。开启了 iCloud 同步的数据会自动恢复；如未开启，请通过反馈联系我们协助找回。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The local database could not be opened at last launch. The old files were kept untouched in the app's Application Support/StoreBackups folder, nothing was deleted. Data with iCloud sync enabled will be restored automatically; otherwise, please contact us via Feedback so we can help recover it."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次啟動時本機資料庫無法開啟，舊檔案已原樣保留在 App 的 Application Support/StoreBackups 目錄中，沒有刪除。開啟了 iCloud 同步的資料會自動恢復；如未開啟，請透過意見回饋聯絡我們協助找回。"
+          }
+        }
+      }
+    },
     "上限" : {
       "localizations" : {
         "en" : {
@@ -7770,6 +7787,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "本地基礎返現"
+          }
+        }
+      }
+    },
+    "本地数据库已重建" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local database was rebuilt"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本機資料庫已重建"
           }
         }
       }

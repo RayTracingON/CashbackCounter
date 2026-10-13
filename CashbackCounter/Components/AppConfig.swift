@@ -98,5 +98,9 @@ enum AppConfig {
         static let lastDeduplicationBuild = "last_deduplication_build"
         /// 数据库被重建（schema 迁移失败）后置为 true，提示下次启动需要去重
         static let needsDataDeduplication = "needs_data_deduplication"
+        /// 本地数据库打不开、被挪到旁边重建后，记录备份目录路径；ContentView 据此弹一次提示
+        static let storeBackupPath = "store_backup_path"
+        /// 备份目录的创建时间，与 storeBackupPath 配套
+        static let storeBackupDate = "store_backup_date"
     }
 }
