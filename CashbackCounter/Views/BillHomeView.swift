@@ -125,7 +125,7 @@ struct BillHomeContentView: View {
             Button(action: { viewModel.showExpenseSheet = true }) {
                 StatBox(
                     title: viewModel.expenseTitle(isSearchingActive: isSearchingActive),
-                    amount: viewModel.exchangeRates.isEmpty ? "..." : String(format: "%.2f", viewModel.totalExpense(from: filteredTransactions, mainCurrencyCode: mainCurrencyCode)),
+                    amount: viewModel.totalExpense(from: filteredTransactions, mainCurrencyCode: mainCurrencyCode).map { String(format: "%.2f", $0) } ?? "...",
                     icon: "arrow.down.circle.fill", color: .red
                 )
                 .overlay(
@@ -135,12 +135,14 @@ struct BillHomeContentView: View {
                 )
             }
             .buttonStyle(.plain)
+            // 汇率还没到就进趋势页，所有币种会按 1:1 相加
+            .disabled(viewModel.exchangeRates.isEmpty)
             
             // 返现统计 -> 绿色趋势图
             Button(action: { viewModel.showTrendSheet = true }) {
                 StatBox(
                     title: viewModel.cashbackTitle(isSearchingActive: isSearchingActive),
-                    amount: viewModel.exchangeRates.isEmpty ? "..." : String(format: "%.2f", viewModel.totalCashback(from: filteredTransactions, mainCurrencyCode: mainCurrencyCode)),
+                    amount: viewModel.totalCashback(from: filteredTransactions, mainCurrencyCode: mainCurrencyCode).map { String(format: "%.2f", $0) } ?? "...",
                     icon: "arrow.up.circle.fill", color: .green
                 )
                 .overlay(
@@ -150,6 +152,8 @@ struct BillHomeContentView: View {
                 )
             }
             .buttonStyle(.plain)
+            // 汇率还没到就进趋势页，所有币种会按 1:1 相加
+            .disabled(viewModel.exchangeRates.isEmpty)
         }
         .padding(.horizontal)
         .padding(.top)

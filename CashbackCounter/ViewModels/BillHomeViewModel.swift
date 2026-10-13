@@ -94,51 +94,67 @@ final class BillHomeViewModel {
 
     // MARK: - Exchange Rate Helpers
 
-    func exchangeRate(for currencyCode: String, mainCurrencyCode: String) -> Double {
+    /// 换算汇率；主币种自身为 1。缺这个币种时返回 nil ——
+    /// 之前退回 1.0，断网时一笔 JPY 10,000 会被当成 ¥10,000 加进"本月支出"
+    func exchangeRate(for currencyCode: String, mainCurrencyCode: String) -> Double? {
         if currencyCode == mainCurrencyCode { return 1.0 }
         if let rate = exchangeRates[currencyCode] { return rate }
         if let rate = exchangeRates[currencyCode.uppercased()] { return rate }
         if let rate = exchangeRates[currencyCode.lowercased()] { return rate }
-        return 1.0
+        return nil
     }
 
     func billingCurrencyCode(for transaction: Transaction) -> String {
         transaction.resolvedBillingCurrencyCode
     }
 
-    func expenseInMainCurrency(for transaction: Transaction, mainCurrencyCode: String) -> (amount: Double, currencyCode: String) {
+    /// 入账金额换算到主币种；缺汇率返回 nil
+    func expenseInMainCurrency(for transaction: Transaction, mainCurrencyCode: String) -> (amount: Double, currencyCode: String)? {
         let code = billingCurrencyCode(for: transaction)
-        let rate = exchangeRate(for: code, mainCurrencyCode: mainCurrencyCode)
+        guard let rate = exchangeRate(for: code, mainCurrencyCode: mainCurrencyCode), rate > 0 else { return nil }
         return (transaction.billingAmount / rate, code)
     }
 
-    func incomeInMainCurrency(for transaction: Transaction, mainCurrencyCode: String) -> Double {
-        (transaction.incomes ?? []).reduce(0) { partial, income in
-            let incomeRate = exchangeRate(for: income.location.currencyCode, mainCurrencyCode: mainCurrencyCode)
-            return partial + (income.amount / incomeRate)
+    /// 关联收入换算到主币种；任一笔缺汇率返回 nil
+    func incomeInMainCurrency(for transaction: Transaction, mainCurrencyCode: String) -> Double? {
+        var total = 0.0
+        for income in transaction.incomes ?? [] {
+            guard let rate = exchangeRate(for: income.location.currencyCode, mainCurrencyCode: mainCurrencyCode), rate > 0 else {
+                return nil
+            }
+            total += income.amount / rate
         }
+        return total
     }
 
     // MARK: - Totals
 
-    func totalExpense(from transactions: [Transaction], mainCurrencyCode: String) -> Double {
-        if exchangeRates.isEmpty { return 0.0 }
-        return transactions.reduce(0) { total, t in
-            let expenseInfo = expenseInMainCurrency(for: t, mainCurrencyCode: mainCurrencyCode)
-            let incomeInMain = incomeInMainCurrency(for: t, mainCurrencyCode: mainCurrencyCode)
-            return total + (expenseInfo.amount - incomeInMain)
+    /// 汇率还没到、或有任何一笔换不了汇时返回 nil，界面显示 "..." 而不是一个错的数
+    func totalExpense(from transactions: [Transaction], mainCurrencyCode: String) -> Double? {
+        if exchangeRates.isEmpty { return nil }
+        var total = 0.0
+        for t in transactions {
+            guard let expense = expenseInMainCurrency(for: t, mainCurrencyCode: mainCurrencyCode),
+                  let income = incomeInMainCurrency(for: t, mainCurrencyCode: mainCurrencyCode) else {
+                return nil
+            }
+            total += expense.amount - income
         }
+        return total
     }
 
-    func totalCashback(from transactions: [Transaction], mainCurrencyCode: String) -> Double {
-        if exchangeRates.isEmpty { return 0.0 }
-        return transactions.reduce(0) { total, t in
+    func totalCashback(from transactions: [Transaction], mainCurrencyCode: String) -> Double? {
+        if exchangeRates.isEmpty { return nil }
+        var total = 0.0
+        for t in transactions {
             let cb = CashbackService.calculateCashback(for: t)
-            // 返现随入账币种计价 (双币卡副币入账的返现也是副币)
-            let code = t.resolvedBillingCurrencyCode
-            let rate = exchangeRate(for: code, mainCurrencyCode: mainCurrencyCode)
-            return total + (cb / rate)
+            // 返现卡随入账币种计价；积分卡的价值是按发卡币种估的（见 Transaction.rewardCurrencyCode）
+            guard let rate = exchangeRate(for: t.rewardCurrencyCode, mainCurrencyCode: mainCurrencyCode), rate > 0 else {
+                return nil
+            }
+            total += cb / rate
         }
+        return total
     }
 
     // MARK: - Data Loading
@@ -160,15 +176,26 @@ final class BillHomeViewModel {
             defer { url.stopAccessingSecurityScopedResource() }
 
             do {
+                let imported: [Transaction]
                 if url.pathExtension.lowercased() == "zip" {
-                    try CSVHelper.importBackupZip(url: url, context: context, allCards: cards)
+                    imported = try CSVHelper.importBackupZip(url: url, context: context, allCards: cards)
                     importMessage = "ZIP 备份导入成功！"
                 } else {
                     let content = try String(contentsOf: url, encoding: .utf8)
-                    _ = try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
+                    imported = try CSVHelper.parseTransactionCSV(content: content, context: context, allCards: cards)
                     importMessage = "CSV 导入成功！"
                 }
                 showImportAlert = true
+
+                // 导入的交易散落在各个周期、也可能早于已有交易：涉及的卡整体按时间顺序重算奖励快照
+                let affectedCards = Set(imported.compactMap(\.card))
+                Task {
+                    try? context.save()
+                    for card in affectedCards {
+                        await card.recalculateAllRewards()
+                    }
+                    try? context.save()
+                }
             } catch {
                 importMessage = "导入失败：\(error.localizedDescription)"
                 showImportAlert = true
@@ -181,12 +208,13 @@ final class BillHomeViewModel {
     // MARK: - Debug Logging
 
     func logNegativeExpenseTransactions(filteredTransactions: [Transaction], mainCurrencyCode: String) {
+        #if DEBUG
         guard !didLogNegativeExpenses, !exchangeRates.isEmpty else { return }
         didLogNegativeExpenses = true
 
         let negativeItems = filteredTransactions.compactMap { transaction -> (Transaction, Double, Double, Double, String)? in
-            let expenseInfo = expenseInMainCurrency(for: transaction, mainCurrencyCode: mainCurrencyCode)
-            let income = incomeInMainCurrency(for: transaction, mainCurrencyCode: mainCurrencyCode)
+            guard let expenseInfo = expenseInMainCurrency(for: transaction, mainCurrencyCode: mainCurrencyCode),
+                  let income = incomeInMainCurrency(for: transaction, mainCurrencyCode: mainCurrencyCode) else { return nil }
             let net = expenseInfo.amount - income
             guard net < -0.0001 else { return nil }
             return (transaction, net, expenseInfo.amount, income, expenseInfo.currencyCode)
@@ -206,12 +234,14 @@ final class BillHomeViewModel {
 NEG_EXPENSE | merchant=\(transaction.merchant) | date=\(transaction.dateString) | card=\(cardName) | issue=\(issueCode) | location=\(transaction.location.currencyCode) | amount=\(transaction.amount) | billing=\(transaction.billingAmount) \(billingCode) | expenseMain=\(expenseMain) | incomeMain=\(incomeMain) | netMain=\(net) | incomes=\(incomeCount)
 """)
         }
+        #endif
     }
 
     // MARK: - Actions
 
     func deleteTransaction(_ transaction: Transaction, context: ModelContext) {
-        context.delete(transaction)
+        // 删掉之后它吃掉的额度要回到同周期其它交易身上
+        Task { await Transaction.deleteRecalculating(transaction, in: context) }
     }
 
     func deleteIncome(_ income: Income, context: ModelContext) {

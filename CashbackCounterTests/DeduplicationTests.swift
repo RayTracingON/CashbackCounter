@@ -229,8 +229,9 @@ final class DeduplicationTests: XCTestCase {
         let vm = BillHomeViewModel()
         vm.exchangeRates = ["HKD": 1.1, "hkd": 1.1]   // base = CNY
 
-        let expense = vm.expenseInMainCurrency(for: tx, mainCurrencyCode: "CNY")
-        let cashback = vm.totalCashback(from: [tx], mainCurrencyCode: "CNY")
+        // 两个口径现在都是可选的：缺汇率时返回 nil 而不是按 1:1 算
+        let expense = try XCTUnwrap(vm.expenseInMainCurrency(for: tx, mainCurrencyCode: "CNY"))
+        let cashback = try XCTUnwrap(vm.totalCashback(from: [tx], mainCurrencyCode: "CNY"))
 
         XCTAssertEqual(expense.currencyCode, "HKD")
         XCTAssertEqual(expense.amount, 100 / 1.1, accuracy: 0.0001)

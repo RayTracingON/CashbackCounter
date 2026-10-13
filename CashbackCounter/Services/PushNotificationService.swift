@@ -116,6 +116,11 @@ final class PushNotificationService: NSObject {
             print("✅ 推送唤醒同步完成: item=\(itemId), 新增 \(summary.inserted) 笔")
             // 只有真的写入了东西才算 newData，否则 iOS 会认为唤醒这个 App 没价值
             return summary.inserted > 0 || summary.refundsApplied > 0 ? .newData : .noData
+        } catch PlaidAPIError.unauthorized, PlaidAPIError.notSignedIn {
+            // 会话过期：后台弹不出 Apple 授权（见 AuthService.recoverFromUnauthorized），
+            // 等用户下次打开 App 续期后再同步。不算失败，否则 iOS 会降低唤醒这个 App 的频率
+            print("ℹ️ 推送唤醒时会话已过期，等前台续期后再同步")
+            return .noData
         } catch {
             print("⚠️ 推送唤醒同步失败: \(error.localizedDescription)")
             return .failed

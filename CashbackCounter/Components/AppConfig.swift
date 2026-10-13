@@ -85,9 +85,12 @@ enum AppConfig {
     // MARK: - UserDefaults Keys
 
     enum UserDefaultsKey {
+        /// 旧版单槽汇率缓存（只用于迁移）
         static let cachedExchangeRates = "cached_exchange_rates"
         static let lastFetchDate = "last_fetch_date"
         static let lastRatesBase = "last_rates_base"
+        /// 按 base 币种分槽的汇率缓存：[base: CurrencyService.CachedEntry]
+        static let cachedExchangeRatesByBase = "cached_exchange_rates_by_base_v2"
         /// 已完成还款提醒通知 identifier 迁移（旧版用 hashValue，重启后无法取消）
         static let didMigrateReminderIdentifiers = "did_migrate_reminder_identifiers_v1"
         /// 上次执行数据去重时的去重逻辑版本号

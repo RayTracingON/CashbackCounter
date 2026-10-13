@@ -111,6 +111,8 @@ struct CameraRecordView: View {
                         }
                     }
                     .tourTarget(.cameraShutter)
+                    // 权限被拒的遮罩在这层之下，不禁用的话按钮透过遮罩仍可点
+                    .disabled(cameraService.permissionDenied)
 
                     Spacer()
                     

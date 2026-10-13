@@ -31,49 +31,113 @@ struct FrankfurterLatestResponse: Decodable {
     }
 }
 
+/// 旧版（单槽）缓存的格式，只用于迁移
 struct CachedRates: Codable {
     let base: String
     let rates: [String: Double]
 }
 
+/// 汇率服务。
+///
+/// 缓存**按 base 币种分槽**：首页用主币种、记账页用消费地币种、积分估值用积分币种、
+/// 批量导入每张小票各自的币种 —— 之前只有一个槽，谁最后调用谁占着，其它页面每次切回来
+/// 都要重新联网，记账页每敲一个数字就是一次请求；断网时 base 对不上就退回 `[base: 1.0]`，
+/// 所有外币被当 1:1 加进总额。现在：同一天内每个 base 只请求一次，并发请求合并，
+/// 失败先用过期缓存，最后才退回 1:1（且只含 base 自己，缺的币种由调用方按"没有汇率"处理）。
 struct CurrencyService {
 
-    // --- 缓存配置 ---
-    private static let kRatesKey = AppConfig.UserDefaultsKey.cachedExchangeRates // 存汇率数据的 Key
-    private static let kDateKey = AppConfig.UserDefaultsKey.lastFetchDate        // 存上次更新时间的 Key
-    private static let kBaseKey = AppConfig.UserDefaultsKey.lastRatesBase        // 存上次汇率基准币种
-    
+    struct CachedEntry: Codable {
+        let fetchedAt: Date
+        let rates: [String: Double]
+    }
+
+    /// 测试可以换成独立的 suite
+    static var defaults: UserDefaults = .standard
+
+    /// 进行中的请求：同一 base 的并发调用共用一次
+    private static var inFlight: [String: Task<[String: Double], Never>] = [:]
+
     // --- 🚀 智能入口：获取汇率 ---
     // View 层只调用这个方法，不需要关心内部逻辑
     static func getRates(base: String = "CNY") async -> [String: Double] {
-        // 1. 检查：今天是不是已经更新过了？并且基准币种一致？
-        if
-            let lastDate = UserDefaults.standard.object(forKey: kDateKey) as? Date,
-            let lastBase = UserDefaults.standard.string(forKey: kBaseKey),
-            lastBase == base,
-            Calendar.current.isDateInToday(lastDate)
-        {
-            // 如果最后更新时间是“今天”，并且基准币种一致，直接读缓存
-            if let cachedRates = loadLocalRates() {
-                print("✅ 汇率无需更新，使用本地缓存 (\(base))")
-                return cachedRates.rates
-            }
+        let key = base.uppercased()
+
+        if let entry = cachedEntry(for: key), isFresh(entry) {
+            return entry.rates
+        }
+        if let running = inFlight[key] {
+            return await running.value
         }
 
-        print("🌍 正在联网更新汇率 (base: \(base))...")
-        do {
-            let rates = try await fetchRemoteRates(base: base)
-            let normalized = normalizedRates(rates)
-            // 下载成功后，立刻存入本地
-            saveRatesLocally(normalized, base: base)
-            return normalized
-        } catch {
-            print("❌ \(AppError.networkFailure(underlying: error).localizedDescription)")
-            if let cached = loadLocalRates(), cached.base.caseInsensitiveCompare(base) == .orderedSame {
-                return cached.rates
+        let task = Task<[String: Double], Never> {
+            print("🌍 正在联网更新汇率 (base: \(key))...")
+            do {
+                let rates = normalizedRates(try await fetchRemoteRates(base: key))
+                guard !rates.isEmpty else {
+                    throw NSError(domain: "CurrencyService", code: 204,
+                                  userInfo: [NSLocalizedDescriptionKey: "汇率响应为空"])
+                }
+                store(rates, for: key)
+                return rates
+            } catch {
+                print("❌ \(AppError.networkFailure(underlying: error).localizedDescription)")
+                // 过期的缓存也比 1:1 强得多
+                if let stale = cachedEntry(for: key) {
+                    return stale.rates
+                }
+                return [key: 1.0, key.lowercased(): 1.0]
             }
-            return [base: 1.0]
         }
+        inFlight[key] = task
+        defer { inFlight[key] = nil }
+        return await task.value
+    }
+
+    // MARK: - 缓存（按 base 分槽）
+
+    static func isFresh(_ entry: CachedEntry, now: Date = Date()) -> Bool {
+        Calendar.current.isDate(entry.fetchedAt, inSameDayAs: now)
+    }
+
+    static func cachedEntry(for base: String) -> CachedEntry? {
+        loadAll()[base.uppercased()]
+    }
+
+    static func store(_ rates: [String: Double], for base: String, at date: Date = Date()) {
+        var all = loadAll()
+        all[base.uppercased()] = CachedEntry(fetchedAt: date, rates: normalizedRates(rates))
+        if let data = try? JSONEncoder().encode(all) {
+            defaults.set(data, forKey: AppConfig.UserDefaultsKey.cachedExchangeRatesByBase)
+        }
+    }
+
+    private static func loadAll() -> [String: CachedEntry] {
+        if let data = defaults.data(forKey: AppConfig.UserDefaultsKey.cachedExchangeRatesByBase),
+           let all = try? JSONDecoder().decode([String: CachedEntry].self, from: data) {
+            return all
+        }
+        // 迁移旧版单槽缓存：当成一个 base 的条目
+        if let legacy = loadLegacyRates() {
+            let all = [legacy.base.uppercased(): legacy.entry]
+            if let data = try? JSONEncoder().encode(all) {
+                defaults.set(data, forKey: AppConfig.UserDefaultsKey.cachedExchangeRatesByBase)
+            }
+            return all
+        }
+        return [:]
+    }
+
+    private static func loadLegacyRates() -> (base: String, entry: CachedEntry)? {
+        guard let data = defaults.data(forKey: AppConfig.UserDefaultsKey.cachedExchangeRates) else { return nil }
+        let fetchedAt = defaults.object(forKey: AppConfig.UserDefaultsKey.lastFetchDate) as? Date ?? .distantPast
+        if let cached = try? JSONDecoder().decode(CachedRates.self, from: data) {
+            return (cached.base, CachedEntry(fetchedAt: fetchedAt, rates: normalizedRates(cached.rates)))
+        }
+        if let rates = try? JSONDecoder().decode([String: Double].self, from: data),
+           let base = defaults.string(forKey: AppConfig.UserDefaultsKey.lastRatesBase) {
+            return (base, CachedEntry(fetchedAt: fetchedAt, rates: normalizedRates(rates)))
+        }
+        return nil
     }
 
     // --- 内部方法：联网下载 (私有) ---
@@ -81,41 +145,15 @@ struct CurrencyService {
         let urlString = "\(AppConfig.currencyAPIBaseURL)\(base.lowercased()).json"
         guard let url = URL(string: urlString) else { return [:] }
 
-        let (data, _) = try await URLSession.shared.data(from: url)
+        // 用配置里的超时：URLSession.shared 默认 60 秒，弱网下首页会显示一分钟的 "..."
+        let request = URLRequest(url: url, timeoutInterval: AppConfig.networkTimeout)
+        let (data, _) = try await URLSession.shared.data(for: request)
         let response = try JSONDecoder().decode(FrankfurterLatestResponse.self, from: data)
         return response.rates
     }
 
-    // --- 内部方法：存入 UserDefaults ---
-    private static func saveRatesLocally(_ rates: [String: Double], base: String) {
-        let normalized = normalizedRates(rates)
-        // 1. 存汇率 + 基准币种
-        let cached = CachedRates(base: base, rates: normalized)
-        if let data = try? JSONEncoder().encode(cached) {
-            UserDefaults.standard.set(data, forKey: kRatesKey)
-        }
-        // 2. 存时间 (存当前时间)
-        UserDefaults.standard.set(Date(), forKey: kDateKey)
-        // 3. 存当前基准币种
-        UserDefaults.standard.set(base, forKey: kBaseKey)
-    }
-
-    // --- 内部方法：读取 UserDefaults ---
-    private static func loadLocalRates() -> CachedRates? {
-        guard let data = UserDefaults.standard.data(forKey: kRatesKey) else { return nil }
-        if let cached = try? JSONDecoder().decode(CachedRates.self, from: data) {
-            return CachedRates(base: cached.base, rates: normalizedRates(cached.rates))
-        }
-        // 兼容旧版本缓存（仅存汇率字典）
-        if let rates = try? JSONDecoder().decode([String: Double].self, from: data),
-           let base = UserDefaults.standard.string(forKey: kBaseKey) {
-            return CachedRates(base: base, rates: normalizedRates(rates))
-        }
-        return nil
-    }
-
     // 统一大小写，避免汇率字典 key 大小写不一致导致换算失败
-    private static func normalizedRates(_ rates: [String: Double]) -> [String: Double] {
+    static func normalizedRates(_ rates: [String: Double]) -> [String: Double] {
         var normalized: [String: Double] = [:]
         normalized.reserveCapacity(rates.count * 2)
         for (code, value) in rates {
@@ -126,5 +164,4 @@ struct CurrencyService {
         }
         return normalized
     }
-    
 }

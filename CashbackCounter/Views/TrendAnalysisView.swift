@@ -480,6 +480,12 @@ struct TrendAnalysisView: View {
                 cardPieData = computeCardPieData()
                 categoryPieData = computeCategoryPieData()
             }
+            .onChange(of: exchangeRates) { _, _ in
+                // 汇率晚于弹窗到达时重算，否则图表停在 1:1 的数字上
+                chartData = computeChartData()
+                cardPieData = computeCardPieData()
+                categoryPieData = computeCategoryPieData()
+            }
         }
     }
     

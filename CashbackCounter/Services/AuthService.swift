@@ -13,6 +13,7 @@
 import AuthenticationServices
 import Foundation
 import Observation
+import UIKit
 
 @MainActor
 @Observable
@@ -35,6 +36,12 @@ final class AuthService: PlaidAPISessionDelegate {
 
     /// 内存里的一份缓存，避免每个请求都读一次 Keychain（读 Keychain 是系统调用，不便宜）
     private var cachedToken: String?
+
+    /// 正在进行的 401 续期。并发到来的 401 共用这一次，而不是各自发起 Apple 授权 ——
+    /// 冷启动时 `.task`、scenePhase、订阅上报三路几乎同时打到过期的会话，
+    /// 第二、三个会在协调器的防重入处拿到 .canceled，之前的实现把它当失败直接登出，
+    /// 表现为"明明授权通过了却被登出 / 报登录已过期"。
+    private var recoveryTask: Task<Bool, Never>?
 
     private init() {
         self.cachedToken = KeychainStore.read(.sessionToken)
@@ -169,15 +176,38 @@ final class AuthService: PlaidAPISessionDelegate {
     func recoverFromUnauthorized() async -> Bool {
         guard isSignedIn else { return false }
 
-        do {
-            let credential = try await coordinator.authorize()
-            try await exchange(credential)
-            return true
-        } catch {
-            print("⚠️ 会话续期失败，需要重新登录：\(error.localizedDescription)")
-            signOut()
+        // 已经有一次续期在跑：等它的结果，不再发起第二次授权
+        if let recoveryTask {
+            return await recoveryTask.value
+        }
+
+        // 交互式续期需要前台。后台推送唤醒时没有窗口可挂授权界面：系统要么回调错误
+        // （之前被当成失败直接登出），要么永不回调 —— continuation 悬住，之后前台每个 401
+        // 都在防重入处拿到 .canceled，静默续期从此失效。不在前台就什么都不做，等回前台再续。
+        guard UIApplication.shared.applicationState == .active else {
+            print("ℹ️ 会话已过期，但 App 不在前台，等回到前台再续期")
             return false
         }
+
+        let task = Task<Bool, Never> { [self] in
+            do {
+                let credential = try await coordinator.authorize()
+                try await exchange(credential)
+                return true
+            } catch AppleSignInError.canceled {
+                // 用户在授权界面点了取消：会话也许只是暂时拿不到，本地状态不动，
+                // 调用方会收到 unauthorized 错误自行提示
+                print("ℹ️ 会话续期被取消，保持当前登录状态")
+                return false
+            } catch {
+                print("⚠️ 会话续期失败，需要重新登录：\(error.localizedDescription)")
+                signOut()
+                return false
+            }
+        }
+        recoveryTask = task
+        defer { recoveryTask = nil }
+        return await task.value
     }
 }
 

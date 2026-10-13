@@ -98,10 +98,13 @@ struct ContentView: View {
 
             // 一次性迁移：旧版通知 identifier 基于 hashValue，重启后无法取消，
             // 这里清理孤儿通知并按稳定 identifier 重新注册
+            let cards = (try? context.fetch(FetchDescriptor<CreditCard>())) ?? []
             if !UserDefaults.standard.bool(forKey: AppConfig.UserDefaultsKey.didMigrateReminderIdentifiers) {
-                let cards = (try? context.fetch(FetchDescriptor<CreditCard>())) ?? []
                 NotificationManager.shared.migrateLegacyReminders(cards: cards)
                 UserDefaults.standard.set(true, forKey: AppConfig.UserDefaultsKey.didMigrateReminderIdentifiers)
+            } else {
+                // 还款日 29/30/31 的卡用的是按月滚动的一次性提醒，每次启动补齐到未来 12 个月
+                NotificationManager.shared.refreshRollingReminders(cards: cards)
             }
         }
     }

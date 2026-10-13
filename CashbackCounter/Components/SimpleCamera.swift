@@ -54,8 +54,13 @@ class CameraService: NSObject, ObservableObject {
         do {
             session.beginConfiguration()
             
-            // 1. 找摄像头
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return }
+            // 1. 找摄像头。没有后置摄像头（模拟器 / 个别设备）时也走"不可用"分支，
+            // 否则快门按钮照常可点，capturePhoto 会因为 output 没接入 session 直接崩
+            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+                session.commitConfiguration()
+                permissionDenied = true
+                return
+            }
             let input = try AVCaptureDeviceInput(device: device)
             
             // 2. 连接输入输出
@@ -88,6 +93,16 @@ class CameraService: NSObject, ObservableObject {
     
     // 拍照动作
     func takePhoto() {
+        // 权限被拒 / 没有摄像头时 output 根本没挂到 session 上，这时 capturePhoto 会抛
+        // NSInvalidArgumentException（"No active and enabled video connection"）直接崩。
+        // 会话还没启动完成时同样忽略这一下
+        guard isConfigured,
+              session.isRunning,
+              let connection = output.connection(with: .video),
+              connection.isEnabled, connection.isActive else {
+            print("⚠️ 相机未就绪，忽略本次拍照")
+            return
+        }
         let settings = AVCapturePhotoSettings()
         output.capturePhoto(with: settings, delegate: self)
     }
