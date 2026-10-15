@@ -106,7 +106,8 @@
     ],
     "memo" : "外币消费 2.4%（年度上限），本地仅 0.4%",
     "bankName" : "滙豐香港",
-    "defaultRate" : 0.4
+    "defaultRate" : 0.4,
+    "pictureURL" : "hsbchkpremiercard"
   },
   {
     "capPeriod" : {
@@ -997,7 +998,7 @@
     "specialRate" : [
 
     ],
-    "pictureURL" : "",
+    "pictureURL" : "beaworldmaster",
     "type" : "World Mastercard",
     "foreignBaseCap" : 115000,
     "localBaseCap" : 0,
@@ -2074,5 +2075,206 @@
     "memo" : "借记卡：每 $2 消费得 1 MR",
     "bankName" : "AMEX US",
     "defaultRate" : 50
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "hsbchkeasy",
+    "type" : "easy信用卡",
+    "foreignBaseCap" : 2400,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "points",
+    "pointProgramKey" : "hsbc hk|rc|hkd",
+    "region" : "香港",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "74D1C6",
+      "DC4A45"
+    ],
+    "foreignCurrencyRate" : 2.4,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "外币消费 2.4%（最紅自主獎賞選「賞世界」，年度上限），本地仅 0.4%；易賞錢另计",
+    "bankName" : "滙豐香港",
+    "defaultRate" : 0.4
+  },
+  {
+    "capPeriod" : {
+      "monthly" : {
+
+      }
+    },
+    "specialRate" : [
+      "dining",
+      5.6
+    ],
+    "pictureURL" : "citicmotion",
+    "type" : "Motion信用卡",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+      "dining",
+      200
+    ],
+    "rewardType" : "cashback",
+    "region" : "香港",
+    "paymentCaps" : [
+      "online",
+      200
+    ],
+    "colors" : [
+      "0A0A0A",
+      "E8692E"
+    ],
+    "foreignCurrencyRate" : 0.4,
+    "paymentMethodRates" : [
+      "online",
+      5.6
+    ],
+    "memo" : "按每月签满 HK$3,800 计：餐饮、线上消费 6%（额外 5.6% 两项合计每月上限 HK$200）；其他 0.4%",
+    "bankName" : "信銀國際",
+    "defaultRate" : 0.4
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "citicjd",
+    "type" : "京東Mastercard",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "cashback",
+    "region" : "香港",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "B3BEC7",
+      "D8D9DE"
+    ],
+    "foreignCurrencyRate" : 0,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "信銀國際",
+    "defaultRate" : 0
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "citicdebit",
+    "type" : "多幣扣賬卡",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "cashback",
+    "region" : "香港",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "3F2353",
+      "8C1B2B"
+    ],
+    "foreignCurrencyRate" : 0.2,
+    "paymentMethodRates" : [
+
+    ],
+    "bankName" : "信銀國際",
+    "defaultRate" : 0.2
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "jalpay",
+    "type" : "Pay",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "cashback",
+    "region" : "日本",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "F5F5F5",
+      "C8102E"
+    ],
+    "foreignCurrencyRate" : 1.2,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "外币消费 1.2%，日元消费 0.5%（里程按 1 里 = ¥1 计）",
+    "bankName" : "JAL",
+    "defaultRate" : 0.5
+  },
+  {
+    "capPeriod" : {
+      "yearly" : {
+
+      }
+    },
+    "specialRate" : [
+
+    ],
+    "pictureURL" : "sofidebit",
+    "type" : "Debit Card",
+    "foreignBaseCap" : 0,
+    "localBaseCap" : 0,
+    "categoryCaps" : [
+
+    ],
+    "rewardType" : "cashback",
+    "region" : "美国",
+    "paymentCaps" : [
+
+    ],
+    "colors" : [
+      "F3F6F9",
+      "00A9CE"
+    ],
+    "foreignCurrencyRate" : 0,
+    "paymentMethodRates" : [
+
+    ],
+    "memo" : "无日常返现，仅限商户返现活动",
+    "bankName" : "SoFi",
+    "defaultRate" : 0
   }
 ]
