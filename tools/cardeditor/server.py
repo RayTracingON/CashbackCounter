@@ -12,14 +12,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import unquote
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 JSON_PATH = REPO / "CashbackCounter" / "CardTemplates.json"
+ASSETS_DIR = REPO / "CashbackCounter" / "Assets.xcassets"
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 
 # --- 与 Swift 侧枚举保持一致 -------------------------------------------------
 # Category.swift / Region.swift / PaymentMethod.swift / CreditCard.swift
@@ -110,31 +114,51 @@ def dump_templates(data, key_order) -> str:
 # --- 校验 -------------------------------------------------------------------
 HEX = set("0123456789ABCDEF")
 
+# 卡面文字颜色：与 CashbackCounter/Components/CardTextContrast.swift 同一套规则，改一边要同步另一边。
+# 新版 App 在白字、黑字里选余量更大的一种：每个采样点按「对比度 ÷ 该处元素的要求」打分，取最差的一点。
+# 卡号是正文（WCAG 1.4.3，4.5:1），左上的非接触图标是图形（1.4.11，3:1）。旧版 App 一律白字。
+# 渐变上的采样位置：图标约 0.1，卡号横跨约 0.28–0.64。
+TEXT_SAMPLES = ((0.10, 3.0), (0.30, 4.5), (0.45, 4.5), (0.60, 4.5))
 
-def _relative_luminance(hex6: str) -> float:
-    def channel(v: float) -> float:
-        v /= 255.0
-        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
 
-    r, g, b = (channel(int(hex6[i:i + 2], 16)) for i in (0, 2, 4))
+def _relative_luminance(rgb) -> float:
+    """gamma 编码的 sRGB（0…1）→ WCAG 相对亮度"""
+    def channel(c: float) -> float:
+        c = min(max(c, 0.0), 1.0)
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = (channel(c) for c in rgb)
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
-def contrast_with_white(hex6: str) -> float:
-    return 1.05 / (_relative_luminance(hex6) + 0.05)
+def contrast_ratio(a: float, b: float) -> float:
+    return (max(a, b) + 0.05) / (min(a, b) + 0.05)
 
 
-def midpoint(a: str, b: str) -> str:
-    return "".join(
-        f"{(int(a[i:i + 2], 16) + int(b[i:i + 2], 16)) // 2:02X}" for i in (0, 2, 4)
-    )
+def text_contrast(a: str, b: str):
+    """渐变两端颜色 → (新版选的字色, 新版最差处, 旧版白字最差处)。
+
+    「最差处」是 (余量, 对比度, 要求)，余量 = 对比度 ÷ 要求，< 1 就是不达标。
+    """
+    ca, cb = ([int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)] for h in (a, b))
+    samples = [(_relative_luminance([x + (y - x) * t for x, y in zip(ca, cb)]), required)
+               for t, required in TEXT_SAMPLES]
+
+    def worst(text_luminance):
+        return min((contrast_ratio(text_luminance, l) / required, contrast_ratio(text_luminance, l), required)
+                   for l, required in samples)
+
+    white, black = worst(1.0), worst(0.0)
+    if black[0] > white[0]:
+        return "黑字", black, white
+    return "白字", white, white
 
 
 def validate(data):
-    """返回 (errors, warnings)。errors 会让 App 解码失败或数据明显错误。"""
-    errors, warnings = [], []
+    """返回 (errors, warnings, info)。errors 会让 App 解码失败或数据明显错误；info 只是提示。"""
+    errors, warnings, old_white = [], [], []
     if not isinstance(data, list):
-        return ["顶层必须是数组"], []
+        return ["顶层必须是数组"], [], []
 
     seen = {}
     for i, e in enumerate(data):
@@ -177,6 +201,11 @@ def validate(data):
                 if not isinstance(v, (int, float)) or isinstance(v, bool):
                     errors.append(f"{name}: {field} 里 {k} 的值 {v!r} 不是数字")
 
+        pic = (e.get("pictureURL") or "").strip()
+        has_image = pic.lower().startswith("http") or find_asset_image(pic) is not None
+        if pic and not has_image:
+            warnings.append(f"{name}: 卡面图 {pic!r} 在 Assets.xcassets 里找不到，App 会退回显示渐变")
+
         colors = e.get("colors", [])
         if not isinstance(colors, list) or len(colors) != 2:
             errors.append(f"{name}: colors 必须正好 2 个颜色（渐变的两端）")
@@ -184,16 +213,17 @@ def validate(data):
             for c in colors:
                 if not isinstance(c, str) or len(c) != 6 or not set(c.upper()) <= HEX:
                     errors.append(f"{name}: 颜色 {c!r} 不是 6 位十六进制")
-            if all(isinstance(c, str) and len(c) == 6 and set(c.upper()) <= HEX for c in colors):
-                a, b = colors[0].upper(), colors[1].upper()
-                mid_hex = midpoint(a, b)
-                start_cr = contrast_with_white(a)
-                mid_cr = contrast_with_white(mid_hex)
-                # CreditCardView 把文字层写死成白色，卡号落在渐变中点
-                if start_cr < 4.5:
-                    warnings.append(f"{name}: 起点色 {a} 对白字对比度只有 {start_cr:.1f}，左上角图标会看不清")
-                if mid_cr < 4.5:
-                    warnings.append(f"{name}: 渐变中点 {mid_hex} 对白字对比度只有 {mid_cr:.1f}，卡号会看不清")
+            # 有卡面图的卡，渐变只在图片解码前闪一下，文字颜色由图决定（见编辑器里的图片预览）；
+            # 只有没图的卡，文字才一直压在渐变上
+            valid_hex = all(isinstance(c, str) and len(c) == 6 and set(c.upper()) <= HEX for c in colors)
+            if valid_hex and not has_image:
+                ink, chosen, white = text_contrast(colors[0].upper(), colors[1].upper())
+                # 新版自动切白字/黑字，单色背景保底 4.58；还不够只可能是渐变两头明暗差太远
+                if chosen[0] < 1:
+                    warnings.append(f"{name}: 渐变两头明暗差太大，自动选{ink}后最差处对比度只有 "
+                                    f"{chosen[1]:.1f}（要求 {chosen[2]:g}），卡号会看不清")
+                if white[0] < 1:
+                    old_white.append(f"{e.get('bankName', '?')} {e.get('type', '?')}")
 
         if e.get("rewardType") == "points" and not e.get("pointProgramKey"):
             warnings.append(f"{name}: rewardType 是 points 但没有 pointProgramKey，积分不会入任何账户")
@@ -205,7 +235,23 @@ def validate(data):
             if mode is not None and mode not in DUAL_MODES:
                 errors.append(f"{name}: dualCurrencyMode {mode!r} 非法")
 
-    return errors, warnings
+    info = []
+    if old_white:
+        # JSON 从 GitHub Master 实时拉、所有版本共用：没图的卡配色调浅，旧版的白字会更看不清
+        info.append(f"旧版 App 卡面文字写死白色：以下 {len(old_white)} 张没有卡面图的卡，渐变上白字达不到要求"
+                    f"（新版已按背景自动切字色）。新版普及前别把没图卡片的配色往浅调：{'、'.join(old_white)}")
+    return errors, warnings, info
+
+
+def find_asset_image(name: str):
+    """非 http 的 pictureURL → Assets.xcassets/<name>.imageset 里的图（App 里 UIImage(named:) 读的就是它）"""
+    if not re.fullmatch(r"[A-Za-z0-9_\- ]+", name):
+        return None
+    folder = ASSETS_DIR / f"{name}.imageset"
+    if not folder.is_dir():
+        return None
+    files = sorted(p for p in folder.iterdir() if p.suffix.lower() in IMAGE_TYPES)
+    return files[0] if files else None
 
 
 # --- HTTP -------------------------------------------------------------------
@@ -213,11 +259,11 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):  # 静音，只在出错时打印
         pass
 
-    def _send(self, code, body: bytes, ctype="application/json; charset=utf-8"):
+    def _send(self, code, body: bytes, ctype="application/json; charset=utf-8", cache="no-store"):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
         self.end_headers()
         self.wfile.write(body)
 
@@ -227,7 +273,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, html, "text/html; charset=utf-8")
         if self.path == "/api/templates":
             data, _ = load_templates()
-            errors, warnings = validate(data)
+            errors, warnings, info = validate(data)
             payload = {
                 "templates": data,
                 "path": str(JSON_PATH),
@@ -236,9 +282,16 @@ class Handler(BaseHTTPRequestHandler):
                     "payments": PAYMENTS, "rewardTypes": REWARD_TYPES,
                     "capPeriods": CAP_PERIODS, "dualModes": DUAL_MODES,
                 },
-                "errors": errors, "warnings": warnings,
+                "errors": errors, "warnings": warnings, "info": info,
             }
             return self._send(200, json.dumps(payload, ensure_ascii=False).encode())
+        if self.path.startswith("/api/image/"):
+            # 预览用：让编辑器能显示卡面图，并按图算 App 会选的字色
+            image = find_asset_image(unquote(self.path[len("/api/image/"):]))
+            if image is None:
+                return self._send(404, b'{"error":"no image"}')
+            # 编辑器每次改动都会重绘预览，图片允许缓存一会儿，免得反复读盘
+            return self._send(200, image.read_bytes(), IMAGE_TYPES[image.suffix.lower()], cache="max-age=300")
         self._send(404, b'{"error":"not found"}')
 
     def do_POST(self):
@@ -251,12 +304,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(400, json.dumps({"error": f"请求不是合法 JSON: {exc}"}).encode())
 
         data = incoming.get("templates")
-        errors, warnings = validate(data)
+        errors, warnings, info = validate(data)
         if errors:
             return self._send(
                 422,
                 json.dumps({"error": "校验未通过，没有写盘", "errors": errors,
-                            "warnings": warnings}, ensure_ascii=False).encode(),
+                            "warnings": warnings, "info": info}, ensure_ascii=False).encode(),
             )
 
         _, key_order = load_templates()
@@ -264,7 +317,7 @@ class Handler(BaseHTTPRequestHandler):
         json.loads(text)  # 写盘前最后确认一次是合法 JSON
         JSON_PATH.write_text(text, encoding="utf-8")
         print(f"✅ 已写入 {JSON_PATH} （{len(data)} 张卡）")
-        self._send(200, json.dumps({"ok": True, "warnings": warnings},
+        self._send(200, json.dumps({"ok": True, "warnings": warnings, "info": info},
                                    ensure_ascii=False).encode())
 
 
@@ -281,7 +334,9 @@ def main():
 
     if args.check:
         data, key_order = load_templates()
-        errors, warnings = validate(data)
+        errors, warnings, info = validate(data)
+        for line in info:
+            print(f"ℹ️  {line}")
         for w in warnings:
             print(f"⚠️  {w}")
         for e in errors:

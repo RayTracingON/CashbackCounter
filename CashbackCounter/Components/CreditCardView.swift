@@ -16,8 +16,21 @@ struct CreditCardView: View {
     
     // ✅ 新增：用于存储解码后图片的 State
     @State private var decodedImage: UIImage? = nil
+    /// 按卡面图上卡号那块背景选出的文字颜色；和图片一起在后台算好，nil 表示退回看渐变
+    @State private var imageInk: CardTextContrast.Ink? = nil
+    @Environment(\.self) private var environment
+    
+    /// 文字用白字还是黑字：有卡面图看图，否则看渐变（规则见 CardTextContrast）
+    private var ink: CardTextContrast.Ink {
+        if decodedImage != nil, let imageInk { return imageInk }
+        return CardTextContrast.ink(gradient: colors.map { color in
+            let resolved = color.resolve(in: environment)
+            return SIMD3(Double(resolved.red), Double(resolved.green), Double(resolved.blue))
+        })
+    }
     
     var body: some View {
+        let ink = self.ink
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 // 1. 背景渐变
@@ -38,8 +51,8 @@ struct CreditCardView: View {
                         // ✅ 关键修复：限制图片最大宽度，防止宽图撑爆布局导致 GeometryReader 坐标错乱
                         .frame(maxWidth: proxy.size.width)
                         .clipped()
-                        // 加一层极淡的黑罩，确保白色卡号稍微清晰点，又不影响卡面美观
-                        .overlay(Color.black.opacity(0.05))
+                        // 白字时加一层极淡的黑罩，让卡号稍微清晰点，又不影响卡面美观；黑字时不需要
+                        .overlay(Color.black.opacity(ink == .light ? 0.05 : 0))
                 }
                 
                 // 4. 文字信息层
@@ -64,7 +77,8 @@ struct CreditCardView: View {
                     }
                 }
                 .padding(25)
-                .foregroundColor(.white)
+                // 浅色卡面（白金、金卡、Apple Card…）上白字看不清，按背景自动切黑字
+                .foregroundColor(ink == .dark ? .black : .white)
             }
         }
         .frame(height: DesignConstants.CardList.cardHeight)
@@ -74,19 +88,23 @@ struct CreditCardView: View {
         // ✅ 核心修复：在后台线程处理图片解码，避免阻塞主线程
         .task(id: cardImageData) {
             if let data = cardImageData {
-                // 使用 detached 任务避免继承当前上下文的优先级，确保不卡顿 UI
-                let image = await Task.detached(priority: .userInitiated) {
-                    return UIImage(data: data)
+                // 使用 detached 任务避免继承当前上下文的优先级，确保不卡顿 UI；
+                // 卡号该用白字还是黑字要看图上那块区域的亮度，顺手在同一个后台任务里算掉
+                let (image, imageInk) = await Task.detached(priority: .userInitiated) {
+                    let image = UIImage(data: data)
+                    return (image, image.flatMap { CardTextContrast.ink(cardImage: $0) })
                 }.value
                 
                 // 回到主线程更新 UI
                 await MainActor.run {
                     withAnimation(.easeIn(duration: 0.2)) {
                         self.decodedImage = image
+                        self.imageInk = imageInk
                     }
                 }
             } else {
                 self.decodedImage = nil
+                self.imageInk = nil
             }
         }
     }
@@ -118,6 +136,22 @@ struct CreditCardView: View {
                    cardImageData: PreviewData.cardArtData)
         .frame(height: DesignConstants.CardList.cardHeight)
         .padding()
+}
+
+#Preview("卡面 · 浅色自动黑字", traits: .sizeThatFitsLayout) {
+    // Apple Card / AMEX Gold 的实卡原色应切成黑字；Sapphire Reserve 这种深色仍是白字
+    VStack(spacing: 16) {
+        CreditCardView(bankName: "Apple", type: "Card", endNum: "0001",
+                       colors: [Color(hex: "F5F5F7"), Color(hex: "F8D347")])
+            .frame(height: DesignConstants.CardList.cardHeight)
+        CreditCardView(bankName: "AMEX US", type: "Gold", endNum: "1005",
+                       colors: [Color(hex: "A39458"), Color(hex: "E0CA79")])
+            .frame(height: DesignConstants.CardList.cardHeight)
+        CreditCardView(bankName: "Chase", type: "Sapphire Reserve", endNum: "2077",
+                       colors: [Color(hex: "12141C"), Color(hex: "6E6555")])
+            .frame(height: DesignConstants.CardList.cardHeight)
+    }
+    .padding()
 }
 
 #Preview("卡面 · 极端文案", traits: .sizeThatFitsLayout) {
