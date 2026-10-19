@@ -191,7 +191,7 @@ struct AddCardView: View {
                                 .multilineTextAlignment(.trailing)
                                 .frame(width: 50)
                         }
-                        Text("并入本币上限：仅第二币种地区消费入账副币，金额按 1:1 计入本币上限（如港币+人民币卡）。\n独立外币上限：所有境外消费入账副币种，使用外币费率与外币上限（如人民币+美元卡）。")
+                        Text("副币消费都算境外，使用外币费率与外币上限。\n外币上限按主币计：仅第二币种地区消费入账副币，金额按 1:1 计入外币上限（如港币+人民币卡）。\n外币上限按副币计：所有境外消费入账副币种，外币上限以副币种计价（如人民币+美元卡）。")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }

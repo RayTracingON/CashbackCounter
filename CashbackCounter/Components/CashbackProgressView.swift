@@ -61,7 +61,6 @@ extension CreditCard {
         var results: [CashbackCapProgress] = []
 
         // A. 本币基础返现计划（有基础费率或设置了上限则显示）
-        // 港式双币卡：副币入账消费也在本币轨道，账单金额按 1:1 计入
         if defaultRate > 0 || localBaseCap > 0 {
             let used = periodTransactions
                 .filter { rewardTrack(for: $0.location) == .local }
@@ -80,6 +79,7 @@ extension CreditCard {
 
         // B. 外币基础返现计划（有境外费率或设置了上限则显示）
         // 陆式双币卡：境外消费一律入账副币种，上限与用量均以副币种计价，符号随之切换
+        // 港式双币卡：副币地区消费（如港卡的 CNY）也在这条轨道，账单金额按 1:1 计入主币上限
         let foreignRate = foreignCurrencyRate ?? 0
         if foreignRate > 0 || foreignBaseCap > 0 {
             let foreignTrackSymbol: String? = (isDualCurrency && dualCurrencyMode == .secondaryAsForeign)

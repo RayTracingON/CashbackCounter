@@ -41,7 +41,7 @@ enum PreviewData {
     /// 积分卡：港币、绑了积分计划。用来看积分相关展示。
     static var pointsCard: CreditCard { seeded.cards[1] }
 
-    /// 港式双币卡：副币种消费按 1:1 并入本币上限。
+    /// 港式双币卡：内地消费入账 CNY，算境外消费，按 1:1 计入外币上限。
     static var dualCurrencyCard: CreditCard { seeded.cards[2] }
 
     // MARK: - 交易与收入

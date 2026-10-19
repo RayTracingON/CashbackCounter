@@ -93,6 +93,8 @@ enum AppConfig {
         static let cachedExchangeRatesByBase = "cached_exchange_rates_by_base_v2"
         /// 已完成还款提醒通知 identifier 迁移（旧版用 hashValue，重启后无法取消）
         static let didMigrateReminderIdentifiers = "did_migrate_reminder_identifiers_v1"
+        /// 已重算港式双币卡的奖励快照（副币消费从本币轨道改判为外币轨道）
+        static let didRecalculateDualCurrencyForeignTrack = "did_recalculate_dual_currency_foreign_track_v1"
         /// 上次执行数据去重时的去重逻辑版本号
         static let lastDeduplicationVersion = "last_deduplication_version"
         /// 上次执行（较重的）交易去重时的 App 构建号（CFBundleVersion）。
