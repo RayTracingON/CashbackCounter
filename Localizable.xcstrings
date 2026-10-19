@@ -3590,6 +3590,22 @@
         }
       }
     },
+    "副币消费都算境外，使用外币费率与外币上限。\n外币上限按主币计：仅第二币种地区消费入账副币，金额按 1:1 计入外币上限（如港币+人民币卡）。\n外币上限按副币计：所有境外消费入账副币种，外币上限以副币种计价（如人民币+美元卡）。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secondary-currency purchases count as overseas, using the foreign rate and foreign cap.\nForeign cap in base currency: only purchases in the secondary region are billed in the secondary currency, counting 1:1 toward the foreign cap (e.g. HKD + CNY cards).\nForeign cap in secondary currency: all overseas purchases are billed in the secondary currency, and the foreign cap is in that currency (e.g. CNY + USD cards)."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "副幣消費都算境外，使用外幣費率與外幣上限。\n外幣上限按主幣計：僅第二幣種地區消費入賬副幣，金額按 1:1 計入外幣上限（如港幣＋人民幣卡）。\n外幣上限按副幣計：所有境外消費入賬副幣種，外幣上限以副幣種計價（如人民幣＋美元卡）。"
+          }
+        }
+      }
+    },
     "副币种费率 (%)" : {
       "localizations" : {
         "en" : {
@@ -4377,6 +4393,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "備註（選填）"
+          }
+        }
+      }
+    },
+    "外币上限按主币计 (1:1)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foreign cap in base currency (1:1)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外幣上限按主幣計 (1:1)"
+          }
+        }
+      }
+    },
+    "外币上限按副币计" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foreign cap in secondary currency"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外幣上限按副幣計"
           }
         }
       }
@@ -5326,39 +5376,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "常規"
-          }
-        }
-      }
-    },
-    "并入本币上限 (1:1)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shared with local cap (1:1)"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "併入本幣上限 (1:1)"
-          }
-        }
-      }
-    },
-    "并入本币上限：仅第二币种地区消费入账副币，金额按 1:1 计入本币上限（如港币+人民币卡）。\n独立外币上限：所有境外消费入账副币种，使用外币费率与外币上限（如人民币+美元卡）。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shared local cap: only purchases in the secondary region are billed in the secondary currency, counting 1:1 toward the local cap (e.g. HKD + CNY cards).\nSeparate foreign cap: all overseas purchases are billed in the secondary currency, using the foreign rate and foreign cap (e.g. CNY + USD cards)."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "併入本幣上限：僅第二幣種地區消費入賬副幣，金額按 1:1 計入本幣上限（如港幣＋人民幣卡）。\n獨立外幣上限：所有境外消費入賬副幣種，使用外幣費率與外幣上限（如人民幣＋美元卡）。"
           }
         }
       }
@@ -9020,23 +9037,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "狀態"
-          }
-        }
-      }
-    },
-    "独立外币上限" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Separate foreign-currency cap"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "獨立外幣上限"
           }
         }
       }

@@ -13,18 +13,20 @@ enum CapPeriod: Codable {
     case monthly
 }
 
+// 两种模式下副币消费都算境外 (走外币费率和外币上限)，区别只在哪些消费入账副币、外币上限按哪个币种计价。
+// case 名是历史遗留 (早期港式卡把副币并入本币轨道)，已持久化进 SwiftData / CloudKit，不能改名。
 enum DualCurrencyMode: String, Codable, CaseIterable {
-    // 港式双币 (如 HKD+CNY)：仅副币种地区消费入账副币，费率/上限并入本币轨道 (金额 1:1 计入 localBaseCap)
+    // 港式双币 (如 HKD+CNY)：仅副币种地区消费入账副币；外币上限按主币计价，副币金额 1:1 计入 foreignBaseCap
     case secondaryAsLocal
-    // 陆式双币 (如 CNY+USD)：所有境外消费入账副币种，走外币轨道 (foreignBaseCap 即副币种独立上限)
+    // 陆式双币 (如 CNY+USD)：所有境外消费入账副币种，foreignBaseCap 按副币种计价
     case secondaryAsForeign
 
     var displayName: String {
         switch self {
         case .secondaryAsLocal:
-            return String.loc("并入本币上限 (1:1)")
+            return String.loc("外币上限按主币计 (1:1)")
         case .secondaryAsForeign:
-            return String.loc("独立外币上限")
+            return String.loc("外币上限按副币计")
         }
     }
 }
@@ -197,19 +199,11 @@ class CreditCard: Identifiable {
         }
     }
 
-    /// 该消费地点走本币轨道还是外币轨道 (决定基础费率与基础上限)
+    /// 该消费地点走本币轨道还是外币轨道 (决定基础费率与基础上限)。
+    /// 只看是不是发卡地：双币卡的副币消费 (如港卡在内地刷的 CNY) 同样是境外消费，
+    /// 入账币种不同不改变它拿外币费率、占外币上限
     func rewardTrack(for location: Region) -> RewardTrack {
-        guard let secondary = secondaryRegion, secondary != issueRegion else {
-            // 单币卡：与旧逻辑 (location != issueRegion 即外币) 完全一致
-            return location == issueRegion ? .local : .foreign
-        }
-        switch dualCurrencyMode {
-        case .secondaryAsLocal:
-            // 港式：副币地区消费并入本币轨道，上限按 1:1 合并
-            return (location == issueRegion || location == secondary) ? .local : .foreign
-        case .secondaryAsForeign:
-            return location == issueRegion ? .local : .foreign
-        }
+        location == issueRegion ? .local : .foreign
     }
 
     /// 该消费地点适用的基础费率 (含 secondaryRate 覆盖)

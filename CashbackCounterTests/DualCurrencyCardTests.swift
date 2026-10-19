@@ -79,7 +79,7 @@ final class DualCurrencyCardTests: XCTestCase {
         return tx
     }
 
-    // MARK: - 1. 港式双币卡：副币消费 1:1 并入本币上限
+    // MARK: - 1. 港式双币卡：副币消费算境外，金额 1:1 计入外币上限
 
     func testHKDualCard_BillingRegionResolution() {
         let card = makeCard(issueRegion: .hk, secondaryRegion: .cn, dualCurrencyMode: .secondaryAsLocal)
@@ -87,33 +87,33 @@ final class DualCurrencyCardTests: XCTestCase {
         XCTAssertEqual(card.billingRegion(for: .hk), .hk, "本地消费入 HKD 账")
         XCTAssertEqual(card.billingRegion(for: .cn), .cn, "内地消费入 CNY 账")
         XCTAssertEqual(card.billingRegion(for: .us), .hk, "其他境外消费入 HKD 账")
-        XCTAssertEqual(card.rewardTrack(for: .cn), .local, "CNY 消费并入本币轨道")
+        XCTAssertEqual(card.rewardTrack(for: .hk), .local)
+        XCTAssertEqual(card.rewardTrack(for: .cn), .foreign, "CNY 消费虽入副币账，仍是境外消费")
         XCTAssertEqual(card.rewardTrack(for: .us), .foreign)
     }
 
-    func testHKDualCard_MergedCapOneToOne() {
-        // localBaseCap = 100 (HKD 计价)，费率 1%
+    func testHKDualCard_SecondarySpendUsesForeignRate() {
+        // 本地 4%、外币 0.4% (同信银国际大湾区卡)
         let card = makeCard(
-            defaultRate: 0.01,
+            defaultRate: 0.04,
             issueRegion: .hk,
-            localBaseCap: 100,
+            foreignCurrencyRate: 0.004,
             secondaryRegion: .cn,
             dualCurrencyMode: .secondaryAsLocal
         )
-        let now = Date()
 
-        // HKD 历史消费 6000 → 已用 60；CNY 历史消费 3000 → 按 1:1 再用 30，共 90
-        makeTransaction(card: card, amount: 6000, location: .hk, date: now)
-        makeTransaction(card: card, amount: 3000, location: .cn, date: now)
+        XCTAssertEqual(card.baseRate(forLocation: .cn), 0.004, accuracy: 0.000001, "CNY 消费按外币费率")
+        XCTAssertEqual(card.baseRate(forLocation: .hk), 0.04, accuracy: 0.000001, "本地消费仍按本币费率")
+        XCTAssertEqual(card.getRate(for: .other, location: .cn, payment: .offline), 0.004, accuracy: 0.000001)
 
-        // 新 CNY 消费 2000 → 理论 20，剩余 10 → 封顶 10
         let cashback = card.calculateCappedCashback(
-            amount: 2000, category: .other, location: .cn, date: now, paymentMethod: .offline
+            amount: 1000, category: .other, location: .cn, date: Date(), paymentMethod: .offline
         )
-        XCTAssertEqual(cashback, 10, accuracy: 0.0001, "CNY 消费应按 1:1 计入 HKD 上限后封顶")
+        XCTAssertEqual(cashback, 4, accuracy: 0.0001, "1000 CNY × 0.4% = 4，不是本地 4% 的 40")
     }
 
-    func testHKDualCard_ForeignTrackUnaffectedByMergedUsage() {
+    func testHKDualCard_SecondarySpendSharesForeignCapOneToOne() {
+        // foreignBaseCap = 50 (HKD 计价)，外币费率 2%
         let card = makeCard(
             defaultRate: 0.01,
             issueRegion: .hk,
@@ -125,15 +125,57 @@ final class DualCurrencyCardTests: XCTestCase {
         )
         let now = Date()
 
-        // 本币轨道已接近打满 (60 + 30 = 90/100)
-        makeTransaction(card: card, amount: 6000, location: .hk, date: now)
-        makeTransaction(card: card, amount: 3000, location: .cn, date: now)
+        // CNY 历史消费 1000 → 按 1:1 用掉外币额度 20；美国消费 1000 (入 HKD 账) 再用 20，共 40
+        makeTransaction(card: card, amount: 1000, location: .cn, date: now)
+        makeTransaction(card: card, amount: 1000, location: .us, date: now)
 
-        // 美国消费走外币轨道：1000 * 2% = 20，外币上限 50 未被本币用量占用
+        // 新 CNY 消费 1000 → 理论 20，外币剩余 10 → 封顶 10
         let cashback = card.calculateCappedCashback(
-            amount: 1000, category: .other, location: .us, date: now, paymentMethod: .offline
+            amount: 1000, category: .other, location: .cn, date: now, paymentMethod: .offline
         )
-        XCTAssertEqual(cashback, 20, accuracy: 0.0001, "外币轨道不应受本币合并用量影响")
+        XCTAssertEqual(cashback, 10, accuracy: 0.0001, "CNY 消费和其他境外消费共用外币上限")
+    }
+
+    func testHKDualCard_LocalTrackUnaffectedBySecondarySpend() {
+        let card = makeCard(
+            defaultRate: 0.01,
+            issueRegion: .hk,
+            foreignCurrencyRate: 0.02,
+            localBaseCap: 100,
+            foreignBaseCap: 50,
+            secondaryRegion: .cn,
+            dualCurrencyMode: .secondaryAsLocal
+        )
+        let now = Date()
+
+        // 本币轨道已用 60/100；CNY 消费 5000 走外币轨道，不占本币额度
+        makeTransaction(card: card, amount: 6000, location: .hk, date: now)
+        makeTransaction(card: card, amount: 5000, location: .cn, date: now)
+
+        // 本地消费 3000 → 理论 30，本币剩余 40 → 不封顶
+        let cashback = card.calculateCappedCashback(
+            amount: 3000, category: .other, location: .hk, date: now, paymentMethod: .offline
+        )
+        XCTAssertEqual(cashback, 30, accuracy: 0.0001, "CNY 消费不应占用本币上限")
+    }
+
+    func testHKDualCard_RecalculateFixesLegacySnapshot() {
+        // 旧逻辑把 CNY 消费按本币 4% 存了快照，重算 (启动时的一次性迁移) 后应改成外币 0.4%
+        let card = makeCard(
+            defaultRate: 0.04,
+            issueRegion: .hk,
+            foreignCurrencyRate: 0.004,
+            secondaryRegion: .cn,
+            dualCurrencyMode: .secondaryAsLocal
+        )
+        let cnTx = makeTransaction(card: card, amount: 1000, location: .cn)
+        cnTx.cashbackamount = 40
+        let hkTx = makeTransaction(card: card, amount: 1000, location: .hk)
+
+        let changed = card.recalculateAllRewards(pointValueInCardCurrency: 0)
+        XCTAssertEqual(changed, 1, "只有 CNY 那笔需要改")
+        XCTAssertEqual(cnTx.cashbackamount, 4, accuracy: 0.0001)
+        XCTAssertEqual(hkTx.cashbackamount, 40, accuracy: 0.0001)
     }
 
     // MARK: - 2. 陆式双币卡：两币种独立上限
@@ -198,11 +240,11 @@ final class DualCurrencyCardTests: XCTestCase {
         XCTAssertEqual(card.baseRate(forLocation: .hk), 0.01, accuracy: 0.000001, "本币消费仍用 defaultRate")
         XCTAssertEqual(card.getRate(for: .other, location: .cn, payment: .offline), 0.005, accuracy: 0.000001)
 
-        // 上限用量也按覆盖后的费率累计
+        // 上限用量也按覆盖后的费率累计 (副币消费算境外，占外币上限)
         let now = Date()
         makeTransaction(card: card, amount: 2000, location: .cn, date: now) // 用 2000*0.005 = 10
         let cardWithCap = card
-        cardWithCap.localBaseCap = 15
+        cardWithCap.foreignBaseCap = 15
         let cashback = cardWithCap.calculateCappedCashback(
             amount: 2000, category: .other, location: .cn, date: now, paymentMethod: .offline
         )
@@ -370,20 +412,26 @@ final class DualCurrencyCardTests: XCTestCase {
         XCTAssertNil(hkForeignItem?.currencySymbolOverride)
     }
 
-    func testCapProgress_MergedLocalTrackIncludesSecondarySpend() {
-        // 港式卡本币进度应包含副币消费的 1:1 用量
+    func testCapProgress_HKForeignTrackIncludesSecondarySpend() {
+        // 港式卡的外币进度应包含副币消费的 1:1 用量，本币进度不含
         let card = makeCard(
             defaultRate: 0.01,
             issueRegion: .hk,
+            foreignCurrencyRate: 0.02,
             localBaseCap: 100,
+            foreignBaseCap: 50,
             secondaryRegion: .cn,
             dualCurrencyMode: .secondaryAsLocal
         )
         let now = Date()
         makeTransaction(card: card, amount: 6000, location: .hk, date: now)
-        makeTransaction(card: card, amount: 3000, location: .cn, date: now)
+        makeTransaction(card: card, amount: 1000, location: .cn, date: now)
+        makeTransaction(card: card, amount: 500, location: .us, date: now)
 
-        let localItem = card.cashbackCapProgress(asOf: now).first { $0.id == "base_local" }
-        XCTAssertEqual(localItem?.used ?? 0, 90, accuracy: 0.0001, "60 (HKD) + 30 (CNY 按 1:1) = 90")
+        let items = card.cashbackCapProgress(asOf: now)
+        let localItem = items.first { $0.id == "base_local" }
+        let foreignItem = items.first { $0.id == "base_foreign" }
+        XCTAssertEqual(localItem?.used ?? 0, 60, accuracy: 0.0001, "本币只算 HKD 本地消费")
+        XCTAssertEqual(foreignItem?.used ?? 0, 30, accuracy: 0.0001, "20 (CNY 按 1:1) + 10 (美国) = 30")
     }
 }

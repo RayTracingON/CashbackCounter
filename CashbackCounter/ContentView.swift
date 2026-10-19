@@ -106,6 +106,16 @@ struct ContentView: View {
                 // 还款日 29/30/31 的卡用的是按月滚动的一次性提醒，每次启动补齐到未来 12 个月
                 NotificationManager.shared.refreshRollingReminders(cards: cards)
             }
+
+            // 一次性重算：港式双币卡（如 HKD+CNY）的副币消费以前被并进本币轨道，
+            // 已存的奖励快照是按本币费率 / 本币上限算的，改判为境外后要整体重算
+            if !UserDefaults.standard.bool(forKey: AppConfig.UserDefaultsKey.didRecalculateDualCurrencyForeignTrack) {
+                for card in cards where card.isDualCurrency && card.dualCurrencyMode == .secondaryAsLocal {
+                    await card.recalculateAllRewards()
+                }
+                try? context.save()
+                UserDefaults.standard.set(true, forKey: AppConfig.UserDefaultsKey.didRecalculateDualCurrencyForeignTrack)
+            }
         }
     }
 }
