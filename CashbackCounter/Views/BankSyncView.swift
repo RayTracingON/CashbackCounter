@@ -710,6 +710,7 @@ private struct CardPickerSheet: View {
             }
             .navigationTitle("选择卡片")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

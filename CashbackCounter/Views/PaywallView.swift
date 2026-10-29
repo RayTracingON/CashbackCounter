@@ -58,6 +58,7 @@ struct PaywallView: View {
             }
             .navigationTitle("银行自动同步")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { dismiss() }

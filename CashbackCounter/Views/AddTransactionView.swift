@@ -43,7 +43,7 @@ struct AddTransactionView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // --- 第一组：消费详情 ---
                 Section(header: Text("消费详情")) {
@@ -203,6 +203,7 @@ struct AddTransactionView: View {
             }
             .navigationTitle(viewModel.transactionToEdit == nil ? "记一笔" : "编辑账单")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {

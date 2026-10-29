@@ -159,7 +159,7 @@ private struct TourStepLayer: View {
                     .frame(width: size.width, height: size.height)
 
                 case .spotlight:
-                    let holes = holes(in: proxy)
+                    let holes = holes(in: proxy, insets: insets)
                     ZStack {
                         SpotlightDimming(holes: holes, size: size) { nudge += 1 }
 
@@ -201,9 +201,11 @@ private struct TourStepLayer: View {
 
     // MARK: 挖空
 
-    private func holes(in proxy: GeometryProxy) -> [TourHole] {
+    private func holes(in proxy: GeometryProxy, insets: EdgeInsets) -> [TourHole] {
         let origin = proxy.frame(in: .global).origin
-        let width = proxy.size.width
+        // 列表只铺在左右安全区之间：横屏的刘海、iPhone Duo 竖到侧边的导航栏都会把它往里推
+        let listMinX = insets.leading
+        let listWidth = proxy.size.width - insets.leading - insets.trailing
 
         var holes: [TourHole] = []
         for target in step.targets {
@@ -211,10 +213,10 @@ private struct TourStepLayer: View {
             guard let frame = tour.frame(for: target) else { return [] }
             let local = frame.offsetBy(dx: -origin.x, dy: -origin.y)
             if target.isListRow {
-                // inset grouped 列表的左右边距跟系统布局边距走：Plus/Max 宽度（≥414pt）是 20pt，
+                // inset grouped 列表的左右边距跟系统布局边距走：Plus/Max 宽度（≥414pt，含 iPad、Duo）是 20pt，
                 // 其余 iPhone 是 16pt；行内容上下各有约 11pt 的内边距
-                let margin: CGFloat = width >= 414 ? 20 : 16
-                let rect = CGRect(x: margin, y: local.minY - 11, width: width - margin * 2, height: local.height + 22)
+                let margin: CGFloat = listWidth >= 414 ? 20 : 16
+                let rect = CGRect(x: listMinX + margin, y: local.minY - 11, width: listWidth - margin * 2, height: local.height + 22)
                 holes.append(TourHole(rect: rect, cornerRadius: 16))
             } else {
                 // 按钮挖成胶囊/圆：相机的圆按钮、工具栏的玻璃按钮都是这个形状

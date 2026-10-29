@@ -240,6 +240,7 @@ struct TransactionDetailView: View {
             .listStyle(.insetGrouped)
             .navigationTitle("交易详情")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 // 1. 左上角关闭按钮
                 ToolbarItem(placement: .topBarLeading) {

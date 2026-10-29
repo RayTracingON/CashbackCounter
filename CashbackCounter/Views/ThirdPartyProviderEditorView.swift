@@ -614,6 +614,7 @@ private struct RemoteModelListView: View {
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "搜索模型")
             .navigationTitle("选择模型")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

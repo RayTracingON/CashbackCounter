@@ -17,7 +17,57 @@ class CameraService: NSObject, ObservableObject {
     @Published var output = AVCapturePhotoOutput()
     @Published var recentImage: UIImage? // 存刚才拍的照片
     @Published var permissionDenied = false // Bug 3: 权限被拒绝时通知 UI
+    /// iPad 分屏 / 台前调度时系统收走了相机（机型不支持多任务下用相机），取景框会黑掉
+    @Published var isUnavailableInMultitasking = false
     private var isConfigured = false
+
+    // MARK: 画面方向
+    // 取景层和拍出来的照片默认都按竖屏方向出图：iPad 横放、iPhone Duo 展开转个方向，
+    // 画面就是歪的。RotationCoordinator 按设备姿态和取景层所在界面的方向给出该转的角度。
+    private var videoDevice: AVCaptureDevice?
+    private weak var previewLayer: AVCaptureVideoPreviewLayer?
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+    private var rotationObservation: NSKeyValueObservation?
+    /// 只在 setup（主线程）里写一次、deinit 里读来注销，不会并发访问
+    private nonisolated(unsafe) var interruptionObservers: [NSObjectProtocol] = []
+
+    deinit {
+        // 切 App 语言时整棵视图树按 id 重建，旧的 CameraService 会被释放，通知中心里的观察者要跟着注销
+        interruptionObservers.forEach { NotificationCenter.default.removeObserver($0) }
+    }
+
+    /// 取景层建好后交过来（CameraPreview.makeUIView）。和 setup 谁先谁后都行，两边都齐了才建 RotationCoordinator
+    func attachPreviewLayer(_ layer: AVCaptureVideoPreviewLayer) {
+        guard layer !== previewLayer else { return }
+        previewLayer = layer
+        configureRotationIfReady()
+    }
+
+    private func configureRotationIfReady() {
+        guard let videoDevice, let previewLayer else { return }
+        let coordinator = AVCaptureDevice.RotationCoordinator(device: videoDevice, previewLayer: previewLayer)
+        rotationCoordinator = coordinator
+        previewLayer.connection?.videoRotationAngle = coordinator.videoRotationAngleForHorizonLevelPreview
+        rotationObservation = coordinator.observe(\.videoRotationAngleForHorizonLevelPreview, options: .new) { [weak previewLayer] coordinator, _ in
+            previewLayer?.connection?.videoRotationAngle = coordinator.videoRotationAngleForHorizonLevelPreview
+        }
+    }
+
+    /// 分屏时相机被系统收走 / 还回来：只关心「多个 App 同时在前台」这一种原因，来电之类的打断照旧黑一下就好
+    private func observeInterruptions() {
+        let center = NotificationCenter.default
+        interruptionObservers = [
+            center.addObserver(forName: AVCaptureSession.wasInterruptedNotification, object: session, queue: .main) { [weak self] note in
+                let reason = (note.userInfo?[AVCaptureSessionInterruptionReasonKey] as? Int)
+                    .flatMap(AVCaptureSession.InterruptionReason.init(rawValue:))
+                guard reason == .videoDeviceNotAvailableWithMultipleForegroundApps else { return }
+                MainActor.assumeIsolated { self?.isUnavailableInMultitasking = true }
+            },
+            center.addObserver(forName: AVCaptureSession.interruptionEndedNotification, object: session, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.isUnavailableInMultitasking = false }
+            },
+        ]
+    }
     
     // 检查权限并启动
     func checkPermissions() {
@@ -67,8 +117,16 @@ class CameraService: NSObject, ObservableObject {
             if session.canAddInput(input) { session.addInput(input) }
             if session.canAddOutput(output) { session.addOutput(output) }
             
+            // iPad 分屏 / 台前调度时默认会把相机收走（取景框直接黑掉）；机型支持的话申请继续用
+            if session.isMultitaskingCameraAccessSupported {
+                session.isMultitaskingCameraAccessEnabled = true
+            }
+
             session.commitConfiguration()
             isConfigured = true
+            videoDevice = device
+            configureRotationIfReady()
+            observeInterruptions()
             
             // 3. 开始流动画面 (必须在后台线程)
             startSessionIfNeeded()
@@ -102,6 +160,13 @@ class CameraService: NSObject, ObservableObject {
               connection.isEnabled, connection.isActive else {
             print("⚠️ 相机未就绪，忽略本次拍照")
             return
+        }
+        // 照片按拍的那一刻设备怎么拿着来摆正，不然横着拍的小票存下来是躺着的
+        if let rotationCoordinator {
+            let angle = rotationCoordinator.videoRotationAngleForHorizonLevelCapture
+            if connection.isVideoRotationAngleSupported(angle) {
+                connection.videoRotationAngle = angle
+            }
         }
         let settings = AVCapturePhotoSettings()
         output.capturePhoto(with: settings, delegate: self)
@@ -139,6 +204,7 @@ struct CameraPreview: UIViewRepresentable {
         let view = CameraPreviewView(frame: .zero)
         view.previewLayer.session = cameraService.session
         view.previewLayer.videoGravity = .resizeAspectFill
+        cameraService.attachPreviewLayer(view.previewLayer)
         return view
     }
     

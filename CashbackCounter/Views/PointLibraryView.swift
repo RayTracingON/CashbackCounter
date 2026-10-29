@@ -11,7 +11,7 @@ struct PointLibraryView: View {
     @State private var showAddSheet = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 if points.isEmpty {
                     ContentUnavailableView(
@@ -43,6 +43,7 @@ struct PointLibraryView: View {
             }
             .navigationTitle("积分库")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { dismiss() }
@@ -98,7 +99,7 @@ struct PointEditorView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("基本信息")) {
                     TextField("银行", text: $bankName)
@@ -132,6 +133,7 @@ struct PointEditorView: View {
             }
             .navigationTitle(pointToEdit == nil ? "新增积分计划" : "编辑积分计划")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

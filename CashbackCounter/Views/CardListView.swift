@@ -116,10 +116,10 @@ struct CardListView: View {
     }
 
     /// 拖动跟随：卡片跟手，手指每跨过一个槽位（stackOffset 高），目标位置移动一格
-    private func updateReorder(card: CreditCard, at index: Int, translationY: CGFloat) {
+    private func updateReorder(card: CreditCard, at index: Int, translationY: CGFloat, stackOffset: CGFloat) {
         guard draggedCardID == card.id else { return }
         dragTranslationY = translationY
-        let steps = (translationY / DesignConstants.CardList.stackOffset).rounded()
+        let steps = (translationY / stackOffset).rounded()
         let newTarget = min(max(index + Int(steps), 0), cards.count - 1)
         if newTarget != dragTargetIndex {
             UISelectionFeedbackGenerator().selectionChanged()
@@ -145,30 +145,30 @@ struct CardListView: View {
     }
 
     /// 拖动中，其余卡片为拖动卡让出位置的位移
-    private func reorderShift(for index: Int) -> CGFloat {
+    private func reorderShift(for index: Int, stackOffset: CGFloat) -> CGFloat {
         guard let draggedID = draggedCardID,
               let from = cards.firstIndex(where: { $0.id == draggedID }),
               let target = dragTargetIndex,
               index != from else { return 0 }
         if from < target, index > from, index <= target {
-            return -DesignConstants.CardList.stackOffset // 拖动卡下移，途经的卡上移补位
+            return -stackOffset // 拖动卡下移，途经的卡上移补位
         }
         if target < from, index >= target, index < from {
-            return DesignConstants.CardList.stackOffset // 拖动卡上移，途经的卡下移补位
+            return stackOffset // 拖动卡上移，途经的卡下移补位
         }
         return 0
     }
 
     // 卡片堆叠列表：负间距 VStack 让每张卡占据真实槽位（stackOffset 高），
     // 选中/详情/拖动的位移都以槽位自然位置为基准换算
-    private var cardStack: some View {
+    private func cardStack(layout: DesignConstants.CardList) -> some View {
         ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
 
             // 计算当前卡片的状态
             let isSelected = card.id == viewModel.selectedCardID
             let isDragged = card.id == draggedCardID
             // 该卡在堆叠中的自然位置（相对内容区顶部），选中/详情模式的位移以此为基准换算
-            let naturalY = CGFloat(index) * DesignConstants.CardList.stackOffset + DesignConstants.CardList.listTopPadding
+            let naturalY = CGFloat(index) * layout.stackOffset + DesignConstants.CardList.listTopPadding
 
             CreditCardView(
                 bankName: card.bankName,
@@ -182,18 +182,18 @@ struct CardListView: View {
             .offset(y: {
                 if isSelected {
                     // 选中时：停在当前滚动位置 + 顶部留白
-                    return viewModel.scrollOffset + DesignConstants.CardList.selectedTopInset - naturalY
+                    return viewModel.scrollOffset + layout.selectedTopInset - naturalY
                 }
                 if viewModel.isDetailMode {
                     // 详情模式的未选中卡：推到屏幕外
-                    return DesignConstants.CardList.detailPushDistance - naturalY
+                    return layout.detailPushDistance - naturalY
                 }
                 if isDragged {
                     // 拖动中：跟随手指
                     return dragTranslationY
                 }
                 // 其他卡：为拖动卡让位（无拖动时为 0）
-                return reorderShift(for: index)
+                return reorderShift(for: index, stackOffset: layout.stackOffset)
             }())
             // 控制透明度和缩放
             .opacity(viewModel.isDetailMode && !isSelected ? 0 : 1)
@@ -212,7 +212,7 @@ struct CardListView: View {
                 ReorderLongPressGesture(
                     isEnabled: !viewModel.isDetailMode,
                     onBegan: { beginReorder(card: card, at: index) },
-                    onChanged: { updateReorder(card: card, at: index, translationY: $0) },
+                    onChanged: { updateReorder(card: card, at: index, translationY: $0, stackOffset: layout.stackOffset) },
                     onEnded: { endReorder(card: card, cancelled: $0) }
                 )
             )
@@ -226,70 +226,82 @@ struct CardListView: View {
     }
 
     var body: some View {
-        NavigationView {
-            ZStack(alignment: .top) {
-                // 背景色
-                Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
-                
-                // --- 图层 1: 交易详情列表 (在最底层) ---
-                if let selectedID = viewModel.selectedCardID,
-                   let selectedCard = cards.first(where: { $0.id == selectedID }) {
-                    
-                    ScrollView(showsIndicators: false) {
-                        EmbeddedTransactionListView(
-                            card: selectedCard,
-                            exchangeRates: viewModel.exchangeRates
-                        )
-                    }
-                    // 按选中卡设置身份：换卡时整个滚动视图重建，滚动位置回到顶部
-                    .id(selectedID)
-                    .padding(.top, DesignConstants.CardList.transactionListTopPadding)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .zIndex(0)
-                }
-                
-                // --- 图层 2: 卡片列表 (在顶层) ---
-                ScrollView(showsIndicators: false) {
-                    ZStack(alignment: .top) {
-                        // 负间距 VStack：每张卡保留完整布局 frame，相邻卡重叠露出 stackOffset 高度
-                        VStack(spacing: DesignConstants.CardList.stackOffset - DesignConstants.CardList.cardHeight) {
-                            cardStack
-                        }
-                        .padding(.top, DesignConstants.CardList.listTopPadding)
+        NavigationStack {
+            // 卡片尺寸按这一页实际拿到的大小算：iPad 分屏、iPhone Duo 开合时会实时变
+            GeometryReader { proxy in
+                let layout = DesignConstants.CardList(containerSize: proxy.size)
 
-                        // 底部占位，保证最后一张卡片能显示完整
-                        Color.clear
-                            .frame(height: CGFloat(max(1, cards.count)) * DesignConstants.CardList.placeholderPerCard + DesignConstants.CardList.listTopPadding )
-                    }
-                }
-                // ✅ 新增：iOS 18 原生滚动监听
-                .onScrollGeometryChange(for: CGFloat.self) { geometry in
-                    // 提取 Y 轴偏移量
-                    geometry.contentOffset.y
-                } action: { oldValue, newValue in
-                    // 只有在没展开卡片的时候更新位置，展开后锁定这个值
-                    if !viewModel.isDetailMode {
-                        viewModel.scrollOffset = newValue
-                    }
-                }
-                .scrollDisabled(viewModel.isDetailMode || draggedCardID != nil)
-                .allowsHitTesting(!viewModel.isDetailMode)
-                .zIndex(1)
-                
-                // --- 点击关闭层 ---
-                if viewModel.isDetailMode {
-                    Color.clear // 透明色
-                        .contentShape(Rectangle()) // 只有定义了形状才能响应点击
-                        .frame(height: DesignConstants.CardList.closeOverlayHeight) // 高度与卡片一致
-                        .padding(.horizontal, 16)
-                        .padding(.top, 10) // 🔥 重要：必须和卡片的 offset 顶部距离一致
-                        .zIndex(2) // 放在最顶层
-                        .onTapGesture {
-                            // 点击这里触发关闭动画
-                            withAnimation(springAnimation) {
-                                viewModel.selectedCardID = nil
-                            }
+                ZStack(alignment: .top) {
+                    // 背景色
+                    Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+
+                    // --- 图层 1: 交易详情列表 (在最底层) ---
+                    if let selectedID = viewModel.selectedCardID,
+                       let selectedCard = cards.first(where: { $0.id == selectedID }) {
+
+                        ScrollView(showsIndicators: false) {
+                            EmbeddedTransactionListView(
+                                card: selectedCard,
+                                exchangeRates: viewModel.exchangeRates
+                            )
+                            // 和上面停着的那张卡对齐成一列（宽屏时居中）
+                            .frame(width: layout.columnWidth)
+                            .frame(maxWidth: .infinity)
                         }
+                        // 按选中卡设置身份：换卡时整个滚动视图重建，滚动位置回到顶部
+                        .id(selectedID)
+                        .padding(.top, layout.transactionListTopPadding)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .zIndex(0)
+                    }
+
+                    // --- 图层 2: 卡片列表 (在顶层) ---
+                    ScrollView(showsIndicators: false) {
+                        ZStack(alignment: .top) {
+                            // 负间距 VStack：每张卡保留完整布局 frame，相邻卡重叠露出 stackOffset 高度
+                            VStack(spacing: layout.stackOffset - layout.cardHeight) {
+                                cardStack(layout: layout)
+                            }
+                            .padding(.top, DesignConstants.CardList.listTopPadding)
+
+                            // 底部占位，保证最后一张卡片能显示完整
+                            Color.clear
+                                .frame(height: CGFloat(max(1, cards.count)) * layout.placeholderPerCard + DesignConstants.CardList.listTopPadding )
+                        }
+                        // 宽屏上卡片封顶宽度后居中；滚动视图本身仍铺满，两侧留白也能拖着滚
+                        .frame(width: layout.columnWidth)
+                        .frame(maxWidth: .infinity)
+                    }
+                    // ✅ 新增：iOS 18 原生滚动监听
+                    .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                        // 提取 Y 轴偏移量
+                        geometry.contentOffset.y
+                    } action: { oldValue, newValue in
+                        // 只有在没展开卡片的时候更新位置，展开后锁定这个值
+                        if !viewModel.isDetailMode {
+                            viewModel.scrollOffset = newValue
+                        }
+                    }
+                    .scrollDisabled(viewModel.isDetailMode || draggedCardID != nil)
+                    .allowsHitTesting(!viewModel.isDetailMode)
+                    .zIndex(1)
+
+                    // --- 点击关闭层 ---
+                    if viewModel.isDetailMode {
+                        Color.clear // 透明色
+                            .contentShape(Rectangle()) // 只有定义了形状才能响应点击
+                            // 高度与卡片一致，宽度只盖住卡片那一列
+                            .frame(width: max(layout.columnWidth - DesignConstants.CardList.horizontalInset * 2, 0),
+                                   height: layout.closeOverlayHeight)
+                            .padding(.top, 10) // 🔥 重要：必须和卡片的 offset 顶部距离一致
+                            .zIndex(2) // 放在最顶层
+                            .onTapGesture {
+                                // 点击这里触发关闭动画
+                                withAnimation(springAnimation) {
+                                    viewModel.selectedCardID = nil
+                                }
+                            }
+                    }
                 }
             }
             // ... (导航栏和 Toolbar 代码) ...
@@ -339,7 +351,8 @@ struct CardListView: View {
                             }
                             
                         } label: {
-                            Image(systemName: "ellipsis.circle.fill")
+                            // 图标 + 标题：iPhone Duo 外屏把导航栏竖到侧边时，只有图标的自定义视图放不进竖排栏
+                            Label("更多", systemImage: "ellipsis.circle.fill")
                                 .font(.system(size: 24))
                         }
                     } else {
@@ -375,7 +388,7 @@ struct CardListView: View {
                             }
                         }
                         label: {
-                            Image(systemName: "ellipsis.circle.fill").font(.system(size: 24))
+                            Label("更多", systemImage: "ellipsis.circle.fill").font(.system(size: 24))
                                 .tourTarget(.addCardMenu)
                         }
                     }

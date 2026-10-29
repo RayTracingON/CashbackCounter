@@ -210,7 +210,7 @@ struct BillHomeContentView: View {
         // 一次算好，body 里各处（统计、列表、导出菜单、调试日志）共用。
         // 之前是计算属性，每处引用都把全部交易重新过滤一遍，一次渲染要过滤 5 次
         let filteredTransactions = self.filteredTransactions
-        return NavigationView {
+        return NavigationStack {
             ZStack {
                 Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
                 
@@ -226,6 +226,7 @@ struct BillHomeContentView: View {
                         // 3. 交易列表
                         transactionList(filteredTransactions)
                     }
+                    .readableContentWidth()
                 }
             }
             .navigationTitle("Cashback Counter")
@@ -253,7 +254,8 @@ struct BillHomeContentView: View {
                             Label("导入结单", systemImage: "chart.bar.doc.horizontal.fill")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle").font(.system(size: DesignConstants.FontSize.toolbarIcon))
+                        // 图标 + 标题：iPhone Duo 外屏把导航栏竖到侧边时，只有图标的自定义视图放不进竖排栏
+                        Label("更多", systemImage: "ellipsis.circle").font(.system(size: DesignConstants.FontSize.toolbarIcon))
                     }
                 }
             }

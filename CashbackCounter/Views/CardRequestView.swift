@@ -54,6 +54,7 @@ struct CardRequestView: View {
             }
             .navigationTitle("建议收录新卡")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 // 提交成功后只留确认页上的「完成」：这时再出现「取消」会让人以为还能撤回
                 if !didSubmit {

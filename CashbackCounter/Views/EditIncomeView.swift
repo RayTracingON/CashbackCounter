@@ -22,7 +22,7 @@ struct EditIncomeView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("收入信息")) {
                     TextField("交易内容", text: $detail)
@@ -58,6 +58,7 @@ struct EditIncomeView: View {
             }
             .navigationTitle("编辑收入")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

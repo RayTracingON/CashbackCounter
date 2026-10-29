@@ -19,7 +19,7 @@ struct PointSystemView: View {
         let summaries = viewModel.pointSummaries(transactions: transactions, adjustments: adjustments, cards: cards)
         let totalValue = viewModel.totalEstimatedValue(for: summaries, mainCurrencyCode: mainCurrencyCode)
 
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color(uiColor: .systemGroupedBackground)
                     .ignoresSafeArea()
@@ -33,6 +33,7 @@ struct PointSystemView: View {
                     .padding(.horizontal)
                     .padding(.top, 12)
                     .padding(.bottom, 24)
+                    .readableContentWidth()
                 }
             }
             .navigationTitle("积分")
@@ -50,7 +51,8 @@ struct PointSystemView: View {
                             Label("手动移除积分", systemImage: "minus")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle.fill")
+                        // 图标 + 标题：iPhone Duo 外屏把导航栏竖到侧边时，只有图标的自定义视图放不进竖排栏
+                        Label("更多", systemImage: "ellipsis.circle.fill")
                             .font(.system(size: 24))
                     }
                 }
@@ -357,6 +359,7 @@ private struct PointDetailView: View {
                 historyCard(items: history)
             }
             .padding()
+            .readableContentWidth()
         }
         .navigationTitle("积分明细")
         .navigationBarTitleDisplayMode(.inline)
@@ -663,7 +666,7 @@ private struct PointAdjustmentEntryView: View {
     private let addTypes: [AdjustmentType] = [.bonus, .earn, .transfer, .manual]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if points.isEmpty {
                     ContentUnavailableView(
@@ -714,6 +717,7 @@ private struct PointAdjustmentEntryView: View {
             }
             .navigationTitle("手动添加积分")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }
@@ -774,7 +778,7 @@ private struct PointRemovalEntryView: View {
     private let removeTypes: [AdjustmentType] = [.redeem, .expire, .transfer, .manual]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if points.isEmpty {
                     ContentUnavailableView(
@@ -825,6 +829,7 @@ private struct PointRemovalEntryView: View {
             }
             .navigationTitle("手动移除积分")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

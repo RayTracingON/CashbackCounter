@@ -2092,6 +2092,7 @@
       }
     },
     "二次元" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2268,6 +2269,7 @@
       }
     },
     "交通出行" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3210,6 +3212,7 @@
       }
     },
     "其他消费" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3365,6 +3368,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "憑證"
+          }
+        }
+      }
+    },
+    "分屏时无法使用相机" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera Unavailable in Split View"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分割畫面時無法使用相機"
+          }
+        }
+      }
+    },
+    "切回全屏后即可拍照，也可以从相册导入小票" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch back to full screen to take photos, or import receipts from Photos."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切回全螢幕後即可拍照，也可以從相簿匯入收據"
           }
         }
       }
@@ -6749,6 +6784,7 @@
       }
     },
     "数码产品" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7338,6 +7374,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "暫時無法取得訂閱選項，請稍後再試。"
+          }
+        }
+      }
+    },
+    "更多" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多"
           }
         }
       }
@@ -11244,6 +11296,7 @@
       }
     },
     "超市便利" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -11794,6 +11847,7 @@
       }
     },
     "退款会自动冲掉原来那笔，返现跟着回冲" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -11808,6 +11862,9 @@
           }
         }
       }
+    },
+    "退款会自动记成一笔负数交易，返现跟着回冲" : {
+
     },
     "退款自动抵销" : {
       "localizations" : {
@@ -12544,6 +12601,7 @@
       }
     },
     "餐饮美食" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

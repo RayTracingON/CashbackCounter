@@ -10,7 +10,7 @@ struct StatementAnalysisEntryView: View {
     @State private var isParsing = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if let statement {
                     StatementAnalysisView(statement: statement)

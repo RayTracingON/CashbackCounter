@@ -51,6 +51,7 @@ struct BatchReceiptImportView: View {
             }
             .navigationTitle("批量导入收据")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") {

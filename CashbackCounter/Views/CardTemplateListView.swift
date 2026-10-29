@@ -20,7 +20,7 @@ struct CardTemplateListView: View {
     @Binding var rootSheet: SheetType?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List(filteredTemplates) { item in
                 Button(action: {
                     // 👇 点击后，不直接保存，而是记录选了谁
@@ -92,6 +92,7 @@ struct CardTemplateListView: View {
                 }
             }
             .navigationTitle("选择卡片模板")
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

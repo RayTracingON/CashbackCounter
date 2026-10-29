@@ -102,6 +102,7 @@ struct SignInView: View {
             }
             .navigationTitle("银行同步")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

@@ -39,15 +39,15 @@ struct CreditCardView: View {
                 // 2. 装饰纹理
                 Circle()
                     .fill(Color.white.opacity(0.1))
-                    .frame(width: 200, height: DesignConstants.CardList.cardHeight)
+                    .frame(width: 200, height: proxy.size.height)
                     .offset(x: 150, y: -50)
-                
+
                 // 3. 图片层（✅ 修改：使用异步解码后的 State）
                 if let uiImage = decodedImage {
                     Image(uiImage: uiImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(height: DesignConstants.CardList.cardHeight)
+                        .frame(height: proxy.size.height)
                         // ✅ 关键修复：限制图片最大宽度，防止宽图撑爆布局导致 GeometryReader 坐标错乱
                         .frame(maxWidth: proxy.size.width)
                         .clipped()
@@ -81,7 +81,9 @@ struct CreditCardView: View {
                 .foregroundColor(ink == .dark ? .black : .white)
             }
         }
-        .frame(height: DesignConstants.CardList.cardHeight)
+        // 高度跟着拿到的宽度按银行卡比例走：卡包列表、iPad 上的添加卡片 sheet 宽度各不相同，
+        // 写死高度会把卡面拉扁或拉长
+        .aspectRatio(DesignConstants.CardList.aspectRatio, contentMode: .fit)
         .cornerRadius(20)
         .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
         .padding(.horizontal)
@@ -120,7 +122,6 @@ struct CreditCardView: View {
                            type: card.type,
                            endNum: card.endNum,
                            colors: card.colors)
-                .frame(height: DesignConstants.CardList.cardHeight)
         }
     }
     .padding()
@@ -134,7 +135,6 @@ struct CreditCardView: View {
                    endNum: "6688",
                    colors: [.blue, .purple],
                    cardImageData: PreviewData.cardArtData)
-        .frame(height: DesignConstants.CardList.cardHeight)
         .padding()
 }
 
@@ -143,13 +143,10 @@ struct CreditCardView: View {
     VStack(spacing: 16) {
         CreditCardView(bankName: "Apple", type: "Card", endNum: "0001",
                        colors: [Color(hex: "F5F5F7"), Color(hex: "F8D347")])
-            .frame(height: DesignConstants.CardList.cardHeight)
         CreditCardView(bankName: "AMEX US", type: "Gold", endNum: "1005",
                        colors: [Color(hex: "A39458"), Color(hex: "E0CA79")])
-            .frame(height: DesignConstants.CardList.cardHeight)
         CreditCardView(bankName: "Chase", type: "Sapphire Reserve", endNum: "2077",
                        colors: [Color(hex: "12141C"), Color(hex: "6E6555")])
-            .frame(height: DesignConstants.CardList.cardHeight)
     }
     .padding()
 }
@@ -160,7 +157,6 @@ struct CreditCardView: View {
                    type: "双币种世界之极尊享白金卡",
                    endNum: "",
                    colors: [Color(hex: "9C1B24"), Color(hex: "D94F45")])
-        .frame(height: DesignConstants.CardList.cardHeight)
         .padding()
 }
 #endif

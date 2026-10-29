@@ -264,7 +264,7 @@ struct TrendAnalysisView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
             VStack(spacing: 20) {
                 
@@ -469,6 +469,7 @@ struct TrendAnalysisView: View {
                 Text("\(type.title)分析")
             )
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { dismiss() }

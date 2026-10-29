@@ -53,6 +53,7 @@ struct FeedbackView: View {
         }
         .navigationTitle("意见反馈")
         .navigationBarTitleDisplayMode(.inline)
+        .prefersHorizontalToolbar()
         .toolbar {
             if !didSubmit {
                 ToolbarItem(placement: .confirmationAction) {

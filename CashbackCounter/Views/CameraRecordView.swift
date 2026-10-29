@@ -22,7 +22,23 @@ struct CameraRecordView: View {
     @State private var isTargeted = false
     @State private var pickedItems: [PhotosPickerItem] = []
     @State private var batchItems: [PhotosPickerItem] = []
-    
+
+    /// iPhone Duo 半开、竖着拿（像翻开的书）时，折痕竖在屏幕正中，正好压在快门上：
+    /// 把整排按钮挪到折痕宽的那一侧。横着拿（像小电脑）时折痕是横的，在按钮上方，不用管。
+    private func foldAvoidingInsets(in proxy: GeometryProxy) -> EdgeInsets {
+        guard #available(iOS 27.1, *),
+              let fold = proxy.reservedRegions(kind: .division)
+                  .first(where: { $0.frame.height > $0.frame.width }) else {
+            return EdgeInsets()
+        }
+        // frame 已经含了折痕两侧的安全边距，且按布局方向镜像过，直接当 leading / trailing 用
+        let leadingSpace = fold.frame.minX
+        let trailingSpace = proxy.size.width - fold.frame.maxX
+        return trailingSpace >= leadingSpace
+            ? EdgeInsets(top: 0, leading: fold.frame.maxX, bottom: 0, trailing: 0)
+            : EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: proxy.size.width - fold.frame.minX)
+    }
+
     var body: some View {
         ZStack {
             // --- 层级 1: 相机画面 (铺满全屏) ---
@@ -77,51 +93,74 @@ struct CameraRecordView: View {
                         }
                     )
             }
-            // --- 层级 3: 操作按钮 ---
-            VStack {
-                Spacer() // 把按钮推到底部
-                
-                HStack {
-                    // 左下角：相册按钮
-                    Button(action: {
-                        showPhotoLibrary = true
-                    }) {
-                        Image(systemName: "photo.on.rectangle.angled")
-                            .font(.largeTitle)
-                            .foregroundColor(.white)
-                            .frame(width: DesignConstants.Size.cameraSideButton, height: DesignConstants.Size.cameraSideButton)
-                            .background(Color.black.opacity(0.5))
-                            .clipShape(Circle())
-                    }
-                    .tourTarget(.cameraLibrary)
-
-                    Spacer()
-
-                    // 中间：拍照大按钮
-                    Button(action: {
-                        cameraService.takePhoto()
-                    }) {
-                        ZStack {
-                            Circle()
-                                .stroke(Color.white, lineWidth: 4)
-                                .frame(width: DesignConstants.Size.cameraButtonOuter, height: DesignConstants.Size.cameraButtonOuter)
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: DesignConstants.Size.cameraButtonInner, height: DesignConstants.Size.cameraButtonInner)
+            // --- 层级 2.6: iPad 分屏 / 台前调度时相机被系统收走 ---
+            // 相册导入和手动记账还能用，所以这层不挡按钮
+            if cameraService.isUnavailableInMultitasking && !cameraService.permissionDenied {
+                Color.black.opacity(0.85)
+                    .ignoresSafeArea()
+                    .overlay(
+                        VStack(spacing: 16) {
+                            Image(systemName: "rectangle.split.2x1")
+                                .font(.system(size: 48))
+                                .foregroundColor(.white.opacity(0.6))
+                            Text("分屏时无法使用相机")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                            Text("切回全屏后即可拍照，也可以从相册导入小票")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.7))
+                                .multilineTextAlignment(.center)
                         }
-                    }
-                    .tourTarget(.cameraShutter)
-                    // 权限被拒的遮罩在这层之下，不禁用的话按钮透过遮罩仍可点
-                    .disabled(cameraService.permissionDenied)
+                        .padding(.horizontal, 32)
+                    )
+            }
+            // --- 层级 3: 操作按钮 ---
+            GeometryReader { proxy in
+                VStack {
+                    Spacer() // 把按钮推到底部
 
-                    Spacer()
-                    
-                    Button(action: {
-                        // 核心逻辑：
-                        // 1. 确保图片为空 (表示纯文本记账)
-                        selectedImage = nil
-                        // 2. 打开记账页面
-                        showAddSheet = true
+                    HStack {
+                        // 左下角：相册按钮
+                        Button(action: {
+                            showPhotoLibrary = true
+                        }) {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.largeTitle)
+                                .foregroundColor(.white)
+                                .frame(width: DesignConstants.Size.cameraSideButton, height: DesignConstants.Size.cameraSideButton)
+                                .background(Color.black.opacity(0.5))
+                                .clipShape(Circle())
+                        }
+                        .tourTarget(.cameraLibrary)
+
+                        Spacer()
+
+                        // 中间：拍照大按钮
+                        Button(action: {
+                            cameraService.takePhoto()
+                        }) {
+                            ZStack {
+                                Circle()
+                                    .stroke(Color.white, lineWidth: 4)
+                                    .frame(width: DesignConstants.Size.cameraButtonOuter, height: DesignConstants.Size.cameraButtonOuter)
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: DesignConstants.Size.cameraButtonInner, height: DesignConstants.Size.cameraButtonInner)
+                            }
+                        }
+                        .tourTarget(.cameraShutter)
+                        // 权限被拒 / 分屏被收走相机的遮罩都在这层之下，不禁用的话按钮透过遮罩仍可点
+                        .disabled(cameraService.permissionDenied || cameraService.isUnavailableInMultitasking)
+
+                        Spacer()
+
+                        Button(action: {
+                            // 核心逻辑：
+                            // 1. 确保图片为空 (表示纯文本记账)
+                            selectedImage = nil
+                            // 2. 打开记账页面
+                            showAddSheet = true
                         }) {
                             Image(systemName: "square.and.pencil") // ✏️ 记账图标
                                 .font(.largeTitle)
@@ -132,9 +171,11 @@ struct CameraRecordView: View {
                         }
                         .tourTarget(.cameraManual)
 
+                    }
+                    .padding(.horizontal, DesignConstants.Spacing.bottomHorizontalPadding)
+                    .padding(.bottom, DesignConstants.Spacing.bottomPadding)
                 }
-                .padding(.horizontal, DesignConstants.Spacing.bottomHorizontalPadding)
-                .padding(.bottom, DesignConstants.Spacing.bottomPadding)
+                .padding(foldAvoidingInsets(in: proxy))
             }
         }
         // 👇👇👇 核心修改：添加拖拽目标 👇👇👇

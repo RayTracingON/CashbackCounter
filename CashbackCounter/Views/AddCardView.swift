@@ -34,20 +34,21 @@ struct AddCardView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // 1. 实时预览
                 Section {
                     VStack(spacing: 12) {
-                        ZStack(alignment: .topTrailing) {
-                            CreditCardView(
-                                bankName: viewModel.bankName.isEmpty ? "银行名称" : viewModel.bankName,
-                                type: viewModel.cardType.isEmpty ? "卡种" : viewModel.cardType,
-                                endNum: viewModel.endNum.isEmpty ? "8888" : viewModel.endNum,
-                                colors: [viewModel.color1, viewModel.color2],
-                                cardImageData: viewModel.cardImageData
-                            )
-                            
+                        CreditCardView(
+                            bankName: viewModel.bankName.isEmpty ? "银行名称" : viewModel.bankName,
+                            type: viewModel.cardType.isEmpty ? "卡种" : viewModel.cardType,
+                            endNum: viewModel.endNum.isEmpty ? "8888" : viewModel.endNum,
+                            colors: [viewModel.color1, viewModel.color2],
+                            cardImageData: viewModel.cardImageData
+                        )
+                        // 按钮叠在卡面上、跟着卡面大小走：卡面高度随 sheet 宽度变（iPad 上比手机高得多），
+                        // 写死高度的话「上传卡面」就不在卡面正中了
+                        .overlay(alignment: .topTrailing) {
                             // 👇 卡面图片操作按钮
                             if viewModel.cardImageData != nil {
                                 // 已有卡面 → 显示删除按钮
@@ -76,7 +77,6 @@ struct AddCardView: View {
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 }
                                 .padding(.horizontal)
-                                .frame(height: 220)
                             }
                         }
                         
@@ -290,6 +290,7 @@ struct AddCardView: View {
             }
             .navigationTitle(cardToEdit == nil ? "添加信用卡" : "编辑卡片")
             .navigationBarTitleDisplayMode(.inline)
+            .prefersHorizontalToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }
